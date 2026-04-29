@@ -25,10 +25,9 @@ It features a polished React frontend integrated with a robust Python/Flask and 
 - **Inventory Management**: Create, view, and delete products easily via UI.
 - **User Management**: Monitor registered users and their roles securely.
 
-## 🛠️ Tech Stack
-- **Frontend**: React (Vite), Tailwind CSS, Lucide React icons, Axios, Recharts, React-Toastify.
-- **Backend**: Python, Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-Limiter.
-- **Database**: MySQL.
+- **Frontend**: React (Vite 6), Tailwind CSS v4, Lucide React icons, Axios, Recharts, React-Toastify.
+- **Backend**: Python, Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-Limiter, Razorpay SDK.
+- **Database**: PostgreSQL (Production Ready).
 
 ---
 
@@ -82,10 +81,22 @@ It features a polished React frontend integrated with a robust Python/Flask and 
 
 ---
 
-## 📦 Deployment Ready
-The application has been structured to easily deploy on modern PaaS platforms:
-- **Backend**: Ready for Render, Railway, or AWS. Include the `requirements.txt` and map environment variables accordingly. 
-- **Frontend**: Ready for Vercel or Netlify via `npm run build`.
+## 📦 Deployment Guide
+The application is optimized for production deployment:
+
+### 🐍 Backend (Railway)
+1.  **Connect Repo**: Link this GitHub repository to [Railway](https://railway.app).
+2.  **Root Directory**: Set the root directory to `backend/`.
+3.  **Environment Variables**: Add your `DATABASE_URL` (or PG credentials), `SECRET_KEY`, and `RAZORPAY_KEY_*` variables.
+4.  **Auto-deploy**: Railway will detect the `Procfile` and start the server.
+
+### ⚛️ Frontend (Firebase Hosting)
+1.  **Build**: Run `npm run build` in the `frontend` folder.
+2.  **Deploy**: Use `npx firebase-tools deploy` to host the `dist/` folder on Firebase.
+3.  **Routing**: The `firebase.json` is already configured for Single Page Application (SPA) routing.
+
+## 💳 Payment Integration
+Payments are processed securely via **Razorpay**. Ensure you have a Razorpay account and have set the `VITE_RAZORPAY_KEY_ID` in your frontend build environment.
 
 ## 📄 License
 This project is licensed under the MIT License.
