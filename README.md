@@ -84,11 +84,16 @@ It features a polished React frontend integrated with a robust Python/Flask and 
 ## 📦 Deployment Guide
 The application is optimized for production deployment:
 
-### 🐍 Backend (Railway)
-1.  **Connect Repo**: Link this GitHub repository to [Railway](https://railway.app).
+### 🐍 Backend (Render.com - FREE)
+1.  **Connect Repo**: Create a "Web Service" on [Render](https://render.com) and link this repo.
 2.  **Root Directory**: Set the root directory to `backend/`.
-3.  **Environment Variables**: Add your `DATABASE_URL` (or PG credentials), `SECRET_KEY`, and `RAZORPAY_KEY_*` variables.
-4.  **Auto-deploy**: Railway will detect the `Procfile` and start the server.
+3.  **Build Command**: `pip install -r requirements.txt`
+4.  **Start Command**: `gunicorn --worker-class gevent --bind 0.0.0.0:$PORT app:app`
+5.  **Environment Variables**: Add your `DATABASE_URL`, `SECRET_KEY`, and `RAZORPAY_KEY_*`.
+
+### 🐘 Database (Neon.tech - FREE)
+1.  **Create Project**: Go to [Neon.tech](https://neon.tech) and create a free PostgreSQL instance.
+2.  **Copy String**: Copy the "Connection String" and use it as your `DATABASE_URL` in Render.
 
 ### ⚛️ Frontend (Firebase Hosting)
 1.  **Build**: Run `npm run build` in the `frontend` folder.
