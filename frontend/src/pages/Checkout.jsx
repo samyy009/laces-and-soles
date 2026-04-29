@@ -5,7 +5,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import QRCode from 'react-qr-code';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import UiballLoader from '../components/premium/UiballLoader';
@@ -31,10 +30,6 @@ export default function Checkout() {
 
   // KYC State
   const [kycData, setKycData] = useState({ pan: localStorage.getItem('mock_kyc_pan') || '', verified: !!localStorage.getItem('mock_kyc_pan') });
-
-  // Payment State (Razorpay Simulation)
-  const [paymentMethod, setPaymentMethod] = useState('upi');
-  const [showQR, setShowQR] = useState(false);
 
   // Pre-fill shipping data from saved user address
   useEffect(() => {
@@ -600,8 +595,7 @@ export default function Checkout() {
                     </div>
                   </div>
                 )}
-              </div></div>
-
+              </div>
             </div>
 
             {/* Sidebar Summary */}
