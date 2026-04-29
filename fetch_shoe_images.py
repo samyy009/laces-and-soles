@@ -9,14 +9,16 @@ import urllib.parse
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 backend_dir = os.path.join(base_dir, 'backend')
-sys.path.append(backend_dir)
+
+sys.path.append(base_dir)
 
 load_dotenv(os.path.join(backend_dir, '.env'))
-from models import db, Product
+from backend.models import db, Product
+
 
 app = Flask(__name__)
 DB_USER     = os.environ.get('DB_USER', 'postgres')
-DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root@123')
+DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
 DB_HOST     = os.environ.get('DB_HOST', 'localhost')
 DB_NAME     = os.environ.get('DB_NAME', 'laces_and_soles')
 encoded_pw  = urllib.parse.quote_plus(DB_PASSWORD)
