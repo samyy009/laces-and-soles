@@ -112,50 +112,75 @@ export default function Checkout() {
     }
 
     setIsProcessing(true);
-    // Simulate Processing Delay for realistic feel
-    setTimeout(async () => {
-      try {
-        const res = await axios.post(`${API}/api/orders`, {
-          shipping_details: shippingData,
-          total_amount: total,
-          payment_method: paymentMethod
-        }, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-          },
-          timeout: 10000 // 10s timeout
-        });
-        
-        if (res.data?.order?.tracking_id) {
-          setConfirmedOrderId(res.data.order.tracking_id);
-          setConfirmedOrder(res.data.order);
-          setStep(4);
-          setSearchParams({ id: res.data.order.tracking_id }, { replace: true });
-          clearCart();
-          toast.success("Order Placed Successfully!");
-        } else {
-          throw new Error("Invalid response from server");
+    
+    try {
+      // 1. Create Order on Backend
+      const orderRes = await axios.post(`${API}/api/razorpay/create-order`, {}, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+      });
+
+      const { razorpay_order_id, amount, currency } = orderRes.data;
+
+      // 2. Configure Razorpay Options
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_placeholder', 
+        amount: amount * 100,
+        currency: currency,
+        name: "Laces & Soles",
+        description: "Secure Footwear Purchase",
+        order_id: razorpay_order_id,
+        handler: async function (response) {
+          // 3. Verify Payment on Success
+          try {
+            setIsProcessing(true);
+            const verifyRes = await axios.post(`${API}/api/razorpay/verify-payment`, {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              shipping_details: shippingData
+            }, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+            });
+
+            if (verifyRes.data.success) {
+              const firstOrder = verifyRes.data.orders[0];
+              setConfirmedOrderId(firstOrder.tracking_id);
+              setConfirmedOrder(firstOrder);
+              setStep(4);
+              setSearchParams({ id: firstOrder.tracking_id }, { replace: true });
+              clearCart();
+              toast.success("Payment Successful! Order Placed.");
+            }
+          } catch (err) {
+            console.error("Verification Error:", err);
+            toast.error("Payment verification failed. Please contact support.");
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        prefill: {
+          name: shippingData.name,
+          email: user?.email,
+          contact: shippingData.phone
+        },
+        theme: {
+          color: "#1A73E8"
+        },
+        modal: {
+          ondismiss: function() {
+            setIsProcessing(false);
+          }
         }
-      } catch(err) {
-        console.error("CHECKOUT ERROR DETAILS:", {
-          message: err.message,
-          code: err.code,
-          response: err.response?.data
-        });
-        
-        let errorMsg = "Payment Failed. Please try again.";
-        if (err.code === 'ERR_NETWORK') {
-          errorMsg = "Network Error: Could not reach server. Please check if the backend is running.";
-        } else if (err.response?.data?.error) {
-          errorMsg = err.response.data.error;
-        }
-        
-        toast.error(errorMsg);
-        setStep(3);
-      } finally {
-        setIsProcessing(false);
-      }
-    }, 2000);
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+
+    } catch (err) {
+      console.error("RAZORPAY ERROR:", err);
+      toast.error(err.response?.data?.error || "Could not initiate payment. Check console.");
+      setIsProcessing(false);
+    }
   };
 
   const handleDownloadInvoice = () => {
@@ -525,114 +550,57 @@ export default function Checkout() {
 
               {/* STEP 3: Razorpay Payment Simulation */}
               <div className={`bg-white rounded-[24px] overflow-hidden border shadow-sm transition-all ${step !== 3 && 'opacity-60 grayscale'}`}>
-                 <div className="p-6 border-b pointer-events-none flex items-center justify-between bg-blue-900 text-white">
+                 <div className="p-6 border-b flex items-center justify-between bg-blue-900 text-white">
                   <h3 className="text-lg font-black uppercase tracking-tight flex items-center gap-3">
                     <span className="size-8 bg-blue-800 text-white rounded-full flex items-center justify-center">3</span>
-                    Payment
+                    Secure Payment
                   </h3>
-                  {step === 3 && <span className="text-[10px] uppercase font-black tracking-widest text-blue-200 flex items-center gap-1"><Icons.Lock size={12}/> Razorpay Trusted</span>}
+                  <span className="text-[10px] uppercase font-black tracking-widest text-blue-200 flex items-center gap-1"><Icons.ShieldCheck size={12}/> Razorpay Secured</span>
                 </div>
 
                 {step === 3 && (
-                  <div className="flex flex-col md:flex-row animate-in fade-in slide-in-from-top-4 min-h-[300px]">
-                    {/* Razorpay Sidebar Tabs */}
-                    <div className="w-full md:w-1/3 bg-gray-50 border-r border-gray-100 flex flex-col">
-                      <button onClick={() => setPaymentMethod('upi')} className={`py-4 px-6 text-left text-sm font-bold flex items-center gap-3 border-l-4 transition-all ${paymentMethod === 'upi' ? 'border-blue-600 bg-white shadow-sm' : 'border-transparent hover:bg-gray-100 text-gray-500'}`}>
-                         <Icons.QrCode size={18} /> UPI / QR
+                  <div className="p-8 animate-in fade-in slide-in-from-top-4 text-center">
+                    <div className="mb-8">
+                       <div className="size-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                         <Icons.CreditCard size={32} />
+                       </div>
+                       <h4 className="text-xl font-black text-gray-900 uppercase tracking-tighter">Ready to Secure Your Style?</h4>
+                       <p className="text-sm text-gray-500 mt-2 max-w-sm mx-auto">
+                         Click below to open the secure Razorpay window. You can pay via **UPI (GPay/PhonePe), Credit/Debit Cards, or NetBanking**.
+                       </p>
+                    </div>
+
+                    <div className="space-y-4 max-w-sm mx-auto">
+                      <button 
+                        onClick={handleCheckout} 
+                        disabled={isProcessing}
+                        className="w-full bg-[#1A73E8] text-white py-5 text-sm flex items-center justify-center gap-3 font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-600/20 transition-all disabled:opacity-70 active:scale-95"
+                      >
+                        {isProcessing ? <UiballLoader size={24} color="#ffffff" /> : <Icons.Lock size={18} />}
+                        {isProcessing ? 'Waiting for Payment...' : `Pay ₹${total.toFixed(2)} Now`}
                       </button>
-                      <button onClick={() => setPaymentMethod('card')} className={`py-4 px-6 text-left text-sm font-bold flex items-center gap-3 border-l-4 transition-all ${paymentMethod === 'card' ? 'border-blue-600 bg-white shadow-sm' : 'border-transparent hover:bg-gray-100 text-gray-500'}`}>
-                         <Icons.CreditCard size={18} /> Card
-                      </button>
-                      <button onClick={() => setPaymentMethod('bnpl')} className={`py-4 px-6 text-left text-sm font-bold flex items-center gap-3 border-l-4 transition-all ${paymentMethod === 'bnpl' ? 'border-blue-600 bg-white shadow-sm' : 'border-transparent hover:bg-gray-100 text-gray-500'}`}>
-                         <Icons.Briefcase size={18} /> Pay Later
+
+                      <div className="flex items-center justify-center gap-4 py-2 opacity-50 grayscale hover:grayscale-0 transition-all">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/UPI-Logo-vector.svg" alt="UPI" className="h-4" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" alt="Visa" className="h-3" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" alt="Mastercard" className="h-5" />
+                      </div>
+
+                      <button 
+                        onClick={() => setStep(1)}
+                        className="w-full text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-blue-600 transition-colors"
+                      >
+                        ← Back to Shipping
                       </button>
                     </div>
 
-                    {/* Razorpay Content Area */}
-                    <div className="w-full md:w-2/3 p-6 flex flex-col justify-between">
-                      {paymentMethod === 'upi' && (
-                        <div className="space-y-6">
-                           <h4 className="font-black text-gray-800">Pay using UPI Apps</h4>
-                           {showQR ? (
-                             <div className="bg-gray-50 p-6 rounded-xl flex flex-col items-center justify-center text-center gap-4 border border-blue-100 animate-in zoom-in-95">
-                                <div className="bg-white p-4 flex items-center justify-center rounded-lg shadow-sm">
-                                  <QRCode value={`upi://pay?pa=lacesandsoles@okicici&pn=Laces%20and%20Soles&am=${total.toFixed(2)}&cu=INR`} size={150} fgColor="#1f2937" />
-                                </div>
-                                <p className="text-xs font-bold text-gray-500">Scan via GPay or PhonePe <br/>to pay ₹{total.toFixed(2)}</p>
-                             </div>
-                           ) : (
-                             <div className="space-y-4">
-                               <button onClick={() => setShowQR(true)} className="w-full flex items-center justify-between border border-gray-200 rounded-xl p-4 hover:border-blue-500 transition-all font-bold text-sm text-gray-700">
-                                 <span>Show QR Code</span> <Icons.QrCode size={20} className="text-blue-600" />
-                               </button>
-                               <div className="relative">
-                                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200"></div></div>
-                                  <div className="relative flex justify-center text-[10px] uppercase font-black"><span className="bg-white px-4 text-gray-400">OR</span></div>
-                               </div>
-                               <div>
-                                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Enter UPI ID</label>
-                                 <input type="text" className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold mt-2 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="example@okhdfcbank" />
-                               </div>
-                             </div>
-                           )}
-                        </div>
-                      )}
-
-                      {paymentMethod === 'card' && (
-                        <div className="space-y-4">
-                           <h4 className="font-black text-gray-800">Add New Card</h4>
-                           <div className="space-y-4">
-                               <input type="text" className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Card Number" />
-                               <div className="grid grid-cols-2 gap-4">
-                                 <input type="text" className="bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="MM/YY" />
-                                 <input type="password" maxlength="3" className="bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="CVV" />
-                               </div>
-                           </div>
-                           <div className="flex items-center gap-2 text-xs font-bold text-gray-500">
-                             <input type="checkbox" id="save-card" className="rounded text-blue-600" />
-                             <label htmlFor="save-card">Securely save this card for faster checkout</label>
-                           </div>
-                        </div>
-                      )}
-
-                      {paymentMethod === 'bnpl' && (
-                        <div className="space-y-6 text-center py-6">
-                           <Icons.CreditCard className="mx-auto text-blue-500 mb-4" size={40} />
-                           <h4 className="font-black text-gray-800 text-lg">Flipkart Pay Later Simulator</h4>
-                           <p className="text-sm text-gray-500">Get instant mock credit and check out with zero OTPs!</p>
-                           <div className="bg-green-50 text-green-700 text-xs font-bold py-2 rounded-lg mt-4 border border-green-200">
-                             Pre-approved limit: ₹50,000
-                           </div>
-                        </div>
-                      )}
-
-                      <div className="mt-8 pt-4 border-t border-gray-100">
-                        <div className="flex gap-4 mb-3">
-                          <button 
-                            onClick={handleCheckout} 
-                            disabled={isProcessing}
-                            className="w-full bg-[#1A73E8] text-white py-4 text-sm flex items-center justify-center gap-2 font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 shadow-xl shadow-blue-600/20 transition-all disabled:opacity-70"
-                          >
-                            {isProcessing ? <UiballLoader size={24} color="#ffffff" /> : <Icons.Lock size={16} />}
-                            {isProcessing ? 'Processing Payment...' : `Pay ₹${total.toFixed(2)}`}
-                          </button>
-                        </div>
-                        <button 
-                          onClick={() => {
-                             if(window.confirm("Are you sure you want to abandon checkout and cancel?")) {
-                               navigate('/');
-                             }
-                          }}
-                          className="w-full mt-3 bg-red-50 text-red-600 border border-transparent py-4 text-[10px] flex items-center justify-center gap-2 font-black uppercase tracking-[0.2em] rounded-xl hover:bg-red-100 transition-all"
-                        >
-                          <Icons.XCircle size={14} /> Cancel Checkout
-                        </button>
-                        <p className="text-center text-[9px] text-gray-400 mt-4 font-bold uppercase flex justify-center items-center gap-1 tracking-widest"><Icons.Shield size={10}/> Powered by Razorpay Simulator</p>
-                      </div>
+                    <div className="mt-12 pt-6 border-t border-gray-50 flex items-center justify-center gap-2">
+                       <Icons.Lock size={12} className="text-green-500" />
+                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">SSL Encrypted 256-bit Connection</span>
                     </div>
                   </div>
                 )}
-              </div>
+              </div></div>
 
             </div>
 

@@ -30,6 +30,18 @@ from flask_socketio import SocketIO, emit
 import zipfile
 
 load_dotenv()
+import razorpay
+
+# Razorpay Client Initialization
+RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_placeholder')
+RAZORPAY_KEY_SECRET = os.environ.get('RAZORPAY_KEY_SECRET', 'placeholder_secret')
+
+try:
+    razorpay_client = razorpay.Client(auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET))
+    logger.info("Razorpay: Client Initialized")
+except Exception as e:
+    logger.error(f"Razorpay: Initialization Failed: {e}")
+    razorpay_client = None
 
 # Configure logging to a file
 logging.basicConfig(
@@ -968,6 +980,132 @@ def validate_coupon():
         return jsonify({'valid': True, 'discount_percentage': 10, 'message': 'Flipkart Simulation Coupon applied! 10% off.'}), 200
         
     return jsonify({'valid': False, 'message': 'Invalid or expired coupon code.'}), 400
+
+# ==========================================
+# RAZORPAY INTEGRATION
+# ==========================================
+
+@app.route('/api/razorpay/create-order', methods=['POST'])
+@jwt_required()
+def create_razorpay_order():
+    if not razorpay_client:
+        return jsonify({'error': 'Razorpay not configured on server'}), 500
+    
+    user_id = int(get_jwt_identity())
+    cart_items = CartItem.query.filter_by(user_id=user_id).all()
+    if not cart_items:
+        return jsonify({'error': 'Cart is empty'}), 400
+
+    # Calculate Total
+    total_price = 0
+    for item in cart_items:
+        if item.product:
+            total_price += (item.product.price * item.quantity)
+    
+    # Add flat shipping fee (matching existing logic)
+    if total_price > 0:
+        total_price += 15.00
+
+    # Razorpay expects amount in paise (1 INR = 100 paise)
+    amount_paise = int(total_price * 100)
+
+    try:
+        razorpay_order = razorpay_client.order.create({
+            "amount": amount_paise,
+            "currency": "INR",
+            "payment_capture": 1
+        })
+        return jsonify({
+            'razorpay_order_id': razorpay_order['id'],
+            'amount': total_price,
+            'currency': 'INR'
+        }), 200
+    except Exception as e:
+        logger.error(f"Razorpay Order Creation Failed: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/razorpay/verify-payment', methods=['POST'])
+@jwt_required()
+def verify_payment():
+    data = request.get_json()
+    razorpay_order_id = data.get('razorpay_order_id')
+    razorpay_payment_id = data.get('razorpay_payment_id')
+    razorpay_signature = data.get('razorpay_signature')
+    shipping_details = data.get('shipping_details', {})
+
+    if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
+        return jsonify({'error': 'Missing payment verification details'}), 400
+
+    try:
+        # Verify Signature
+        razorpay_client.utility.verify_payment_signature({
+            'razorpay_order_id': razorpay_order_id,
+            'razorpay_payment_id': razorpay_payment_id,
+            'razorpay_signature': razorpay_signature
+        })
+        
+        # Payment Verified! Now create the L&S orders using existing logic
+        user_id = int(get_jwt_identity())
+        cart_items = CartItem.query.filter_by(user_id=user_id).all()
+        
+        if not cart_items:
+            return jsonify({'error': 'Cart empty after payment'}), 400
+
+        pincode = shipping_details.get('pincode', shipping_details.get('zipCode', ''))
+        address_str = f"{shipping_details.get('address', '')}, {shipping_details.get('city', '')}, {shipping_details.get('state', '')} {pincode}"
+        
+        created_orders = []
+        distance_km = round(random.uniform(0.5, 8.0), 2)
+
+        for index, item in enumerate(cart_items):
+            # Generate Tracking ID
+            chars = string.ascii_uppercase + string.digits
+            rand_id = ''.join(random.choices(chars, k=8))
+            unique_track_id = f"L&S-{rand_id}"
+
+            item_total = (item.product.price * item.quantity)
+            if index == 0:
+                item_total += 15.00
+
+            new_order = Order(
+                user_id=user_id,
+                total_amount=item_total,
+                status='Processing', # Confirmed because paid
+                shipping_address=address_str,
+                pincode=pincode,
+                tracking_id=unique_track_id,
+                payment_method=f"Razorpay ({razorpay_payment_id})",
+                distance_km=distance_km
+            )
+            db.session.add(new_order)
+            db.session.flush()
+
+            # Stock Management
+            item.product.stock -= item.quantity
+            
+            # Create Order Item
+            order_item = OrderItem(
+                order_id=new_order.id,
+                product_id=item.product_id,
+                quantity=item.quantity,
+                price=item.product.price
+            )
+            db.session.add(order_item)
+            
+            # Clear Cart Item
+            db.session.delete(item)
+            created_orders.append(new_order.to_dict())
+
+        db.session.commit()
+        return jsonify({
+            'success': True, 
+            'message': 'Payment verified and orders created',
+            'orders': created_orders
+        }), 200
+
+    except Exception as e:
+        logger.error(f"Payment Verification Failed: {e}")
+        return jsonify({'error': 'Invalid payment signature or verification failed'}), 400
 
 @app.route('/api/orders', methods=['GET', 'POST'])
 @jwt_required()
