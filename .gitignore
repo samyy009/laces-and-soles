@@ -1,0 +1,58 @@
+# ─── Python ───────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.so
+
+# ─── Virtual Environments ─────────────────────
+venv/
+env/
+.venv/
+ENV/
+
+# ─── Environment Variables (NEVER commit!) ────
+.env
+backend/.env
+*.env
+
+# ─── Flask / App ──────────────────────────────
+backend/app.log
+backend/products.db
+backend/uploads/product_*.jpg
+backend/uploads/product_*.png
+backend/uploads/product_*.webp
+
+# ─── Node / Frontend ──────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# ─── IDE / OS ─────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── Logs ─────────────────────────────────────
+*.log
+logs/
+
+# ─── Database dumps ───────────────────────────
+*.sql
+*.dump
+*.sqlite3
+
+# ─── Temp / Scratch ───────────────────────────
+scratch/
+backend/scratch/
+*.tmp
+*.bak
