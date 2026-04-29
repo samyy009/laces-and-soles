@@ -7,7 +7,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
 const ShopContext = createContext();
-export const API = 'http://localhost:5000';
+export const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export const useShop = () => {
   const context = useContext(ShopContext);
