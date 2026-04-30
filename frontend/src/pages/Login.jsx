@@ -180,20 +180,21 @@ export default function Login() {
                   }
                   
                   window.FB.login((response) => {
-                    console.log('MANUAL_FB_RESPONSE:', response);
+                    alert("Facebook Response Received! Status: " + response.status);
                     if (response.authResponse) {
                       const token = response.authResponse.accessToken;
-                      toast.info("Facebook connected! Finalizing with server...");
+                      alert("Token found! Sending to server...");
+                      
                       loginWithFacebook(token).then(res => {
                         if (res.success) {
-                          navigate('/');
+                          alert("SUCCESS! Redirecting to Dashboard...");
+                          window.location.href = "/";
                         } else {
-                          toast.error(`Server Error: ${res.error}`);
+                          alert("SERVER ERROR: " + res.error);
                         }
                       });
                     } else {
-                      alert("Facebook Login Failed: User cancelled or did not authorize.");
-                      toast.error("Auth Failed");
+                      alert("Facebook Auth Failed: No authResponse found.");
                     }
                   }, { scope: 'public_profile,email' });
                 }}
