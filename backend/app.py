@@ -6,7 +6,10 @@ logger = logging.getLogger(__name__)
 
 
 
+
 import os
+
+
 import sys
 import subprocess
 import urllib.parse
@@ -61,28 +64,38 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-# Smart CORS configuration: 
-# Open during Development for Postman/Phone testing (as requested), 
-# Tightened during Production for maximum security.
+# Database Configuration
+db_url = os.getenv("DATABASE_URL")
+
+if db_url:
+    # Render and other platforms sometimes provide 'postgres://' which SQLAlchemy requires as 'postgresql://'
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {"sslmode": "require"}
+    }
+else:
+    # Fallback for local development
+    DB_USER = os.environ.get('DB_USER', 'postgres')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+    DB_NAME = os.environ.get('DB_NAME', 'laces_and_soles')
+    encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}'
+
+# Smart CORS configuration
 if os.environ.get('FLASK_ENV') == 'development':
     CORS(app, resources={r"/*": {"origins": "*"}})
     logger.info("Security: Development CORS enabled (Allow All Routes)")
 else:
-    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173"]}})
-    logger.info("Security: Production CORS enabled (Strict)")
+    # In production, prioritize the frontend URL if provided
+    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    CORS(app, resources={r"/*": {"origins": [frontend_url, "http://localhost:5173"]}})
+    logger.info(f"Security: Production CORS enabled for {frontend_url}")
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
-# ==========================================
-# CONFIGURATION
-# ==========================================
-DB_USER = os.environ.get('DB_USER', 'postgres')
-DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
-DB_HOST = os.environ.get('DB_HOST', 'localhost')
-DB_NAME = os.environ.get('DB_NAME', 'laces_and_soles')
-
-encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # CRITICAL SECURITY: Secrets must be loaded from .env. 
