@@ -179,11 +179,9 @@ export default function Login() {
                   }
                   
                   const processFacebookToken = (token) => {
-                    toast.info("Facebook connected! Finalizing login...");
                     loginWithFacebook(token).then(res => {
                       if (res.success) {
-                        toast.success("Welcome back!");
-                        window.location.href = '/'; // Force hard reload to prevent React state bugs
+                        navigate('/', { replace: true });
                       } else {
                         toast.error(`Login Error: ${res.error}`);
                       }
