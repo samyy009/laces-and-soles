@@ -84,12 +84,12 @@ It features a polished React frontend integrated with a robust Python/Flask and 
 ## 📦 Deployment Guide
 The application is optimized for production deployment:
 
-### 🐍 Backend (Render.com - FREE)
+### 🐍 Backend (Render.com)
 1.  **Connect Repo**: Create a "Web Service" on [Render](https://render.com) and link this repo.
-2.  **Root Directory**: Set the root directory to `backend/`.
+2.  **Root Directory**: Leave blank if you are linking the whole repo, or set to `backend/`.
 3.  **Build Command**: `pip install -r requirements.txt`
-4.  **Start Command**: `gunicorn --worker-class gevent --bind 0.0.0.0:$PORT app:app`
-5.  **Environment Variables**: Add your `DATABASE_URL`, `SECRET_KEY`, and `RAZORPAY_KEY_*`.
+4.  **Start Command**: `gunicorn --bind 0.0.0.0:$PORT app:app`
+5.  **Environment Variables**: Add your `DATABASE_URL`, `SECRET_KEY`, `BREVO_API_KEY`, and `BREVO_SENDER`.
 
 ### 🐘 Database (Neon.tech - FREE)
 1.  **Create Project**: Go to [Neon.tech](https://neon.tech) and create a free PostgreSQL instance.

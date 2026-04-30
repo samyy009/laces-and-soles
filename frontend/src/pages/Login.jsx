@@ -154,7 +154,7 @@ export default function Login() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
-              <div className="flex justify-center sm:justify-start">
+              <div className="flex justify-center sm:justify-start min-h-[44px]">
                 <GoogleLogin
                   onSuccess={credentialResponse => {
                     loginWithGoogle(credentialResponse.credential).then(res => {
@@ -163,13 +163,13 @@ export default function Login() {
                   }}
                   onError={() => {
                     console.log('Login Failed');
+                    toast.error("Google Login failed to initialize.");
                   }}
                   useOneTap
                   theme="outline"
                   shape="pill"
                   size="large"
                   text="signin_with"
-                  width="100%"
                 />
               </div>
               <FacebookLogin
