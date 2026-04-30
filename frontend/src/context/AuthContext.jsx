@@ -74,6 +74,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     localStorage.removeItem('laces_soles_wishlist');
     delete axios.defaults.headers.common['Authorization'];
     toast.info("Logged out successfully");
+    window.location.href = '/login'; // Force hard reload to clear FB SDK state
   };
 
   const loginWithGoogle = async (credential) => {
