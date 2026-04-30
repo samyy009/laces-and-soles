@@ -183,7 +183,7 @@ export default function Login() {
                     loginWithFacebook(token).then(res => {
                       if (res.success) {
                         toast.success("Welcome back!");
-                        navigate('/');
+                        window.location.href = '/'; // Force hard reload to prevent React state bugs
                       } else {
                         toast.error(`Login Error: ${res.error}`);
                       }
@@ -197,7 +197,7 @@ export default function Login() {
                     } else {
                       toast.error("Facebook Login was cancelled or failed.");
                     }
-                  }, { scope: 'public_profile,email', auth_type: 'reauthenticate' });
+                  }, { scope: 'public_profile,email' });
                 }}
                 className="flex items-center justify-center gap-4 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[44px] w-full"
               >
