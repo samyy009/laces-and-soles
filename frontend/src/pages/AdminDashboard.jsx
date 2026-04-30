@@ -10,7 +10,7 @@ import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import ZoneSelector from '../components/ZoneSelector';
 
-const API = 'http://localhost:5000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();

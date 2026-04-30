@@ -14,13 +14,15 @@ export default function ForgotPassword() {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   const handleRequestOTP = async (e) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
     console.log(`Attempting to request OTP for: ${email}`);
     try {
-      const res = await axios.post('http://localhost:5000/api/forgot-password', { email });
+      const res = await axios.post(`${API}/api/forgot-password`, { email });
       console.log('OTP Request Response:', res.data);
       setSuccess(res.data.message);
       setStep(2);
@@ -37,7 +39,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
     console.log(`Attempting to verify OTP: ${otp} for: ${email}`);
     try {
-      const res = await axios.post('http://localhost:5000/api/verify-otp', { email, otp });
+      const res = await axios.post(`${API}/api/verify-otp`, { email, otp });
       console.log('OTP Verification Response:', res.data);
       setStep(3);
     } catch (err) {
@@ -57,7 +59,7 @@ export default function ForgotPassword() {
     setIsLoading(true);
     console.log(`Attempting to reset password for: ${email}`);
     try {
-      const res = await axios.post('http://localhost:5000/api/reset-password', { email, otp, new_password: newPassword });
+      const res = await axios.post(`${API}/api/reset-password`, { email, otp, new_password: newPassword });
       console.log('Password Reset Response:', res.data);
       setSuccess('Password reset successful! Redirecting to login...');
       setTimeout(() => navigate('/login'), 3000);

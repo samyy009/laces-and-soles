@@ -24,9 +24,11 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, [token]);
 
+const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   const login = async (email, password) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/login', { email, password });
+      const res = await axios.post(`${API}/api/login`, { email, password });
       const { user: userData, token: jwtToken, message } = res.data;
       setUser(userData);
       setToken(jwtToken);
@@ -45,7 +47,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (full_name, email, password, phone_number) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/register', { full_name, email, password, phone_number });
+      const res = await axios.post(`${API}/api/register`, { full_name, email, password, phone_number });
       const { user: userData, token: jwtToken, message } = res.data;
       setUser(userData);
       setToken(jwtToken);
@@ -76,7 +78,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithGoogle = async (credential) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/google-login', { credential });
+      const res = await axios.post(`${API}/api/google-login`, { credential });
       const { user: userData, token: jwtToken, message } = res.data;
       
       setUser(userData);
@@ -96,7 +98,7 @@ export const AuthProvider = ({ children }) => {
 
   const loginWithFacebook = async (accessToken) => {
     try {
-      const res = await axios.post('http://localhost:5000/api/facebook-login', { accessToken });
+      const res = await axios.post(`${API}/api/facebook-login`, { accessToken });
       const { user: userData, token: jwtToken, message } = res.data;
       
       setUser(userData);
