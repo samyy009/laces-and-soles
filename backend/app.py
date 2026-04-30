@@ -101,6 +101,7 @@ limiter = Limiter(
     default_limits=default_limits,
     storage_uri="memory://"
 )
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -125,35 +126,52 @@ with app.app_context():
             
         # Products Seed
         if Product.query.count() == 0:
-            json_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'content.json')
-            try:
-                with open(json_path, 'r', encoding='utf-8') as f:
-                    content_data = json.load(f)
-                    items = content_data.get('products', {}).get('items', [])
-                    for i, item in enumerate(items):
-                        # Add more varied data for seeding
-                        category = 'men' if i % 2 == 0 else 'women'
-                        prod_type = 'sneakers' if i % 3 == 0 else ('sports' if i % 3 == 1 else 'casual')
-                        p = Product(
-                            title=item['title'], 
-                            price=item['price'], 
-                            old_price=item.get('oldPrice'), 
-                            brand=item['brand'], 
-                            image_url=item['image'], 
-                            badge=item.get('badge'),
-                            category=category,
-                            type=prod_type,
-                            description=f"Inspired by the early 2000s original, the {item['brand']} {item['title']} is designed for maximum comfort and style. Featuring high-quality materials and a whole lot of personality.",
-                            colors="Red,Black,White,Blue",
-                            sizes="6,7,8,9,10,11,12",
-                            stock=random.randint(5, 15),
-                            discount=random.choice([0, 10, 15, 20, 30]),
-                            reviews_count=random.randint(10, 200),
-                            gallery=f"{item['image']},{item['image']},{item['image']},{item['image']}"
-                        )
-                        db.session.add(p)
-            except Exception as e:
-                print(f"Skipped initial products seed: {e}")
+            # Try multiple potential paths for content.json
+            possible_paths = [
+                os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'content.json'),
+                os.path.join(os.path.dirname(__file__), 'frontend', 'src', 'content.json'),
+                os.path.join(os.path.dirname(__file__), 'content.json'),
+                '/opt/render/project/src/frontend/src/content.json' # Absolute path fallback for Render
+            ]
+            
+            json_path = None
+            for path in possible_paths:
+                if os.path.exists(path):
+                    json_path = path
+                    logger.info(f"Seeding: Found content.json at {path}")
+                    break
+            
+            if json_path:
+                try:
+                    with open(json_path, 'r', encoding='utf-8') as f:
+                        content_data = json.load(f)
+                        items = content_data.get('products', {}).get('items', [])
+                        for i, item in enumerate(items):
+                            # Add more varied data for seeding
+                            category = 'men' if i % 2 == 0 else 'women'
+                            prod_type = 'sneakers' if i % 3 == 0 else ('sports' if i % 3 == 1 else 'casual')
+                            p = Product(
+                                title=item['title'], 
+                                price=item['price'], 
+                                old_price=item.get('oldPrice'), 
+                                brand=item['brand'], 
+                                image_url=item['image'], 
+                                badge=item.get('badge'),
+                                category=category,
+                                type=prod_type,
+                                description=f"Inspired by the early 2000s original, the {item['brand']} {item['title']} is designed for maximum comfort and style. Featuring high-quality materials and a whole lot of personality.",
+                                colors="Red,Black,White,Blue",
+                                sizes="6,7,8,9,10,11,12",
+                                stock=random.randint(5, 15),
+                                discount=random.choice([0, 10, 15, 20, 30]),
+                                reviews_count=random.randint(10, 200),
+                                gallery=f"{item['image']},{item['image']},{item['image']},{item['image']}"
+                            )
+                            db.session.add(p)
+                except Exception as e:
+                    logger.error(f"Seeding: Error processing content.json: {e}")
+            else:
+                logger.warning("Seeding: content.json not found in any expected location. Skipping product seed.")
         # Drivers Seed
         drivers_to_seed = [
             {'name': 'Driver One', 'email': 'driver1@laces.com', 'range': 'short', 'phone': '9876543210'},
