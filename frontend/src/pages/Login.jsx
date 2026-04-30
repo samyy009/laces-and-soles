@@ -171,36 +171,36 @@ export default function Login() {
                   text="signin_with"
                 />
               </div>
-              <FacebookLogin
-                appId="2204173596994401"
-                autoLoad={false}
-                fields="name,email,picture"
-                callback={(response) => {
-                  console.log('FACEBOOK_DEBUG_RESPONSE:', response);
-                  if (response.accessToken) {
-                    toast.info("Facebook verified! Connecting to Laces and Soles...");
-                    loginWithFacebook(response.accessToken).then(res => {
-                      if (res.success) {
-                        navigate('/');
-                      } else {
-                        toast.error(`Server Login Failed: ${res.error}`);
-                      }
-                    });
-                  } else {
-                    console.log('Facebook SDK did not return a token:', response);
-                    toast.error("Facebook Login was cancelled or failed.");
+              <button 
+                onClick={() => {
+                  if (typeof window.FB === 'undefined') {
+                    toast.error("Facebook SDK still loading... Please wait 5 seconds and try again.");
+                    return;
                   }
+                  
+                  window.FB.login((response) => {
+                    console.log('MANUAL_FB_RESPONSE:', response);
+                    if (response.authResponse) {
+                      const token = response.authResponse.accessToken;
+                      toast.info("Facebook connected! Finalizing with server...");
+                      loginWithFacebook(token).then(res => {
+                        if (res.success) {
+                          navigate('/');
+                        } else {
+                          toast.error(`Server Error: ${res.error}`);
+                        }
+                      });
+                    } else {
+                      alert("Facebook Login Failed: User cancelled or did not authorize.");
+                      toast.error("Auth Failed");
+                    }
+                  }, { scope: 'public_profile,email' });
                 }}
-                render={renderProps => (
-                  <button 
-                    onClick={renderProps.onClick}
-                    className="flex items-center justify-center gap-4 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[44px] w-full"
-                  >
-                    <Icons.Facebook size={18} fill="currentColor" />
-                    Facebook
-                  </button>
-                )}
-              />
+                className="flex items-center justify-center gap-4 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[44px] w-full"
+              >
+                <Icons.Facebook size={18} fill="currentColor" />
+                Facebook
+              </button>
             </div>
           </div>
 
