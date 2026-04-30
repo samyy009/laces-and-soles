@@ -411,19 +411,26 @@ def login():
 @app.route('/api/google-login', methods=['POST'])
 @limiter.limit("10 per minute")
 def google_login():
-    data = request.get_json()
-    token = data.get('credential')
-    client_id = os.environ.get('GOOGLE_CLIENT_ID')
-    
-    if not token:
-        return jsonify({'error': 'Token is required'}), 400
-    if not client_id:
-        return jsonify({'error': 'Google Client ID not configured on server'}), 500
-
     try:
-        # Verify the ID token using google-auth-library
-        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
+        data = request.get_json()
+        token = data.get('credential')
+        client_id = os.environ.get('GOOGLE_CLIENT_ID')
         
+        if not token:
+            logger.error("GOOGLE LOGIN ERROR: No credential token provided in request")
+            return jsonify({'error': 'Token is required'}), 400
+        if not client_id:
+            logger.error("GOOGLE LOGIN ERROR: GOOGLE_CLIENT_ID not found in environment variables")
+            return jsonify({'error': 'Google Client ID not configured on server'}), 500
+
+        try:
+            # Verify the ID token using google-auth-library
+            idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
+            logger.info(f"GOOGLE LOGIN: Token verified for {idinfo.get('email')}")
+        except ValueError as e:
+            logger.error(f"GOOGLE LOGIN TOKEN VERIFICATION FAILED: {str(e)}")
+            return jsonify({'error': f'Invalid token: {str(e)}'}), 401
+            
         # ID token is valid. Get user details from it.
         email = idinfo['email']
         full_name = idinfo.get('name', 'Google User')
@@ -432,8 +439,7 @@ def google_login():
         user = User.query.filter_by(email=email).first()
         
         if not user:
-            # Create a new user for this Google account
-            # We use a random password hash since they login via Google
+            logger.info(f"GOOGLE LOGIN: Creating new user account for {email}")
             user = User(
                 full_name=full_name,
                 email=email,
@@ -451,12 +457,9 @@ def google_login():
             'user': user.to_dict()
         }), 200
         
-    except ValueError as e:
-        # Invalid token
-        return jsonify({'error': f'Invalid token: {str(e)}'}), 401
     except Exception as e:
-        logger.error(f"GOOGLE LOGIN ERROR: {str(traceback.format_exc())}")
-        return jsonify({'error': 'An internal error occurred during Google authentication'}), 500
+        logger.error(f"GOOGLE LOGIN CRITICAL FAILURE: {str(traceback.format_exc())}")
+        return jsonify({'error': f'Authentication Error: {str(e)}'}), 500
 
 @app.route('/api/user/update', methods=['POST'])
 @jwt_required()
@@ -506,6 +509,7 @@ def facebook_login():
         )
         
         if fb_res.status_code != 200:
+            logger.error(f"FACEBOOK TOKEN VERIFICATION FAILED: Status {fb_res.status_code} - {fb_res.text}")
             return jsonify({'error': 'Invalid Facebook token'}), 401
             
         fb_data = fb_res.json()
@@ -513,15 +517,14 @@ def facebook_login():
         full_name = fb_data.get('name', 'Facebook User')
         
         if not email:
-            # Facebook users can sometimes not have an email or it's restricted
-            # In a real app we'd handle this, for now we'll use their FB ID + placeholder
+            logger.warning(f"FACEBOOK LOGIN: No email returned for FB user {fb_data.get('id')}")
             email = f"{fb_data['id']}@facebook.com"
         
         # Check if user exists
         user = User.query.filter_by(email=email).first()
         
         if not user:
-            # Create a new user
+            logger.info(f"FACEBOOK LOGIN: Creating new user account for {email}")
             user = User(
                 full_name=full_name,
                 email=email,
@@ -540,8 +543,8 @@ def facebook_login():
         }), 200
         
     except Exception as e:
-        logger.error(f"FACEBOOK LOGIN ERROR: {str(traceback.format_exc())}")
-        return jsonify({'error': 'An internal error occurred during Facebook authentication'}), 500
+        logger.error(f"FACEBOOK LOGIN CRITICAL FAILURE: {str(traceback.format_exc())}")
+        return jsonify({'error': f'Authentication Error: {str(e)}'}), 500
 
 import traceback
 
