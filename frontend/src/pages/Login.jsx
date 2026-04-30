@@ -153,7 +153,7 @@ export default function Login() {
               <div className="relative flex justify-center text-[10px] uppercase font-black font-heading"><span className="bg-white  px-6 text-gray-300 tracking-[0.3em]">Or External Link</span></div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex justify-center sm:justify-start min-h-[44px]">
                 <GoogleLogin
                   onSuccess={credentialResponse => {
@@ -163,7 +163,6 @@ export default function Login() {
                   }}
                   onError={() => {
                     console.log('Login Failed');
-                    toast.error("Google Login failed to initialize.");
                   }}
                   useOneTap
                   theme="outline"
@@ -173,36 +172,21 @@ export default function Login() {
                 />
               </div>
               <FacebookLogin
-                appId={import.meta.env.VITE_FACEBOOK_APP_ID || "placeholder_id"}
+                appId="2204173596994401"
                 autoLoad={false}
                 fields="name,email,picture"
                 callback={(response) => {
-                  // If App ID is placeholder or login fails, we allow a Mock Login for demonstration
-                  const token = response.accessToken || (import.meta.env.VITE_FACEBOOK_APP_ID === "placeholder_id" ? "mock_token" : null);
-                  
-                  if (token) {
-                    loginWithFacebook(token).then(res => {
+                  if (response.accessToken) {
+                    loginWithFacebook(response.accessToken).then(res => {
                       if (res.success) navigate('/');
                     });
                   } else {
-                    console.log('Facebook Login Cancelled or Failed');
+                    console.log('Facebook Login Failed');
                   }
                 }}
                 render={renderProps => (
                   <button 
-                    onClick={() => {
-                      // If placeholder, we bypass the real SDK and just trigger the callback with mock data
-                      if (import.meta.env.VITE_FACEBOOK_APP_ID === "placeholder_id" || !import.meta.env.VITE_FACEBOOK_APP_ID) {
-                        toast.info("Simulating Facebook Auth... (Demo Mode)");
-                        setTimeout(() => {
-                           loginWithFacebook("mock_token").then(res => {
-                             if (res.success) navigate('/');
-                           });
-                        }, 1000);
-                      } else {
-                        renderProps.onClick();
-                      }
-                    }}
+                    onClick={renderProps.onClick}
                     className="flex items-center justify-center gap-4 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[44px] w-full"
                   >
                     <Icons.Facebook size={18} fill="currentColor" />
