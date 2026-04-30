@@ -176,12 +176,19 @@ export default function Login() {
                 autoLoad={false}
                 fields="name,email,picture"
                 callback={(response) => {
+                  console.log('FACEBOOK_DEBUG_RESPONSE:', response);
                   if (response.accessToken) {
+                    toast.info("Facebook verified! Connecting to Laces and Soles...");
                     loginWithFacebook(response.accessToken).then(res => {
-                      if (res.success) navigate('/');
+                      if (res.success) {
+                        navigate('/');
+                      } else {
+                        toast.error(`Server Login Failed: ${res.error}`);
+                      }
                     });
                   } else {
-                    console.log('Facebook Login Failed');
+                    console.log('Facebook SDK did not return a token:', response);
+                    toast.error("Facebook Login was cancelled or failed.");
                   }
                 }}
                 render={renderProps => (
