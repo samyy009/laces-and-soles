@@ -1,17 +1,13 @@
 import logging
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-
-
-
 import os
 import sys
 import subprocess
 import urllib.parse
+from datetime import datetime, timedelta
 
+# 1. Setup Logging immediately at the top
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -19,7 +15,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from models import db, User, Product, Order, OrderItem, CartItem, WishlistItem, Review, Coupon, PasswordReset
 import json
-import logging
 import shutil
 import re
 import string
@@ -30,7 +25,6 @@ from dotenv import load_dotenv
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from google.oauth2 import id_token
@@ -40,6 +34,36 @@ import zipfile
 
 load_dotenv()
 import razorpay
+
+# 2. Initialize App
+app = Flask(__name__)
+
+# 3. Database Configuration (Bulletproof)
+db_url = os.environ.get("DATABASE_URL")
+
+if db_url:
+    logger.info("Database: Using DATABASE_URL from environment")
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        "connect_args": {"sslmode": "require"}
+    }
+else:
+    logger.warning("Database: DATABASE_URL not found, falling back to local PostgreSQL")
+    DB_USER = os.environ.get('DB_USER', 'postgres')
+    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
+    DB_HOST = os.environ.get('DB_HOST', 'localhost')
+    DB_NAME = os.environ.get('DB_NAME', 'laces_and_soles')
+    encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}'
+
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# 4. Core Security Configuration
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_key')
+app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', 'dev_jwt_key')
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
 
 # Razorpay Client Initialization
 RAZORPAY_KEY_ID = os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_placeholder')
@@ -52,69 +76,16 @@ except Exception as e:
     logger.error(f"Razorpay: Initialization Failed: {e}")
     razorpay_client = None
 
-# Configure logging to a file
-logging.basicConfig(
-    filename='app.log',
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s: %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-app = Flask(__name__)
-
-# Database Configuration
-db_url = os.getenv("DATABASE_URL")
-
-if db_url:
-    # Render and other platforms sometimes provide 'postgres://' which SQLAlchemy requires as 'postgresql://'
-    if db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "connect_args": {"sslmode": "require"}
-    }
-else:
-    # Fallback for local development
-    DB_USER = os.environ.get('DB_USER', 'postgres')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
-    DB_HOST = os.environ.get('DB_HOST', 'localhost')
-    DB_NAME = os.environ.get('DB_NAME', 'laces_and_soles')
-    encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}'
-
 # Smart CORS configuration
 if os.environ.get('FLASK_ENV') == 'development':
     CORS(app, resources={r"/*": {"origins": "*"}})
     logger.info("Security: Development CORS enabled (Allow All Routes)")
 else:
-    # In production, prioritize the frontend URL if provided
-    frontend_url = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+    frontend_url = os.environ.get('FRONTEND_URL', '*')
     CORS(app, resources={r"/*": {"origins": [frontend_url, "http://localhost:5173"]}})
     logger.info(f"Security: Production CORS enabled for {frontend_url}")
 
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# CRITICAL SECURITY: Secrets must be loaded from .env. 
-# No hardcoded fallbacks to prevent accidental exposure.
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
-app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
-
-if not app.config['SECRET_KEY'] or not app.config['JWT_SECRET_KEY']:
-    logger.error("CRITICAL: SECRET_KEY or JWT_SECRET_KEY missing in .env!")
-    # Keep as warning for development, but crash in production
-    if os.environ.get('FLASK_ENV') != 'development':
-        raise RuntimeError("Missing Core Security Keys!")
-
-# JWT SECURITY: 24h Expiry for Developer-friendly session management
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)
-
-# Configure Uploads
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 db.init_app(app)
 jwt = JWTManager(app)
