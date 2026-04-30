@@ -125,7 +125,7 @@ with app.app_context():
             
         # Products Seed
         if Product.query.count() == 0:
-            json_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'content.json')
+            json_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'content.json')
             try:
                 with open(json_path, 'r', encoding='utf-8') as f:
                     content_data = json.load(f)
