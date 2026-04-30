@@ -190,22 +190,14 @@ export default function Login() {
                     });
                   };
 
-                  // First check if the user is already connected to Facebook from a previous session
-                  window.FB.getLoginStatus((response) => {
-                    if (response.status === 'connected' && response.authResponse) {
-                      // Already connected, use existing token (fixes the "must refresh" bug)
-                      processFacebookToken(response.authResponse.accessToken);
+                  // Call FB.login DIRECTLY to prevent browser popup blockers.
+                  window.FB.login((loginResponse) => {
+                    if (loginResponse.authResponse) {
+                      processFacebookToken(loginResponse.authResponse.accessToken);
                     } else {
-                      // Not connected, trigger the login popup
-                      window.FB.login((loginResponse) => {
-                        if (loginResponse.authResponse) {
-                          processFacebookToken(loginResponse.authResponse.accessToken);
-                        } else {
-                          toast.error("Facebook Login was cancelled or failed.");
-                        }
-                      }, { scope: 'public_profile,email' });
+                      toast.error("Facebook Login was cancelled or failed.");
                     }
-                  });
+                  }, { scope: 'public_profile,email', auth_type: 'reauthenticate' });
                 }}
                 className="flex items-center justify-center gap-4 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[44px] w-full"
               >
