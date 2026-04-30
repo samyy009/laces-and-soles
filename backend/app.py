@@ -47,7 +47,9 @@ if db_url:
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        "connect_args": {"sslmode": "require"}
+        "connect_args": {"sslmode": "require"},
+        "pool_pre_ping": True,
+        "pool_recycle": 300
     }
 else:
     logger.warning("Database: DATABASE_URL not found, falling back to local PostgreSQL")
