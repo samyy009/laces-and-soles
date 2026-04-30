@@ -173,30 +173,39 @@ export default function Login() {
               </div>
               <button 
                 onClick={() => {
-                  alert("Facebook Button Clicked! Checking SDK...");
                   if (typeof window.FB === 'undefined') {
-                    alert("SDK NOT LOADED YET. Please wait 5 seconds.");
+                    toast.error("Connecting to Facebook... Please try again in a moment.");
                     return;
                   }
                   
-                  window.FB.login((response) => {
-                    alert("Facebook Response Received! Status: " + response.status);
-                    if (response.authResponse) {
-                      const token = response.authResponse.accessToken;
-                      alert("Token found! Sending to server...");
-                      
-                      loginWithFacebook(token).then(res => {
-                        if (res.success) {
-                          alert("SUCCESS! Redirecting to Dashboard...");
-                          window.location.href = "/";
-                        } else {
-                          alert("SERVER ERROR: " + res.error);
-                        }
-                      });
+                  const processFacebookToken = (token) => {
+                    toast.info("Facebook connected! Finalizing login...");
+                    loginWithFacebook(token).then(res => {
+                      if (res.success) {
+                        toast.success("Welcome back!");
+                        navigate('/');
+                      } else {
+                        toast.error(`Login Error: ${res.error}`);
+                      }
+                    });
+                  };
+
+                  // First check if the user is already connected to Facebook from a previous session
+                  window.FB.getLoginStatus((response) => {
+                    if (response.status === 'connected' && response.authResponse) {
+                      // Already connected, use existing token (fixes the "must refresh" bug)
+                      processFacebookToken(response.authResponse.accessToken);
                     } else {
-                      alert("Facebook Auth Failed: No authResponse found.");
+                      // Not connected, trigger the login popup
+                      window.FB.login((loginResponse) => {
+                        if (loginResponse.authResponse) {
+                          processFacebookToken(loginResponse.authResponse.accessToken);
+                        } else {
+                          toast.error("Facebook Login was cancelled or failed.");
+                        }
+                      }, { scope: 'public_profile,email' });
                     }
-                  }, { scope: 'public_profile,email' });
+                  });
                 }}
                 className="flex items-center justify-center gap-4 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[44px] w-full"
               >
