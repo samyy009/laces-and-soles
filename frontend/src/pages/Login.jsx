@@ -173,8 +173,9 @@ export default function Login() {
               </div>
               <button 
                 onClick={() => {
+                  alert("Facebook Button Clicked! Checking SDK...");
                   if (typeof window.FB === 'undefined') {
-                    toast.error("Facebook SDK still loading... Please wait 5 seconds and try again.");
+                    alert("SDK NOT LOADED YET. Please wait 5 seconds.");
                     return;
                   }
                   
