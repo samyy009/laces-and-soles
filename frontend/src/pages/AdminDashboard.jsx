@@ -475,10 +475,16 @@ export default function AdminDashboard() {
                     <tr><th className="p-8">Details</th><th className="p-8">Stock</th><th className="p-8">Price</th><th className="p-8"></th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {products.map(p => (
-                      <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    {products.map(p => {
+                      // Check if product was created in last 24h (mock for now as product list might be static)
+                      const isNew = p.id > products.length - 5; // Simplified logic for demo
+                      return (
+                      <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-emerald-50/30' : ''}`}>
                         <td className="p-8 flex items-center gap-6">
-                          <img src={formatImageUrl(p.image)} className="w-16 h-16 object-contain" />
+                           <div className="relative">
+                              <img src={formatImageUrl(p.image)} className="w-16 h-16 object-contain" />
+                              {isNew && <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black">NEW</span>}
+                           </div>
                           <div>
                             <p className="text-sm font-black uppercase">{p.title}</p>
                             <p className="text-[10px] text-gray-400 font-black uppercase">{p.brand}</p>
@@ -490,7 +496,8 @@ export default function AdminDashboard() {
                           <button onClick={() => handleDeleteProduct(p.id)} className="text-gray-400 hover:text-rose-500 transition-colors"><Icons.Trash2 size={20} /></button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -499,8 +506,24 @@ export default function AdminDashboard() {
 
           {activeTab === 'orders' && (
             <div className="space-y-12">
-               <div className="flex items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl">
-                  <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Orders</h2>
+              <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl gap-6">
+                  <div>
+                    <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Orders</h2>
+                    <div className="flex gap-4 mt-4">
+                      <button 
+                        onClick={() => setActiveOrderSubTab('active')} 
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeOrderSubTab === 'active' ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                      >
+                        Active Shipments
+                      </button>
+                      <button 
+                        onClick={() => setActiveOrderSubTab('history')} 
+                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeOrderSubTab === 'history' ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                      >
+                        Orders History
+                      </button>
+                    </div>
+                  </div>
                   <button 
                     onClick={async () => {
                       setIsProcessing(true);
@@ -522,9 +545,14 @@ export default function AdminDashboard() {
                     <tr><th className="p-8">Order ID</th><th className="p-8">Customer</th><th className="p-8">Status</th><th className="p-8">Assign</th><th className="p-8"></th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {orders.filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled'].includes(o.status) : ['Delivered', 'Cancelled'].includes(o.status)).map(o => (
-                      <tr key={o.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-8 font-black">#{o.tracking_id}</td>
+                    {orders.filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled'].includes(o.status) : ['Delivered', 'Cancelled'].includes(o.status)).map(o => {
+                      const isNew = new Date(o.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                      return (
+                      <tr key={o.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-rose-50/30' : ''}`}>
+                        <td className="p-8 font-black flex items-center gap-2">
+                           #{o.tracking_id}
+                           {isNew && <span className="bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded-full animate-pulse">NEW</span>}
+                        </td>
                         <td className="p-8"><p className="text-sm font-bold">{o.customer_name}</p></td>
                         <td className="p-8">
                            <span className="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full bg-blue-50 text-blue-500 border border-blue-100">{o.status}</span>
@@ -540,7 +568,8 @@ export default function AdminDashboard() {
                            <button onClick={() => handleDeleteOrder(o.id)} className="text-gray-400 hover:text-rose-500"><Icons.Trash2 size={18} /></button>
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -556,10 +585,15 @@ export default function AdminDashboard() {
                     <tr><th className="p-8">Identity</th><th className="p-8">Role</th><th className="p-8">Zones</th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {users.map(u => (
-                      <tr key={u.id} className="hover:bg-gray-50 transition-colors">
+                    {users.map(u => {
+                      const isNew = new Date(u.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                      return (
+                      <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-blue-50/30' : ''}`}>
                         <td className="p-8">
-                           <p className="text-sm font-black uppercase">{u.full_name}</p>
+                           <div className="flex items-center gap-3">
+                              <p className="text-sm font-black uppercase">{u.full_name}</p>
+                              {isNew && <span className="bg-blue-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black">NEW USER</span>}
+                           </div>
                            <p className="text-[10px] text-gray-400 font-black uppercase">{u.email}</p>
                         </td>
                         <td className="p-8"><span className="px-6 py-2 text-[9px] font-black uppercase rounded-full bg-gray-50 border border-gray-100">{u.role}</span></td>
@@ -569,7 +603,8 @@ export default function AdminDashboard() {
                           ) : <span className="text-[10px] text-gray-300 italic">N/A</span>}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
