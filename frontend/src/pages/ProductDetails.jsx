@@ -175,6 +175,90 @@ export default function ProductDetails() {
              </div>
           </div>
         </div>
+        </div>
+
+        {/* ── Reviews Section ── */}
+        <div className="mt-20 border-t border-gray-100 pt-16">
+           <div className="max-w-3xl mx-auto">
+              <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3">
+                 <Icons.MessageSquare size={24} className="text-[#ff3366]" />
+                 CUSTOMER REVIEWS
+              </h3>
+
+              <div className="space-y-8 mb-16">
+                 {product.reviews && product.reviews.length > 0 ? (
+                    product.reviews.map((rev, i) => (
+                       <div key={i} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                          <div className="flex justify-between items-start mb-4">
+                             <div className="flex items-center gap-3">
+                                <div className="size-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
+                                   <Icons.User size={20} />
+                                </div>
+                                <div>
+                                   <p className="text-xs font-black uppercase tracking-widest">{rev.user_name || "Anonymous User"}</p>
+                                   <p className="text-[10px] text-gray-400 font-bold">{new Date(rev.created_at).toLocaleDateString()}</p>
+                                </div>
+                             </div>
+                             <div className="flex">
+                                {[1,2,3,4,5].map(s => (
+                                   <Icons.Star key={s} size={12} className={s <= rev.rating ? "fill-gray-900 text-gray-900" : "text-gray-200"} />
+                                ))}
+                             </div>
+                          </div>
+                          <p className="text-sm font-medium text-gray-600 leading-relaxed italic">"{rev.comment}"</p>
+                       </div>
+                    ))
+                 ) : (
+                    <div className="text-center py-10 bg-gray-100/50 rounded-3xl border-2 border-dashed border-gray-200">
+                       <p className="text-sm font-bold text-gray-400 uppercase tracking-widest">No reviews yet. Be the first to buy and review!</p>
+                    </div>
+                 )}
+              </div>
+
+              {/* Add Review Form */}
+              <div className="bg-gray-900 rounded-[32px] p-8 text-white relative overflow-hidden">
+                 <div className="relative z-10">
+                    <h4 className="text-lg font-black uppercase tracking-tighter mb-2">WRITE A REVIEW</h4>
+                    <p className="text-xs text-gray-400 font-medium mb-6">Only verified buyers can submit reviews to ensure authenticity.</p>
+                    
+                    <form onSubmit={async (e) => {
+                       e.preventDefault();
+                       const rating = e.target.rating.value;
+                       const comment = e.target.comment.value;
+                       try {
+                          await axios.post(`${API_BASE}/products/${product.id}/reviews`, { rating: parseInt(rating), comment }, {
+                             headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                          });
+                          toast.success("Review posted successfully!");
+                          window.location.reload();
+                       } catch (err) {
+                          toast.error(err.response?.data?.error || "Failed to post review");
+                       }
+                    }} className="space-y-4">
+                       <div className="flex gap-4">
+                          <select name="rating" required className="bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-xs font-black uppercase tracking-widest outline-none focus:border-[#ff3366]">
+                             <option value="5" className="text-black">5 Stars (Excellent)</option>
+                             <option value="4" className="text-black">4 Stars (Great)</option>
+                             <option value="3" className="text-black">3 Stars (Average)</option>
+                             <option value="2" className="text-black">2 Stars (Poor)</option>
+                             <option value="1" className="text-black">1 Star (Terrible)</option>
+                          </select>
+                       </div>
+                       <textarea 
+                          name="comment" 
+                          required 
+                          placeholder="Share your experience with this product..." 
+                          className="w-full h-32 bg-white/10 border border-white/20 rounded-2xl p-4 text-sm font-medium outline-none focus:border-[#ff3366] placeholder:text-gray-500"
+                       ></textarea>
+                       <button type="submit" className="w-full bg-[#ff3366] text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg">
+                          Submit Verified Review
+                       </button>
+                    </form>
+                 </div>
+                 <Icons.Zap size={160} className="absolute bottom-[-40px] right-[-40px] opacity-10 rotate-12" />
+              </div>
+           </div>
+        </div>
       </div>
     </div>
   );

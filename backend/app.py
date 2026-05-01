@@ -716,11 +716,47 @@ def add_review(product_id):
     if not product:
         return jsonify({'error': 'Product not found'}), 404
         
+    # Verified Review Check: User must have an order with this product that is 'Delivered'
+    has_purchased = db.session.query(Order).join(OrderItem).filter(
+        Order.user_id == user_id,
+        OrderItem.product_id == product_id,
+        Order.status == 'Delivered'
+    ).first()
+    
+    if not has_purchased:
+        return jsonify({'error': 'Only customers who have purchased and received this item can leave a review.'}), 403
+        
     review = Review(user_id=user_id, product_id=product_id, rating=rating, comment=comment)
     db.session.add(review)
     db.session.commit()
     
     return jsonify({'message': 'Review added successfully', 'review': review.to_dict()}), 201
+
+@app.route('/api/orders/<tracking_id>/address', methods=['PATCH'])
+@jwt_required()
+def update_shipping_address(tracking_id):
+    user_id = int(get_jwt_identity())
+    orders = Order.query.filter_by(tracking_id=tracking_id, user_id=user_id).all()
+    if not orders:
+        return jsonify({'error': 'Order not found'}), 404
+        
+    data = request.get_json()
+    new_address = data.get('address')
+    new_pincode = data.get('pincode')
+    
+    if not new_address:
+        return jsonify({'error': 'Address is required'}), 400
+        
+    for order in orders:
+        if order.status not in ['Pending', 'Processing']:
+            return jsonify({'error': f'Cannot update address for order in {order.status} stage. It might be already packed or shipped.'}), 400
+        
+        order.shipping_address = new_address
+        if new_pincode:
+            order.pincode = new_pincode
+            
+    db.session.commit()
+    return jsonify({'message': 'Shipping address updated successfully'}), 200
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 if not os.path.exists(UPLOAD_FOLDER):

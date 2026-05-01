@@ -384,6 +384,27 @@ export default function TrackOrder() {
                       </div>
                    </div>
 
+                   {/* Dynamic ETA */}
+                   {orderInfo.current_status === 'Out for Delivery' && orderInfo.distance_km && (
+                      <div className="mb-6 bg-rose-50/50 p-4 rounded-2xl border border-rose-100/50 flex items-center justify-between">
+                         <div className="flex items-center gap-3">
+                            <div className="size-10 bg-rose-500 text-white rounded-xl flex items-center justify-center">
+                               <Icons.Clock size={20} />
+                            </div>
+                            <div>
+                               <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest">Estimated Arrival</p>
+                               <p className="text-sm font-black text-gray-950 uppercase">
+                                  {Math.ceil(orderInfo.distance_km * 3)} - {Math.ceil(orderInfo.distance_km * 3) + 5} Minutes
+                               </p>
+                            </div>
+                         </div>
+                         <div className="text-right">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Distance Left</p>
+                            <p className="text-sm font-black text-gray-950 uppercase">{orderInfo.distance_km.toFixed(1)} KM</p>
+                         </div>
+                      </div>
+                   )}
+
                    <div className="space-y-4">
                       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Items in this Tracking ID</p>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -468,6 +489,28 @@ export default function TrackOrder() {
                     className="flex-1 bg-white border-2 border-rose-500 text-rose-500 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/10"
                    >
                      Cancel Entire Order
+                   </button>
+                 )}
+
+                 {(['Processing', 'Pending'].includes(orderInfo.current_status)) && (
+                   <button 
+                    onClick={async () => {
+                      const newAddr = window.prompt("Enter new shipping address:", orderInfo.shipping_address);
+                      if (newAddr) {
+                        try {
+                          await axios.patch(`${API}/api/orders/${orderInfo.tracking_id}/address`, { address: newAddr }, {
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                          });
+                          toast.success("Address Updated!");
+                          fetchOrder(orderInfo.tracking_id);
+                        } catch (err) {
+                          toast.error(err.response?.data?.error || "Update failed");
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-white border-2 border-gray-950 text-gray-950 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-950 hover:text-white transition-all shadow-lg shadow-gray-950/10 flex items-center justify-center gap-2"
+                   >
+                     <Icons.MapPin size={14} /> Update Address
                    </button>
                  )}
 

@@ -108,6 +108,20 @@ export default function Checkout() {
 
     setIsProcessing(true);
     
+    // Final Stock Check before Payment
+    try {
+      for (const item of cartItems) {
+        const prodCheck = await axios.get(`${API}/api/products/${item.product_id}`);
+        if (prodCheck.data.product.stock < item.quantity) {
+          toast.error(`Sorry! ${prodCheck.data.product.title} just went out of stock.`);
+          setIsProcessing(false);
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Stock check failed:", err);
+    }
+    
     try {
       // Simulation Mode Bypass
       if (import.meta.env.VITE_MOCK_PAYMENT === 'true') {
@@ -502,21 +516,40 @@ export default function Checkout() {
                     </div>
                     <div className="grid sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Phone Number</label>
-                        <input type="tel" className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="+91 98765 43210"
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1">
+                           Phone Number <span className="text-rose-500">*</span>
+                        </label>
+                        <input type="tel" 
+                          required
+                          className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" 
+                          placeholder="+91 98765 43210"
+                          value={shippingData.phone}
                           onChange={e => setShippingData(p => ({ ...p, phone: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Pincode</label>
-                        <input type="text" className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="400001"
-                          onChange={e => setShippingData(p => ({ ...p, pincode: e.target.value }))}
+                        <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1">
+                           Pincode <span className="text-rose-500">*</span>
+                        </label>
+                        <input type="text" 
+                          required
+                          maxLength="6"
+                          className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" 
+                          placeholder="400001"
+                          value={shippingData.pincode}
+                          onChange={e => setShippingData(p => ({ ...p, pincode: e.target.value.replace(/\D/g, '') }))}
                         />
                       </div>
                     </div>
                     <div className="space-y-2">
-                       <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Full Address</label>
-                       <input type="text" className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="123 Street Name, Flat 4B"
+                       <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 flex items-center gap-1">
+                          Full Address <span className="text-rose-500">*</span>
+                       </label>
+                       <input type="text" 
+                         required
+                         className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" 
+                         placeholder="123 Street Name, Flat 4B"
+                         value={shippingData.address}
                          onChange={e => setShippingData(p => ({ ...p, address: e.target.value }))}
                        />
                     </div>
@@ -524,18 +557,34 @@ export default function Checkout() {
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">City</label>
                          <input type="text" className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Mumbai"
+                          value={shippingData.city}
                           onChange={e => setShippingData(p => ({ ...p, city: e.target.value }))}
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">State</label>
                          <input type="text" className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Maharashtra"
+                          value={shippingData.state}
                           onChange={e => setShippingData(p => ({ ...p, state: e.target.value }))}
                         />
                       </div>
                     </div>
                     <div className="flex gap-4">
-                      <button onClick={() => setStep(2)} className="w-full bg-blue-600 text-white py-4 text-[11px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all">
+                      <button 
+                        onClick={() => {
+                           const { phone, pincode, address } = shippingData;
+                           if (!phone || !pincode || !address) {
+                              toast.error("Please fill all mandatory fields (Phone, Pincode, Address)");
+                              return;
+                           }
+                           if (pincode.length !== 6) {
+                              toast.error("Pincode must be exactly 6 digits.");
+                              return;
+                           }
+                           setStep(2);
+                        }} 
+                        className="w-full bg-blue-600 text-white py-4 text-[11px] font-black uppercase tracking-[0.2em] rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all"
+                      >
                         Continue to KYC
                       </button>
                     </div>
