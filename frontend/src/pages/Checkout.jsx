@@ -129,7 +129,8 @@ export default function Checkout() {
     // Final Stock Check before Payment
     try {
       for (const item of cartItems) {
-        const prodCheck = await axios.get(`${API}/api/products/${item.product_id}`);
+        // In this codebase, item.id is the productId in the cartItems state
+        const prodCheck = await axios.get(`${API}/api/products/${item.id}`);
         if (prodCheck.data.product.stock < item.quantity) {
           toast.error(`Sorry! ${prodCheck.data.product.title} just went out of stock.`);
           setIsProcessing(false);
@@ -138,6 +139,9 @@ export default function Checkout() {
       }
     } catch (err) {
       console.error("Stock check failed:", err);
+      toast.error("Could not verify stock. Please try again.");
+      setIsProcessing(false);
+      return;
     }
     
     try {

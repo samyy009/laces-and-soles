@@ -1077,6 +1077,7 @@ def create_razorpay_order():
 @jwt_required()
 def verify_payment():
     data = request.get_json()
+    logger.info(f"Incoming verify-payment request: {data}")
     razorpay_order_id = data.get('razorpay_order_id')
     razorpay_payment_id = data.get('razorpay_payment_id')
     razorpay_signature = data.get('razorpay_signature')
