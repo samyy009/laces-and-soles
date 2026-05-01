@@ -1098,6 +1098,21 @@ def verify_payment():
         
         # Payment Verified! Now create the L&S orders using existing logic
         user_id = int(get_jwt_identity())
+        
+        # --- NEW: Duplicate Order Throttling ---
+        from datetime import datetime, timedelta
+        recent_order = Order.query.filter_by(user_id=user_id)\
+            .filter(Order.created_at >= datetime.utcnow() - timedelta(seconds=60))\
+            .first()
+        
+        if recent_order:
+            logger.warning(f"Throttling duplicate order attempt for user {user_id}")
+            return jsonify({
+                'success': True, 
+                'orders': [recent_order.to_dict()],
+                'message': 'Duplicate order prevented. Using existing order.'
+            }), 200
+        # --------------------------------------
         cart_items = CartItem.query.filter_by(user_id=user_id).all()
         
         if not cart_items:

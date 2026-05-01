@@ -585,7 +585,13 @@ export default function Checkout() {
                           value={shippingData.state}
                           onChange={e => setShippingData(p => ({ ...p, state: e.target.value }))}
                         />
-                      </div>
+                    <div className="space-y-2">
+                       <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Special Instructions / Gift Message (Optional)</label>
+                       <textarea 
+                         className="w-full bg-[#f6f9fc] border border-gray-100 rounded-xl p-3 text-sm font-bold focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none" 
+                         placeholder="e.g. Please wrap it as a gift or Leave at the front desk."
+                         onChange={e => setShippingData(p => ({ ...p, notes: e.target.value }))}
+                       ></textarea>
                     </div>
                     <div className="flex gap-4">
                       <button 

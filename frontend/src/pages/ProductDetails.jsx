@@ -165,12 +165,23 @@ export default function ProductDetails() {
                    <p className="text-[9px] font-bold text-gray-400 mt-3 tracking-wide">Free shipping over ₹5000 • Easy 14 days returns</p>
                 </div>
 
-                <button
-                  onClick={() => addToCart(product.id, 1, selectedSize)}
-                  className="w-full h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-[#ff3366] transition-colors shadow-xl"
-                >
-                  <Icons.ShoppingBag size={18} /> Add to Cart (₹{product.price.toLocaleString()})
-                </button>
+                {product.stock > 0 ? (
+                  <button
+                    onClick={() => addToCart(product.id, 1, selectedSize)}
+                    className="w-full h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-[#ff3366] transition-colors shadow-xl"
+                  >
+                    <Icons.ShoppingBag size={18} /> Add to Cart (₹{product.price.toLocaleString()})
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      toast.info("We'll notify you when this is back in stock!");
+                    }}
+                    className="w-full h-12 bg-rose-100 text-[#ff3366] rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-rose-200 transition-colors border-2 border-rose-200"
+                  >
+                    <Icons.Bell size={18} /> Notify Me When Available
+                  </button>
+                )}
 
              </div>
           </div>
