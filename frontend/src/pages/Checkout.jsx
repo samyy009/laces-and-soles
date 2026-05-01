@@ -109,7 +109,42 @@ export default function Checkout() {
     setIsProcessing(true);
     
     try {
-      // 1. Create Order on Backend
+      // Simulation Mode Bypass
+      if (import.meta.env.VITE_MOCK_PAYMENT === 'true') {
+        toast.info("Simulation Mode: Processing Demo Payment...");
+        const mockResponse = {
+          razorpay_order_id: "order_MOCK_" + Math.random().toString(36).substring(7),
+          razorpay_payment_id: "pay_MOCK_" + Math.random().toString(36).substring(7),
+          razorpay_signature: "MOCK_SIGNATURE"
+        };
+        
+        try {
+          const verifyRes = await axios.post(`${API}/api/razorpay/verify-payment`, {
+            ...mockResponse,
+            shipping_details: shippingData
+          }, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+          });
+
+          if (verifyRes.data.success) {
+            const firstOrder = verifyRes.data.orders[0];
+            setConfirmedOrderId(firstOrder.tracking_id);
+            setConfirmedOrder(firstOrder);
+            setStep(4);
+            setSearchParams({ id: firstOrder.tracking_id }, { replace: true });
+            clearCart();
+            toast.success("Demo Payment Successful!");
+          }
+        } catch (err) {
+          console.error("Mock Verify Error:", err);
+          toast.error("Simulation failed. Check backend.");
+        } finally {
+          setIsProcessing(false);
+        }
+        return;
+      }
+
+      // 1. Create Order on Backend (Real Flow)
       const orderRes = await axios.post(`${API}/api/razorpay/create-order`, {}, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
       });
