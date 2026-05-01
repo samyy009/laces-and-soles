@@ -1126,6 +1126,10 @@ def verify_payment():
         distance_km = round(random.uniform(0.5, 8.0), 2)
 
         for index, item in enumerate(cart_items):
+            if not item.product:
+                logger.error(f"Cart Item {item.id} has no associated product!")
+                continue
+                
             # Generate Tracking ID
             chars = string.ascii_uppercase + string.digits
             rand_id = ''.join(random.choices(chars, k=8))
