@@ -10,7 +10,7 @@ import autoTable from 'jspdf-autotable';
 
 export default function UserDashboard() {
   const { user, logout, loading, updateUser } = useAuth();
-  const { wishlistItems } = useShop();
+  const { wishlistItems, formatImageUrl } = useShop();
   const navigate = useNavigate();
   
   const [orders, setOrders] = useState([]);
@@ -257,7 +257,7 @@ export default function UserDashboard() {
                                   {order.items.map(item => (
                                      <div key={item.id} className="flex items-center gap-4">
                                         <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center p-2">
-                                           <img src={item.product?.image} alt="" className="max-w-full max-h-full object-contain" />
+                                           <img src={formatImageUrl(item.product?.image)} alt="" className="max-w-full max-h-full object-contain" />
                                         </div>
                                         <div>
                                            <p className="text-sm font-black text-gray-900 uppercase">{item.product?.title}</p>
@@ -317,7 +317,7 @@ export default function UserDashboard() {
                                   {order.items.map(item => (
                                      <div key={item.id} className="flex items-center gap-4">
                                         <div className="w-12 h-12 bg-white border border-gray-100 rounded-lg flex items-center justify-center p-2 filter grayscale">
-                                           <img src={item.product?.image} alt="" className="max-w-full max-h-full object-contain" />
+                                           <img src={formatImageUrl(item.product?.image)} alt="" className="max-w-full max-h-full object-contain" />
                                         </div>
                                         <div>
                                            <p className="text-xs font-black text-gray-600 uppercase">{item.product?.title}</p>
