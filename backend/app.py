@@ -1399,9 +1399,9 @@ def delete_order(order_id):
         db.session.rollback()
         return jsonify({'error': 'Failed to delete order', 'details': str(e)}), 500
 
-@app.route('/api/orders/<int:order_id>/cancel', methods=['PATCH'])
+@app.route('/api/orders/<int:order_id>/cancel_v2', methods=['PATCH'])
 @jwt_required()
-def cancel_order(order_id):
+def cancel_order_v2(order_id):
     user_id = int(get_jwt_identity())
     order = db.session.get(Order, order_id)
     
