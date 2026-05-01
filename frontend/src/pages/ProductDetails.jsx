@@ -3,13 +3,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import axios from 'axios';
 import { useShop, API } from '../context/ShopContext';
+import { toast } from 'react-toastify';
 
 const API_BASE = `${API}/api`;
 
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, toggleWishlist, wishlistItems, isInWishlist, formatImageUrl } = useShop();
+  const { addToCart, formatImageUrl } = useShop();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -68,7 +69,6 @@ export default function ProductDetails() {
           {/* ── Gallery ── */}
           <div className="space-y-4">
             <div className="relative aspect-[4/3] md:aspect-square md:max-h-[520px] bg-[#f5f5f5] rounded-[32px] flex items-center justify-center p-8 overflow-hidden border border-gray-100 shadow-sm">
-               {/* Removed wishlist button as requested per standardization */}
               <img
                 src={formatImageUrl(activeImage)}
                 alt={product.title}
@@ -116,7 +116,7 @@ export default function ProductDetails() {
                          <Icons.Star key={star} size={16} className={star <= (product.rating||4.5) ? "fill-gray-900 text-gray-900" : "text-gray-200"} />
                       ))}
                    </div>
-                   <span className="text-[10px] font-bold text-gray-400">(10 reviews)</span>
+                   <span className="text-[10px] font-bold text-gray-400">({product.reviews?.length || 0} reviews)</span>
                 </div>
 
                 <div className="mb-4">
@@ -125,7 +125,7 @@ export default function ProductDetails() {
 
                 <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-4">
                    <div className="size-2 rounded-full bg-green-500" />
-                   <span className="text-[10px] font-black uppercase tracking-widest text-green-600">LIVE INVENTORY: {product.stock || 43} UNITS AVAILABLE</span>
+                   <span className="text-[10px] font-black uppercase tracking-widest text-green-600">LIVE INVENTORY: {product.stock || 0} UNITS AVAILABLE</span>
                 </div>
 
                 <p className="text-sm font-medium text-gray-500 leading-relaxed max-w-md mb-6">
@@ -182,10 +182,8 @@ export default function ProductDetails() {
                     <Icons.Bell size={18} /> Notify Me When Available
                   </button>
                 )}
-
              </div>
           </div>
-        </div>
         </div>
 
         {/* ── Reviews Section ── */}
