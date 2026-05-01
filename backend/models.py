@@ -86,7 +86,8 @@ class Product(db.Model):
             'colors': self.colors.split(',') if self.colors else [],
             'sizes': self.sizes.split(',') if self.sizes else [],
             'collection': self.collection,
-            'gallery': self.gallery.split(',') if self.gallery else []
+            'gallery': self.gallery.split(',') if self.gallery else [],
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None
         }
 
 class Order(db.Model):

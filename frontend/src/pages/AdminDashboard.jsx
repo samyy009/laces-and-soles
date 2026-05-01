@@ -476,8 +476,7 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {products.map(p => {
-                      // Check if product was created in last 24h (mock for now as product list might be static)
-                      const isNew = p.id > products.length - 5; // Simplified logic for demo
+                      const isNew = p.created_at && new Date(p.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-emerald-50/30' : ''}`}>
                         <td className="p-8 flex items-center gap-6">
@@ -546,7 +545,7 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {orders.filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled'].includes(o.status) : ['Delivered', 'Cancelled'].includes(o.status)).map(o => {
-                      const isNew = new Date(o.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                      const isNew = o.created_at && new Date(o.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={o.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-rose-50/30' : ''}`}>
                         <td className="p-8 font-black flex items-center gap-2">
@@ -586,7 +585,7 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {users.map(u => {
-                      const isNew = new Date(u.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000);
+                      const isNew = u.created_at && new Date(u.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-blue-50/30' : ''}`}>
                         <td className="p-8">
