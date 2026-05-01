@@ -1170,6 +1170,18 @@ def verify_payment():
             created_orders.append(new_order.to_dict())
 
         db.session.commit()
+        
+        # Send Confirmation Email (using the first order created)
+        if created_orders:
+            try:
+                # We need the actual Order object, not the dict, for the email helper
+                first_order_id = created_orders[0]['id']
+                actual_order = db.session.get(Order, first_order_id)
+                if actual_order:
+                    send_order_confirmation_email(user.email, user.full_name, actual_order)
+            except Exception as email_err:
+                logger.error(f"Failed to send confirmation email: {email_err}")
+
         return jsonify({
             'success': True, 
             'message': 'Payment verified and orders created',
