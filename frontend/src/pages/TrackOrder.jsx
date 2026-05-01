@@ -417,6 +417,83 @@ export default function TrackOrder() {
                    </div>
                 </div>
 
+               {/* Special Status Alerts */}
+               {orderInfo.current_status === 'Delivery Attempt Failed' && (
+                 <div className="bg-amber-50 border border-amber-100 p-6 rounded-3xl flex items-start gap-4">
+                    <div className="size-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shrink-0">
+                       <Icons.AlertTriangle size={20} />
+                    </div>
+                    <div>
+                       <h4 className="text-sm font-black text-amber-900 uppercase tracking-tight">Delivery Attempt Failed</h4>
+                       <p className="text-xs text-amber-700 font-medium mt-1">
+                          Our driver tried to deliver but: <span className="font-bold underline">{orderInfo.failure_reason || 'Customer not available'}</span>. 
+                          We will re-attempt delivery within 24 hours.
+                       </p>
+                    </div>
+                 </div>
+               )}
+
+               {orderInfo.current_status === 'Return Requested' && (
+                 <div className="bg-rose-50 border border-rose-100 p-6 rounded-3xl flex items-start gap-4">
+                    <div className="size-10 bg-rose-500 text-white rounded-xl flex items-center justify-center shrink-0">
+                       <Icons.RotateCcw size={20} />
+                    </div>
+                    <div>
+                       <h4 className="text-sm font-black text-rose-900 uppercase tracking-tight">Return in Progress</h4>
+                       <p className="text-xs text-rose-700 font-medium mt-1">
+                          Reason: <span className="font-bold underline">{orderInfo.return_reason}</span>. 
+                          Our executive will visit your address for pickup soon.
+                       </p>
+                    </div>
+                 </div>
+               )}
+
+               {/* Order Actions */}
+               <div className="flex flex-wrap gap-4">
+                 {(['Processing', 'Packed', 'Pending'].includes(orderInfo.current_status)) && (
+                   <button 
+                    onClick={async () => {
+                      if (window.confirm("Are you sure you want to cancel this order?")) {
+                        try {
+                          await axios.post(`${API}/api/orders/${orderInfo.tracking_id}/cancel`, {}, {
+                            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                          });
+                          toast.success("Order Cancelled Successfully");
+                          fetchOrder(orderInfo.tracking_id);
+                        } catch (err) {
+                          toast.error(err.response?.data?.error || "Cancellation failed");
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-white border-2 border-rose-500 text-rose-500 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/10"
+                   >
+                     Cancel Entire Order
+                   </button>
+                 )}
+
+                 {orderInfo.current_status === 'Delivered' && (
+                    <button 
+                      onClick={async () => {
+                        const reason = window.prompt("Please enter the reason for return (e.g. Wrong Size, Damaged):");
+                        if (reason) {
+                          try {
+                            await axios.post(`${API}/api/orders/${orderInfo.tracking_id}/return`, { reason }, {
+                              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                            });
+                            toast.success("Return request submitted!");
+                            fetchOrder(orderInfo.tracking_id);
+                          } catch (err) {
+                            toast.error(err.response?.data?.error || "Return failed");
+                          }
+                        }
+                      }}
+                      className="flex-1 bg-white border-2 border-blue-500 text-blue-500 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg shadow-blue-500/10"
+                    >
+                      Request Return
+                    </button>
+                 )}
+               </div>
+
                {/* MAP SECTION */}
                <div className="bg-white rounded-[40px] shadow-2xl shadow-gray-950/5 border border-gray-100 overflow-hidden relative">
                   <div className="absolute top-6 left-6 right-6 z-[99] flex justify-between items-center pointer-events-none">

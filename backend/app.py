@@ -1123,6 +1123,72 @@ def verify_payment():
         logger.error(f"Payment Verification Failed: {e}")
         return jsonify({'error': 'Invalid payment signature or verification failed'}), 400
 
+@app.route('/api/orders/<tracking_id>/cancel', methods=['POST'])
+@jwt_required()
+def cancel_order(tracking_id):
+    user_id = int(get_jwt_identity())
+    orders = Order.query.filter_by(tracking_id=tracking_id, user_id=user_id).all()
+    if not orders:
+        return jsonify({'error': 'Order not found'}), 404
+    
+    data = request.get_json()
+    reason = data.get('reason', 'User cancelled')
+    
+    for order in orders:
+        if order.status not in ['Pending', 'Processing', 'Packed']:
+            return jsonify({'error': f'Cannot cancel order in {order.status} stage'}), 400
+        
+        # Restore Stock
+        for item in order.items:
+            item.product.stock += item.quantity
+        
+        order.status = 'Cancelled'
+        order.cancellation_reason = reason
+    
+    db.session.commit()
+    return jsonify({'message': 'Order cancelled successfully'}), 200
+
+@app.route('/api/orders/<tracking_id>/return', methods=['POST'])
+@jwt_required()
+def return_order(tracking_id):
+    user_id = int(get_jwt_identity())
+    orders = Order.query.filter_by(tracking_id=tracking_id, user_id=user_id).all()
+    if not orders:
+        return jsonify({'error': 'Order not found'}), 404
+    
+    data = request.get_json()
+    reason = data.get('reason', 'Quality issues')
+    
+    for order in orders:
+        if order.status != 'Delivered':
+            return jsonify({'error': 'Only delivered items can be returned'}), 400
+        
+        order.status = 'Return Requested'
+        order.return_reason = reason
+    
+    db.session.commit()
+    return jsonify({'message': 'Return request submitted. Our executive will pick it up soon.'}), 200
+
+@app.route('/api/driver/orders/<int:order_id>/fail', methods=['PATCH'])
+@jwt_required()
+def mark_delivery_failed(order_id):
+    driver_id = int(get_jwt_identity())
+    order = db.session.get(Order, order_id)
+    if not order or order.driver_id != driver_id:
+        return jsonify({'error': 'Order not found or unauthorized'}), 404
+        
+    data = request.get_json()
+    reason = data.get('reason', 'Customer not available')
+    
+    order.status = 'Delivery Attempt Failed'
+    order.failure_reason = reason
+    db.session.commit()
+    
+    # Broadcast to user
+    socketio.emit('status_updated', {'order_id': order.id, 'status': 'Delivery Attempt Failed', 'reason': reason}, room=f"order_{order.id}")
+    
+    return jsonify({'message': 'Delivery attempt marked as failed', 'status': 'Delivery Attempt Failed'}), 200
+
 @app.route('/api/orders', methods=['GET', 'POST'])
 @jwt_required()
 def handle_orders():

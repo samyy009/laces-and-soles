@@ -103,10 +103,13 @@ class Order(db.Model):
     tracking_id = db.Column(db.String(50), unique=True, nullable=True)
     payment_method = db.Column(db.String(50), nullable=True)
     
-    # New Fields for Delivery Confirmation
+    # New Fields for Delivery Confirmation & Edge Cases
     distance_km = db.Column(db.Float, nullable=True)
     delivery_otp = db.Column(db.String(6), nullable=True)
     is_otp_verified = db.Column(db.Boolean, default=False)
+    failure_reason = db.Column(db.String(255), nullable=True)
+    return_reason = db.Column(db.String(255), nullable=True)
+    cancellation_reason = db.Column(db.String(255), nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -130,6 +133,9 @@ class Order(db.Model):
             'distance_km': self.distance_km,
             'delivery_otp': self.delivery_otp,
             'is_otp_verified': self.is_otp_verified,
+            'failure_reason': self.failure_reason,
+            'return_reason': self.return_reason,
+            'cancellation_reason': self.cancellation_reason,
             'shipping_address': self.shipping_address,
             'pincode': self.pincode,
             'payment_method': self.payment_method,

@@ -264,72 +264,90 @@ export default function DriverDashboard() {
                     </button>
                   )}
 
-                  {order.status === 'Out for Delivery' && (
                     <div className="w-full space-y-4">
-                      {!order.delivery_otp ? (
+                      <div className="flex gap-4">
                         <button 
-                          onClick={async () => {
-                            try {
-                              const res = await axios.post(`${API}/api/driver/orders/${order.id}/send-otp`, {}, {
+                          onClick={() => {
+                            const reason = window.prompt("Reason for failure (e.g. User not available, Locked house):");
+                            if (reason) {
+                              axios.patch(`${API}/api/driver/orders/${order.id}/fail`, { reason }, {
                                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+                              }).then(() => {
+                                toast.warning("Delivery marked as failed");
+                                fetchOrders();
                               });
-                              toast.info(`OTP sent to customer: ${res.data.otp}`);
-                              fetchOrders();
-                            } catch (err) {
-                              toast.error("Failed to send OTP");
                             }
                           }}
-                          className="w-full bg-zinc-800 text-white font-black py-4 rounded-2xl hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2"
+                          className="px-6 bg-zinc-800 text-rose-500 border border-rose-500/30 font-black py-4 rounded-2xl hover:bg-rose-500/10 transition-all flex items-center justify-center gap-2"
                         >
-                          <Icons.Send size={18} /> SEND VERIFICATION OTP
+                           <Icons.XCircle size={18} /> FAIL
                         </button>
-                      ) : !order.is_otp_verified ? (
-                        <div className="bg-zinc-800/50 border border-zinc-700 p-4 rounded-2xl">
-                          <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-3 text-center">Verify Delivery Code</p>
-                          <div className="flex gap-2">
-                             <input 
-                               type="text" 
-                               placeholder="Enter 6-digit OTP" 
-                               id={`otp-${order.id}`}
-                               className="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-sm font-black text-center tracking-[0.5em] outline-none focus:border-rose-500"
-                             />
-                             <button 
-                               onClick={async () => {
-                                 const otp = document.getElementById(`otp-${order.id}`).value;
-                                 try {
-                                   await axios.post(`${API}/api/driver/orders/${order.id}/verify-otp`, { otp }, {
-                                     headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-                                   });
-                                   toast.success("OTP Verified Successfully!");
-                                   fetchOrders();
-                                 } catch (err) {
-                                   toast.error("Invalid OTP Code");
-                                 }
-                               }}
-                               className="px-6 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors"
-                             >
-                               VERIFY
-                             </button>
+
+                        {!order.delivery_otp ? (
+                          <button 
+                            onClick={async () => {
+                              try {
+                                const res = await axios.post(`${API}/api/driver/orders/${order.id}/send-otp`, {}, {
+                                  headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+                                });
+                                toast.info(`OTP sent to customer: ${res.data.otp}`);
+                                fetchOrders();
+                              } catch (err) {
+                                toast.error("Failed to send OTP");
+                              }
+                            }}
+                            className="flex-1 bg-zinc-800 text-white font-black py-4 rounded-2xl hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <Icons.Send size={18} /> SEND VERIFICATION OTP
+                          </button>
+                        ) : !order.is_otp_verified ? (
+                          <div className="flex-1 bg-zinc-800/50 border border-zinc-700 p-4 rounded-2xl">
+                            <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mb-3 text-center">Verify Delivery Code</p>
+                            <div className="flex gap-2">
+                               <input 
+                                 type="text" 
+                                 placeholder="Enter 6-digit OTP" 
+                                 id={`otp-${order.id}`}
+                                 className="flex-1 bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-3 text-sm font-black text-center tracking-[0.5em] outline-none focus:border-rose-500"
+                               />
+                               <button 
+                                 onClick={async () => {
+                                   const otp = document.getElementById(`otp-${order.id}`).value;
+                                   try {
+                                     await axios.post(`${API}/api/driver/orders/${order.id}/verify-otp`, { otp }, {
+                                       headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+                                     });
+                                     toast.success("OTP Verified Successfully!");
+                                     fetchOrders();
+                                   } catch (err) {
+                                     toast.error("Invalid OTP Code");
+                                   }
+                                 }}
+                                 className="px-6 bg-rose-600 text-white font-black rounded-xl hover:bg-rose-500 transition-colors"
+                               >
+                                 VERIFY
+                               </button>
+                            </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="flex gap-4">
-                          <button 
-                            onClick={() => updateStatus(order.id, 'Delivered')}
-                            className="flex-1 bg-green-600 text-white font-black py-4 rounded-2xl hover:bg-green-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
-                          >
-                            <Icons.CheckCircle size={18} /> COMPLETE DELIVERY
-                          </button>
-                          <button 
-                            onClick={() => stopTracking()}
-                            className="px-6 bg-zinc-800 text-white font-black py-4 rounded-2xl hover:bg-zinc-700 transition-colors"
-                          >
-                            PAUSE
-                          </button>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="flex-1 flex gap-4">
+                            <button 
+                              onClick={() => updateStatus(order.id, 'Delivered')}
+                              className="flex-1 bg-green-600 text-white font-black py-4 rounded-2xl hover:bg-green-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
+                            >
+                              <Icons.CheckCircle size={18} /> COMPLETE DELIVERY
+                            </button>
+                            <button 
+                              onClick={() => stopTracking()}
+                              className="px-6 bg-zinc-800 text-white font-black py-4 rounded-2xl hover:bg-zinc-700 transition-colors"
+                            >
+                              PAUSE
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  )}
+
                   
                   {order.status === 'Delivered' && (
                     <div className="w-full py-4 text-center text-green-500 font-bold bg-green-500/5 rounded-2xl border border-green-500/20 flex items-center justify-center gap-2">
