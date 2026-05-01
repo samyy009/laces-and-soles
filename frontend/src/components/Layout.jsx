@@ -32,7 +32,7 @@ export default function Layout({ children }) {
       {/* ─── Scroll to top button */}
       {showGoTop && (
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'auto' })}
           aria-label="Go to top"
           className="fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-rose-500 text-white shadow-2xl transition-all hover:bg-rose-600 hover:-translate-y-2 active:scale-90"
         >
