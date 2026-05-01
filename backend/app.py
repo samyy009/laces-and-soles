@@ -1098,9 +1098,10 @@ def verify_payment():
         
         # Payment Verified! Now create the L&S orders using existing logic
         user_id = int(get_jwt_identity())
+        logger.info(f"Processing verified payment for user {user_id}")
         
-        # --- NEW: Duplicate Order Throttling ---
-        from datetime import datetime, timedelta
+        # --- Duplicate Order Throttling ---
+        # Using the already imported datetime/timedelta
         recent_order = Order.query.filter_by(user_id=user_id)\
             .filter(Order.created_at >= datetime.utcnow() - timedelta(seconds=60))\
             .first()
@@ -1172,7 +1173,8 @@ def verify_payment():
 
     except Exception as e:
         logger.error(f"Payment Verification Failed: {e}")
-        return jsonify({'error': 'Invalid payment signature or verification failed'}), 400
+        logger.error(traceback.format_exc())
+        return jsonify({'error': f'Verification failed: {str(e)}'}), 400
 
 @app.route('/api/orders/<tracking_id>/cancel', methods=['POST'])
 @jwt_required()
