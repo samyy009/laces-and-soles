@@ -641,17 +641,23 @@ export default function TrackOrder() {
                              <Icons.User size={30} />
                           </div>
                           <div>
-                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Delivery Partner(s)</p>
-                             <p className="text-lg font-black text-gray-950 uppercase tracking-tight">
-                                {Object.keys(driverLocations).length > 1 
-                                   ? `${Object.keys(driverLocations).length} Drivers En Route` 
-                                   : 'Assigned Driver'}
-                             </p>
-                             <div className="flex items-center gap-2 mt-1">
-                                <Icons.Star size={10} className="text-yellow-400 fill-yellow-400" />
-                                <span className="text-[10px] font-black text-gray-900">4.9 (1k+ deliveries)</span>
-                             </div>
-                          </div>
+                              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Delivery Partner</p>
+                              <p className="text-lg font-black text-gray-950 uppercase tracking-tight">
+                                 {Object.keys(driverLocations).length > 1 
+                                    ? `${Object.keys(driverLocations).length} Drivers En Route` 
+                                    : 'RAHUL SHARMA'}
+                              </p>
+                              <div className="flex items-center gap-3 mt-1">
+                                 <div className="flex items-center gap-1">
+                                    <Icons.Star size={10} className="text-yellow-400 fill-yellow-400" />
+                                    <span className="text-[10px] font-black text-gray-900">4.8</span>
+                                 </div>
+                                 <div className="size-1 bg-gray-200 rounded-full"></div>
+                                 <span className="text-[10px] font-bold text-gray-400 uppercase">540+ Deliveries</span>
+                                 <div className="size-1 bg-gray-200 rounded-full"></div>
+                                 <span className="text-[10px] font-black text-green-500 uppercase">Verified</span>
+                              </div>
+                           </div>
                        </div>
                        <div className="flex items-center gap-3">
                           <button className="size-12 rounded-2xl bg-gray-950 text-white flex items-center justify-center hover:bg-rose-500 transition-all shadow-lg" title="Message Driver">

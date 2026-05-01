@@ -63,9 +63,27 @@ export default function Checkout() {
   }, [searchParams]);
 
   const subtotal = getCartTotal();
-  const shipping = 15.00;
+  
+  // Dynamic Shipping Calculation (Real-world logic)
+  const calculateShipping = () => {
+    const pin = parseInt(shippingData.pincode);
+    if (!pin) return 15.00;
+    
+    // Central Hubli Pin is 580020. Distance simulated by pin difference.
+    const distance = Math.abs(pin - 580020) || 1; 
+    const fee = 15.00 + (distance * 5); // ₹15 base + ₹5 per simulated KM
+    return Math.min(fee, 150); // Cap shipping at ₹150
+  };
+
+  const shipping = calculateShipping();
   const discountAmount = discount.active ? (subtotal * (discount.percent / 100)) : 0;
   const total = (subtotal - discountAmount) + shipping;
+
+  // Real-time Operating Hours Check
+  const isAfterHours = () => {
+    const hour = new Date().getHours();
+    return hour >= 22 || hour < 7; // Closed between 10 PM and 7 AM
+  };
 
   const handleApplyPromo = async () => {
     if (!promoCode.trim()) {
@@ -683,8 +701,18 @@ export default function Checkout() {
             </div>
 
             {/* Sidebar Summary */}
-            <div className="space-y-6">
-              <div className="bg-white rounded-[24px] p-6 border shadow-sm sticky top-32">
+            <div className="space-y-6 sticky top-[100px]">
+              {isAfterHours() && (
+                <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3 animate-pulse">
+                    <Icons.Moon size={20} className="text-amber-600 shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-black text-amber-900 uppercase tracking-widest">Late Night Ordering</p>
+                      <p className="text-[10px] font-medium text-amber-700 mt-0.5">We are currently closed. Your order will be processed at 9:00 AM tomorrow.</p>
+                    </div>
+                </div>
+              )}
+              
+              <div className="bg-white rounded-[32px] p-8 border shadow-xl shadow-blue-500/5">
                 <h4 className="text-sm font-black uppercase tracking-widest border-b border-gray-100 pb-4 mb-6">Order Details</h4>
                 
                 <div className="space-y-6 max-h-60 overflow-y-auto pr-2 custom-scrollbar-light mb-6">
