@@ -184,6 +184,25 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveReturn = async (orderId) => {
+    try {
+      const res = await fetch(`${API}/api/admin/orders/${orderId}/approve-return`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+      });
+      if (res.ok) {
+        toast.success("Return approved and items restocked");
+        fetch(`${API}/api/admin/orders`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` } })
+        .then(res => res.json()).then(data => setOrders(data.orders || []));
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to approve return");
+      }
+    } catch (err) {
+      toast.error("Error approving return");
+    }
+  };
+
   const handleDownloadInvoice = (order) => {
     try {
       const doc = new jsPDF();
@@ -594,7 +613,7 @@ export default function AdminDashboard() {
                     <tr><th className="p-8">Order ID</th><th className="p-8">Customer</th><th className="p-8">Status</th><th className="p-8">Assign</th><th className="p-8"></th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {orders.filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled'].includes(o.status) : ['Delivered', 'Cancelled'].includes(o.status)).map(o => {
+                    {orders.filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled', 'Returned'].includes(o.status) : ['Delivered', 'Cancelled', 'Returned'].includes(o.status)).map(o => {
                       const isNew = o.created_at && new Date(o.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={o.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-rose-50/30' : ''}`}>
@@ -613,6 +632,11 @@ export default function AdminDashboard() {
                           </select>
                         </td>
                         <td className="p-8 text-right flex gap-2">
+                           {o.status === 'Return Requested' && (
+                             <button onClick={() => handleApproveReturn(o.id)} className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-orange-200 transition-colors" title="Approve Return & Restock">
+                               Approve
+                             </button>
+                           )}
                            <button onClick={() => handleDownloadInvoice(o)} className="text-gray-400 hover:text-blue-500"><Icons.FileText size={18} /></button>
                            <button onClick={() => handleDeleteOrder(o.id)} className="text-gray-400 hover:text-rose-500"><Icons.Trash2 size={18} /></button>
                         </td>

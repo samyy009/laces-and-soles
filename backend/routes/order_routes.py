@@ -249,6 +249,7 @@ def cancel_order(tracking_id):
     db.session.commit()
     return jsonify({'message': 'Order cancelled'}), 200
 
+
 @order_bp.route('/api/orders/<tracking_id>/return', methods=['POST'])
 @jwt_required()
 def return_order(tracking_id):

@@ -368,3 +368,28 @@ def delete_coupon(id):
     db.session.delete(coupon)
     db.session.commit()
     return jsonify({'message': 'Coupon deleted'}), 200
+
+@admin_bp.route('/api/admin/orders/<int:id>/approve-return', methods=['POST'])
+@jwt_required()
+def approve_return(id):
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    order = db.session.get(Order, id)
+    if not order:
+        return jsonify({'error': 'Order not found'}), 404
+        
+    if order.status != 'Return Requested':
+        return jsonify({'error': 'Order is not pending a return request'}), 400
+        
+    order.status = 'Returned'
+    
+    # Restock the items
+    for item in order.items:
+        Product.query.filter_by(id=item.product_id).update({"stock": Product.stock + item.quantity})
+        updated_product = db.session.get(Product, item.product_id)
+        socketio.emit('inventory_updated', {'product_id': item.product_id, 'new_stock': updated_product.stock})
+        
+    db.session.commit()
+    return jsonify({'message': 'Return approved and items restocked successfully.'}), 200

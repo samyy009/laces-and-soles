@@ -96,6 +96,23 @@ export default function UserDashboard() {
     }
   };
 
+  const requestReturn = async (tracking_id) => {
+    const reason = window.prompt("Please provide a reason for the return:");
+    if (!reason) return;
+    try {
+      await axios.post(`${API}/api/orders/${tracking_id}/return`, { reason }, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      toast.success("Return requested successfully");
+      const res = await axios.get(`${API}/api/orders`, {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      setOrders(res.data.orders);
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to request return");
+    }
+  };
+
   const handleDownloadInvoice = (order) => {
     try {
       const doc = new jsPDF();
@@ -277,13 +294,13 @@ export default function UserDashboard() {
                    )}
 
                    <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter mb-4 mt-8">Past Orders</h2>
-                   {orders.filter(o => o.status === 'Delivered' || o.status === 'Cancelled').length === 0 ? (
+                   {orders.filter(o => ['Delivered', 'Cancelled', 'Return Requested', 'Returned'].includes(o.status)).length === 0 ? (
                       <div className="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">No past orders yet</h3>
                       </div>
                    ) : (
                       <div className="space-y-6 opacity-80 hover:opacity-100 transition-opacity">
-                         {orders.filter(o => o.status === 'Delivered' || o.status === 'Cancelled').map(order => (
+                         {orders.filter(o => ['Delivered', 'Cancelled', 'Return Requested', 'Returned'].includes(o.status)).map(order => (
                             <div key={order.id} className="border border-gray-100 rounded-2xl p-4 relative bg-gray-50">
                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-200 pb-4">
                                   <div className="flex items-center gap-6">
@@ -298,12 +315,26 @@ export default function UserDashboard() {
                                         </p>
                                      </div>
                                   </div>
+                                  </div>
                                   <div className="flex flex-wrap items-center justify-end gap-3">
                                      <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shrink-0 ${
-                                        order.status === 'Delivered' ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'
+                                        order.status === 'Delivered' ? 'bg-green-50 text-green-600 border-green-100' :
+                                        order.status === 'Returned' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                        order.status === 'Return Requested' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                        'bg-red-50 text-red-600 border-red-100'
                                      }`}>
                                         {order.status}
                                      </span>
+                                     
+                                     {order.status === 'Delivered' && (
+                                        <button 
+                                          onClick={() => requestReturn(order.tracking_id)} 
+                                          className="px-4 py-1.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-orange-500 transition-colors shadow-sm"
+                                        >
+                                           Return Order
+                                        </button>
+                                     )}
+
                                      <button 
                                        onClick={() => deleteOrder(order.id)} 
                                        className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
