@@ -79,11 +79,31 @@ def create_razorpay_order():
     if not razorpay_client:
         return jsonify({'error': 'Razorpay not configured on server'}), 500
     user_id = int(get_jwt_identity())
+    
+    data = request.get_json() or {}
+    coupon_code = data.get('coupon_code', '').upper()
+    
     cart_items = CartItem.query.filter_by(user_id=user_id).all()
     if not cart_items:
         return jsonify({'error': 'Cart is empty'}), 400
+    
     total_price = sum((item.product.price * item.quantity) for item in cart_items if item.product)
-    if total_price > 0: total_price += 15.00
+    
+    # Apply coupon if valid
+    discount_percentage = 0
+    if coupon_code:
+        coupon = Coupon.query.filter_by(code=coupon_code, is_active=True).first()
+        if coupon:
+            discount_percentage = coupon.discount_percentage
+        elif coupon_code == 'FLIPKART10':
+            discount_percentage = 10
+            
+    if discount_percentage > 0:
+        discount_amount = total_price * (discount_percentage / 100)
+        total_price -= discount_amount
+        
+    if total_price > 0: total_price += 15.00 # Shipping
+    
     amount_paise = int(total_price * 100)
     try:
         razorpay_order = razorpay_client.order.create({"amount": amount_paise, "currency": "INR", "payment_capture": 1})

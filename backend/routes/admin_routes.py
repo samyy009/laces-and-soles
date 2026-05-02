@@ -11,7 +11,7 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash
 
 from extensions import db, socketio
-from models import User, Product, Order, OrderItem
+from models import User, Product, Order, OrderItem, Coupon
 
 logger = logging.getLogger(__name__)
 admin_bp = Blueprint('admin', __name__)
@@ -327,3 +327,44 @@ def delete_product(product_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/api/admin/coupons', methods=['GET', 'POST'])
+@jwt_required()
+def manage_coupons():
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    if request.method == 'POST':
+        data = request.json
+        code = data.get('code', '').strip().upper()
+        discount = data.get('discount_percentage')
+        
+        if not code or not discount:
+            return jsonify({'error': 'Missing code or discount'}), 400
+            
+        if Coupon.query.filter_by(code=code).first():
+            return jsonify({'error': 'Coupon already exists'}), 400
+            
+        new_coupon = Coupon(code=code, discount_percentage=float(discount), is_active=True)
+        db.session.add(new_coupon)
+        db.session.commit()
+        return jsonify({'message': 'Coupon created', 'coupon': new_coupon.to_dict()}), 201
+
+    coupons = Coupon.query.order_by(Coupon.id.desc()).all()
+    return jsonify({'coupons': [c.to_dict() for c in coupons]}), 200
+
+@admin_bp.route('/api/admin/coupons/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_coupon(id):
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    coupon = db.session.get(Coupon, id)
+    if not coupon:
+        return jsonify({'error': 'Coupon not found'}), 404
+        
+    db.session.delete(coupon)
+    db.session.commit()
+    return jsonify({'message': 'Coupon deleted'}), 200

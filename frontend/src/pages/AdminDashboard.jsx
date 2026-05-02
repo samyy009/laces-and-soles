@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [orders, setOrders] = useState([]);
   const [drivers, setDrivers] = useState([]);
+  const [coupons, setCoupons] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [activeOrderSubTab, setActiveOrderSubTab] = useState('active');
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
@@ -35,6 +36,7 @@ export default function AdminDashboard() {
     collection: 'urban-explorer',
     files: null 
   });
+  const [newCoupon, setNewCoupon] = useState({ code: '', discount_percentage: '' });
 
   const fetchMetrics = () => {
     const token = localStorage.getItem('token') || '';
@@ -62,6 +64,10 @@ export default function AdminDashboard() {
       fetch(`${API}/api/admin/drivers`, { headers })
         .then(res => res.json())
         .then(data => setDrivers(data.drivers || []));
+
+      fetch(`${API}/api/admin/coupons`, { headers })
+        .then(res => res.json())
+        .then(data => setCoupons(data.coupons || []));
 
       const socket = io(API);
       socket.on('order_placed', (data) => {
@@ -254,6 +260,49 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAddCoupon = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API}/api/admin/coupons`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newCoupon)
+      });
+      if (res.ok) {
+        toast.success("Coupon created successfully");
+        setNewCoupon({ code: '', discount_percentage: '' });
+        fetch(`${API}/api/admin/coupons`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` } })
+          .then(res => res.json()).then(data => setCoupons(data.coupons || []));
+      } else {
+        const data = await res.json();
+        toast.error(data.error || "Failed to create coupon");
+      }
+    } catch (err) {
+      toast.error("Error creating coupon");
+    }
+  };
+
+  const handleDeleteCoupon = async (id) => {
+    if (!window.confirm("Delete this coupon?")) return;
+    try {
+      const res = await fetch(`${API}/api/admin/coupons/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+      });
+      if (res.ok) {
+        toast.success("Coupon deleted");
+        setCoupons(coupons.filter(c => c.id !== id));
+      } else {
+        toast.error("Failed to delete coupon");
+      }
+    } catch (err) {
+      toast.error("Error deleting coupon");
+    }
+  };
+
   const handleUpdateUserZone = async (userId, zones) => {
     try {
       const res = await fetch(`${API}/api/admin/users/${userId}`, {
@@ -322,7 +371,8 @@ export default function AdminDashboard() {
               { id: 'overview', label: 'Overview', icon: Icons.BarChart2 }, 
               { id: 'inventory', label: 'Products', icon: Icons.Package }, 
               { id: 'orders', label: 'Orders', icon: Icons.ShoppingCart },
-              { id: 'users', label: 'Users', icon: Icons.Users }
+              { id: 'users', label: 'Users', icon: Icons.Users },
+              { id: 'coupons', label: 'Coupons', icon: Icons.Ticket }
             ].map(tab => (
               <button 
                 key={tab.id} 
@@ -609,6 +659,66 @@ export default function AdminDashboard() {
                       </tr>
                       );
                     })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'coupons' && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl">
+                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Promo Codes</h2>
+              </div>
+              
+              <form onSubmit={handleAddCoupon} className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-8 rounded-[40px] border border-gray-100 shadow-xl">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Coupon Code</label>
+                  <input required placeholder="e.g. SUMMER20" value={newCoupon.code} onChange={e => setNewCoupon({...newCoupon, code: e.target.value.toUpperCase()})} className="w-full bg-gray-50 rounded-2xl p-5 text-sm font-bold outline-none uppercase" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Discount %</label>
+                  <input required type="number" min="1" max="100" placeholder="e.g. 20" value={newCoupon.discount_percentage} onChange={e => setNewCoupon({...newCoupon, discount_percentage: e.target.value})} className="w-full bg-gray-50 rounded-2xl p-5 text-sm font-bold outline-none" />
+                </div>
+                <div className="flex items-end">
+                  <button type="submit" className="w-full bg-rose-500 hover:bg-rose-600 text-white p-5 rounded-[24px] uppercase font-black text-[11px] tracking-widest transition-colors flex items-center justify-center gap-2">
+                    <Icons.Plus size={16} /> Create Code
+                  </button>
+                </div>
+              </form>
+
+              <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
+                <table className="w-full text-left">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Code</th>
+                      <th className="p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Discount</th>
+                      <th className="p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                      <th className="p-8 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {coupons.map(c => (
+                      <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="p-8">
+                          <span className="bg-rose-50 text-rose-600 px-4 py-2 rounded-xl text-xs font-black tracking-widest border border-rose-100">{c.code}</span>
+                        </td>
+                        <td className="p-8 text-sm font-bold text-gray-900">{c.discount_percentage}% OFF</td>
+                        <td className="p-8">
+                          <span className="flex items-center gap-2 text-xs font-bold text-emerald-500"><div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div> Active</span>
+                        </td>
+                        <td className="p-8 text-right">
+                          <button onClick={() => handleDeleteCoupon(c.id)} className="p-3 hover:bg-rose-50 hover:text-rose-500 rounded-xl text-gray-400 transition-colors">
+                            <Icons.Trash2 size={18} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                    {coupons.length === 0 && (
+                      <tr>
+                        <td colSpan="4" className="p-12 text-center text-gray-400 font-bold text-sm">No promo codes generated yet.</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>

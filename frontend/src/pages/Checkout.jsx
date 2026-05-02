@@ -181,7 +181,7 @@ export default function Checkout() {
       }
 
       // 1. Create Order on Backend (Real Flow)
-      const orderRes = await axios.post(`${API}/api/razorpay/create-order`, {}, {
+      const orderRes = await axios.post(`${API}/api/razorpay/create-order`, { coupon_code: promoCode }, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
       });
 
