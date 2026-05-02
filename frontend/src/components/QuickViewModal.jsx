@@ -9,7 +9,12 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
 
   if (!product) return null;
 
-  const gallery = [product.image, product.image, product.image, product.image]; // Mock 4 angles
+  const galleryAngles = [
+    { img: product.gallery?.[0] || product.image, label: "Left" },
+    { img: product.gallery?.[1] || product.image, label: "Right" },
+    { img: product.gallery?.[2] || product.image, label: "Top" },
+    { img: product.gallery?.[3] || product.image, label: "Bottom" }
+  ];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/40 backdrop-blur-[2px] transition-all duration-500">
@@ -37,13 +42,16 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
 
             {/* Thumbnails */}
             <div className="absolute bottom-4 flex gap-3 bg-white/40 p-2 rounded-2xl backdrop-blur-md">
-              {gallery.map((img, idx) => (
+              {galleryAngles.map((angleObj, idx) => (
                 <button
                   key={idx}
-                  onClick={() => setActiveImage(img)}
-                  className={`size-14 rounded-xl flex items-center justify-center bg-[#cacaca] overflow-hidden border-2 transition-all ${activeImage === img ? 'border-gray-800' : 'border-transparent hover:border-gray-400'}`}
+                  onClick={() => setActiveImage(angleObj.img)}
+                  className={`size-14 rounded-xl flex flex-col items-center justify-center bg-[#cacaca] overflow-hidden border-2 transition-all relative ${activeImage === angleObj.img ? 'border-gray-800' : 'border-transparent hover:border-gray-400'}`}
                 >
-                  <img src={formatImageUrl(img)} alt={`Angle ${idx}`} className="w-full h-full object-contain p-1" />
+                  <img src={formatImageUrl(angleObj.img)} alt={`${angleObj.label} view`} className="w-full h-full object-contain p-1" />
+                  <div className="absolute inset-x-0 bottom-0 bg-white/80 py-0.5 text-center">
+                      <span className="text-[7px] font-black uppercase tracking-wider text-gray-900">{angleObj.label}</span>
+                  </div>
                 </button>
               ))}
             </div>

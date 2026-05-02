@@ -51,7 +51,12 @@ export default function ProductDetails() {
     </div>
   );
 
-  const mockGallery = [product.image, product.image, product.image, product.image];
+  const galleryAngles = [
+    { img: product.gallery?.[0] || product.image, label: "Left" },
+    { img: product.gallery?.[1] || product.image, label: "Right" },
+    { img: product.gallery?.[2] || product.image, label: "Top" },
+    { img: product.gallery?.[3] || product.image, label: "Bottom" }
+  ];
 
   return (
     <div className="pb-16 bg-gray-50 min-h-screen">
@@ -79,19 +84,19 @@ export default function ProductDetails() {
             </div>
 
             <div className="flex justify-center gap-3">
-              {mockGallery.map((img, i) => (
+              {galleryAngles.map((angleObj, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveImage(img)}
-                  className={`size-14 rounded-2xl bg-[#f5f5f5] border-2 flex items-center justify-center p-2 relative overflow-hidden transition-all ${activeImage === img ? 'border-[#ff3366]' : 'border-transparent hover:border-gray-300'}`}
+                  onClick={() => setActiveImage(angleObj.img)}
+                  className={`size-14 rounded-2xl bg-[#f5f5f5] border-2 flex items-center justify-center p-2 relative overflow-hidden transition-all ${activeImage === angleObj.img ? 'border-[#ff3366]' : 'border-transparent hover:border-gray-300'}`}
                 >
                   <img
-                    src={formatImageUrl(img)}
-                    alt={`Angle ${i}`}
+                    src={formatImageUrl(angleObj.img)}
+                    alt={`${angleObj.label} view`}
                     className="w-full h-full object-contain"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-white/80 py-0.5 text-center">
-                      <span className="text-[7px] font-black uppercase tracking-wider text-gray-900">Angle</span>
+                      <span className="text-[7px] font-black uppercase tracking-wider text-gray-900">{angleObj.label}</span>
                   </div>
                 </button>
               ))}
