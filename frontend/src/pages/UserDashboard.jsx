@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -247,7 +247,7 @@ export default function UserDashboard() {
                                      </div>
                                      <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total</p>
-                                        <p className="text-sm font-black text-[#ff3366] mt-1">₹{order.total_amount.toLocaleString()}</p>
+                                        <p className="text-sm font-black text-[#ff3366] mt-1">â‚¹{order.total_amount.toLocaleString()}</p>
                                      </div>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-end gap-3">
@@ -314,7 +314,6 @@ export default function UserDashboard() {
                                            {new Date(order.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })} at {new Date(order.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                                         </p>
                                      </div>
-                                  </div>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-end gap-3">
                                      <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shrink-0 ${
