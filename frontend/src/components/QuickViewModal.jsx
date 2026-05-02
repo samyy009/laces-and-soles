@@ -9,11 +9,18 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
 
   if (!product) return null;
 
+  const demoImages = [
+    product.image, // Left (Original image)
+    'https://images.unsplash.com/photo-1579338559194-a162d19bf842?w=800&q=80', // Right mock
+    'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=800&q=80', // Top mock
+    'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&q=80' // Bottom mock
+  ];
+
   const galleryAngles = [
-    { img: product.gallery?.[0] || product.image, label: "Left" },
-    { img: product.gallery?.[1] || product.image, label: "Right" },
-    { img: product.gallery?.[2] || product.image, label: "Top" },
-    { img: product.gallery?.[3] || product.image, label: "Bottom" }
+    { img: product.gallery?.[0] || demoImages[0], label: "Left" },
+    { img: product.gallery?.[1] || demoImages[1], label: "Right" },
+    { img: product.gallery?.[2] || demoImages[2], label: "Top" },
+    { img: product.gallery?.[3] || demoImages[3], label: "Bottom" }
   ];
 
   return (
