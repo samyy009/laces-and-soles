@@ -99,19 +99,28 @@ export default function DriverDashboard() {
     updateStatus(orderId, 'Out for Delivery');
 
     watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
+        // Legacy Socket.IO emit
         socketRef.current.emit('update_driver_location', {
           order_id: orderId,
           lat: latitude,
           lng: longitude
         });
+        // Persist to backend + broadcast via server-side Socket.IO
+        try {
+          await axios.post(`${API}/api/driver/location`, { lat: latitude, lng: longitude }, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+          });
+        } catch (err) {
+          console.warn("Location POST failed:", err.message);
+        }
       },
       (err) => {
         toast.error("GPS Signal lost. Please check permissions.");
         setIsTracking(false);
       },
-      { enableHighAccuracy: true }
+      { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
     );
   };
 

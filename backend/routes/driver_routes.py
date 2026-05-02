@@ -75,3 +75,34 @@ def mark_delivery_failed(order_id):
     db.session.commit()
     socketio.emit('status_updated', {'order_id': order.id, 'status': 'Delivery Attempt Failed', 'reason': reason}, room=f"order_{order.id}")
     return jsonify({'message': 'Delivery attempt failed'}), 200
+
+@driver_bp.route('/api/driver/location', methods=['POST'])
+@jwt_required()
+def update_location():
+    driver_id = int(get_jwt_identity())
+    user = db.session.get(User, driver_id)
+    if not user or user.role != 'driver':
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    data = request.get_json()
+    lat = data.get('lat')
+    lng = data.get('lng')
+    
+    if lat is None or lng is None:
+        return jsonify({'error': 'Missing coordinates'}), 400
+        
+    # Update all active "Out for Delivery" orders for this driver
+    active_orders = Order.query.filter_by(driver_id=driver_id, status='Out for Delivery').all()
+    for order in active_orders:
+        order.driver_lat = lat
+        order.driver_lng = lng
+        # Broadcast the location update to users tracking this order
+        socketio.emit('driver_location_update', {
+            'order_id': order.id,
+            'tracking_id': order.tracking_id,
+            'lat': lat,
+            'lng': lng
+        }, room=f"order_{order.id}")
+        
+    db.session.commit()
+    return jsonify({'message': 'Location updated'}), 200

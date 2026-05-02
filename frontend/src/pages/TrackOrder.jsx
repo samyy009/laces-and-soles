@@ -123,7 +123,13 @@ export default function TrackOrder() {
     });
 
     socketRef.current.on('location_broadcast', (data) => {
-       console.log("Location received:", data);
+       console.log("Location received (broadcast):", data);
+       setDriverLocations(prev => ({ ...prev, [data.order_id]: [data.lat, data.lng] }));
+    });
+
+    // Also handle backend-side driver_location_update (from REST POST)
+    socketRef.current.on('driver_location_update', (data) => {
+       console.log("Location received (server REST):", data);
        setDriverLocations(prev => ({ ...prev, [data.order_id]: [data.lat, data.lng] }));
     });
 
