@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* ── Hero Banner ── */}
-      <section className="relative w-full min-h-[500px] md:h-[450px] bg-[#fdfdfd] mt-0 flex items-center overflow-hidden border-b border-gray-100 px-4 sm:px-6">
+      <section className="relative w-full min-h-[400px] md:h-[400px] bg-[#fdfdfd] mt-0 flex items-center overflow-hidden border-b border-gray-100 px-4 sm:px-6">
         {/* Background Watermark */}
         <div className="absolute inset-0 z-0 flex items-center justify-center select-none pointer-events-none overflow-hidden opacity-50 md:opacity-100">
             <span className="text-[30vw] md:text-[20vw] font-black text-gray-50/50 uppercase tracking-tighter leading-none transform translate-y-12">FOOTWEAR</span>
@@ -39,37 +39,37 @@ export default function Home() {
         </div>
         
         {/* Text Content */}
-        <div className="relative z-10 py-8 px-4 md:px-6 max-w-xl lg:ml-4 animate-fade-in-up">
-            <h3 className="text-[#ff3366] text-[10px] font-black uppercase tracking-[0.5em] mb-4">LATEST DROP</h3>
-            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-6">
+        <div className="relative z-10 py-6 px-4 md:px-6 max-w-xl lg:ml-4 animate-fade-in-up">
+            <h3 className="text-[#ff3366] text-[10px] font-black uppercase tracking-[0.5em] mb-2">LATEST DROP</h3>
+            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-4">
                <span className="text-[#ff3366]">{content.hero.titleLight}</span> <br/>
                <span className="text-gray-900">{content.hero.titleBold}</span>
             </h1>
-            <p className="text-gray-500 text-sm font-bold mb-10 leading-relaxed max-w-sm">
+            <p className="text-gray-500 text-sm font-bold mb-6 leading-relaxed max-w-sm">
                 {content.hero.description}
             </p>
             <Link to="/store">
-                <button className="bg-gray-900 text-white px-12 py-5 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#ff3366] transition-all shadow-2xl hover:-translate-y-2 active:scale-95">
+                <button className="bg-gray-900 text-white px-10 py-4 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#ff3366] transition-all shadow-2xl hover:-translate-y-2 active:scale-95">
                     SHOP NOW
                 </button>
             </Link>
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-10 hidden lg:flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.4em] text-gray-300 animate-pulse-gentle">
-            <div className="w-[1px] h-12 bg-gradient-to-b from-transparent via-gray-300 to-transparent" />
+        <div className="absolute bottom-6 left-10 hidden lg:flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.4em] text-gray-300 animate-pulse-gentle">
+            <div className="w-[1px] h-8 bg-gradient-to-b from-transparent via-gray-300 to-transparent" />
             <span>SCROLL TO EXPLORE</span>
         </div>
       </section>
 
       {/* ── Featured Collections ── */}
-      <section className="max-w-[1400px] mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="max-w-[1400px] mx-auto px-6 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {(content.collection || []).map((cat, idx) => (
             <Link 
                 to={cat.link} 
                 key={idx}
-                className="group relative h-[300px] rounded-[32px] overflow-hidden bg-gray-100 flex items-end p-8 border border-gray-100 hover:shadow-2xl transition-all"
+                className="group relative h-[220px] rounded-[32px] overflow-hidden bg-gray-100 flex items-end p-6 border border-gray-100 hover:shadow-2xl transition-all"
             >
                 {/* Background Image */}
                 <img 
@@ -83,7 +83,7 @@ export default function Home() {
 
                 {/* Content */}
                 <div className="relative z-20 w-full transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                    <h3 className="text-3xl lg:text-4xl font-black text-white uppercase tracking-tighter mb-3 leading-tight">
+                    <h3 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tighter mb-2 leading-tight">
                         {cat.title}
                     </h3>
                     <div className="flex items-center gap-2 text-[#ff3366] text-[10px] font-black uppercase tracking-[0.3em] group/btn">
@@ -97,8 +97,8 @@ export default function Home() {
       </section>
 
       {/* ── Shop by Brand — Infinite Marquee ── */}
-      <section className="py-6 border-t border-gray-50 overflow-hidden">
-        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-6 text-center">
+      <section className="py-4 border-t border-gray-50 overflow-hidden">
+        <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-4 text-center">
           SHOP BY BRAND
         </h2>
 
@@ -110,7 +110,7 @@ export default function Home() {
                style={{ background: 'linear-gradient(to left, white, transparent)' }} />
 
           {/* Marquee track — duplicated for seamless loop */}
-          <div className="flex overflow-hidden py-4">
+          <div className="flex overflow-hidden py-2">
             <div className="flex items-center animate-marquee w-max whitespace-nowrap">
               {/* Set 1 */}
               <div className="flex items-center gap-12 md:gap-20 px-8">
@@ -127,12 +127,12 @@ export default function Home() {
                   <Link
                     to={`/store?brand=${brand.name}`}
                     key={`${brand.name}-${idx}`}
-                    className="flex-shrink-0 flex items-center justify-center min-w-[120px] md:min-w-[160px] opacity-90 hover:opacity-100 transition-all duration-500 hover:scale-110"
+                    className="flex-shrink-0 flex items-center justify-center min-w-[100px] md:min-w-[140px] opacity-90 hover:opacity-100 transition-all duration-500 hover:scale-110"
                   >
                     <img
                       src={brand.logo}
                       alt={brand.name}
-                      className="h-8 md:h-10 w-auto object-contain"
+                      className="h-6 md:h-8 w-auto object-contain"
                     />
                   </Link>
                 ))}
@@ -152,12 +152,12 @@ export default function Home() {
                   <Link
                     to={`/store?brand=${brand.name}`}
                     key={`${brand.name}-dup-${idx}`}
-                    className="flex-shrink-0 flex items-center justify-center min-w-[120px] md:min-w-[160px] opacity-90 hover:opacity-100 transition-all duration-500 hover:scale-110"
+                    className="flex-shrink-0 flex items-center justify-center min-w-[100px] md:min-w-[140px] opacity-90 hover:opacity-100 transition-all duration-500 hover:scale-110"
                   >
                     <img
                       src={brand.logo}
                       alt={brand.name}
-                      className="h-8 md:h-10 w-auto object-contain"
+                      className="h-6 md:h-8 w-auto object-contain"
                     />
                   </Link>
                 ))}
@@ -168,19 +168,19 @@ export default function Home() {
       </section>
 
       {/* ── Services ── */}
-      <section className="bg-gray-50 border-t border-b border-gray-100 py-8">
+      <section className="bg-gray-50 border-t border-b border-gray-100 py-6">
         <div className="max-w-[1400px] mx-auto px-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 {(content.service || []).map((s, idx) => {
                     const IconComp = serviceIcons[s.icon];
                     return (
-                        <div key={idx} className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#ff3366] shadow-sm">
-                                {IconComp && <IconComp size={20} />}
+                        <div key={idx} className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-[#ff3366] shadow-sm">
+                                {IconComp && <IconComp size={16} />}
                             </div>
                             <div>
-                                <h4 className="text-xs font-black uppercase text-gray-900 tracking-widest">{s.title}</h4>
-                                <p className="text-[10px] font-bold text-gray-400 mt-1">{s.text}</p>
+                                <h4 className="text-[10px] font-black uppercase text-gray-900 tracking-widest">{s.title}</h4>
+                                <p className="text-[9px] font-bold text-gray-400 mt-1">{s.text}</p>
                             </div>
                         </div>
                     );
@@ -190,15 +190,15 @@ export default function Home() {
       </section>
 
       {/* ── Bestsellers ── */}
-      <section className="max-w-[1400px] mx-auto px-6 py-8">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-6">
-             <h2 className="text-3xl md:text-5xl font-black text-gray-900 uppercase tracking-tighter">Bestseller Products</h2>
-             <div className="flex gap-4 mt-6 md:mt-0 overflow-x-auto pb-4 md:pb-0">
+      <section className="max-w-[1400px] mx-auto px-6 py-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-4">
+             <h2 className="text-2xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter">Bestseller Products</h2>
+             <div className="flex gap-3 mt-4 md:mt-0 overflow-x-auto pb-2 md:pb-0">
                 {['All', 'Nike', 'Adidas', 'Jordan'].map(brand => (
                     <button 
                         key={brand}
                         onClick={() => setActiveFilter(brand)}
-                        className={`text-xs font-bold uppercase tracking-widest px-6 py-3 rounded-xl transition-colors whitespace-nowrap ${activeFilter === brand ? 'bg-[#ff3366] text-white' : 'bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-200'}`}
+                        className={`text-[10px] font-bold uppercase tracking-widest px-5 py-2.5 rounded-xl transition-colors whitespace-nowrap ${activeFilter === brand ? 'bg-[#ff3366] text-white' : 'bg-gray-50 text-gray-400 hover:text-gray-900 hover:bg-gray-200'}`}
                     >
                         {brand}
                     </button>
@@ -206,7 +206,7 @@ export default function Home() {
              </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {filteredProducts.map((product, index) => (
                 <div 
                   key={product.id} 

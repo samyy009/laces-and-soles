@@ -63,12 +63,12 @@ export default function ProductDetails() {
           </nav>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-8">
+      <div className="max-w-[1400px] mx-auto px-6 py-4">
+        <div className="grid lg:grid-cols-2 gap-6">
 
           {/* ── Gallery ── */}
-          <div className="space-y-4">
-            <div className="relative aspect-[4/3] md:aspect-square md:max-h-[520px] bg-[#f5f5f5] rounded-[32px] flex items-center justify-center p-8 overflow-hidden border border-gray-100 shadow-sm">
+          <div className="space-y-3">
+            <div className="relative aspect-[4/3] md:aspect-square md:max-h-[400px] bg-[#f5f5f5] rounded-[24px] flex items-center justify-center p-6 overflow-hidden border border-gray-100 shadow-sm">
               <img
                 src={formatImageUrl(activeImage)}
                 alt={product.title}
@@ -76,12 +76,12 @@ export default function ProductDetails() {
               />
             </div>
 
-            <div className="flex justify-center gap-4">
+            <div className="flex justify-center gap-3">
               {mockGallery.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImage(img)}
-                  className={`size-16 rounded-2xl bg-[#f5f5f5] border-2 flex items-center justify-center p-2 relative overflow-hidden transition-all ${activeImage === img ? 'border-[#ff3366]' : 'border-transparent hover:border-gray-300'}`}
+                  className={`size-14 rounded-2xl bg-[#f5f5f5] border-2 flex items-center justify-center p-2 relative overflow-hidden transition-all ${activeImage === img ? 'border-[#ff3366]' : 'border-transparent hover:border-gray-300'}`}
                 >
                   <img
                     src={formatImageUrl(img)}
@@ -89,7 +89,7 @@ export default function ProductDetails() {
                     className="w-full h-full object-contain"
                   />
                   <div className="absolute inset-x-0 bottom-0 bg-white/80 py-0.5 text-center">
-                      <span className="text-[8px] font-black uppercase tracking-wider text-gray-900">Angle</span>
+                      <span className="text-[7px] font-black uppercase tracking-wider text-gray-900">Angle</span>
                   </div>
                 </button>
               ))}
@@ -99,50 +99,50 @@ export default function ProductDetails() {
           {/* ── Details ── */}
           <div className="flex items-center">
              <div className="flex-1 max-w-xl">
-                <div className="inline-flex items-center gap-2 bg-green-50 px-4 py-2 rounded-full mb-4">
-                   <div className="size-2 rounded-full bg-green-500 animate-pulse" />
-                   <span className="text-[9px] font-black uppercase tracking-widest text-green-700">
-                      11 PEOPLE ARE VIEWING THIS MASTERPIECE RIGHT NOW
+                <div className="inline-flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full mb-3">
+                   <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
+                   <span className="text-[8px] font-black uppercase tracking-widest text-green-700">
+                      11 PEOPLE ARE VIEWING THIS MASTERPIECE
                    </span>
                 </div>
 
-                <h1 className="text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter leading-tight mb-3">
+                <h1 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tighter leading-tight mb-2">
                   {product.title}
                 </h1>
 
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2 mb-3">
                    <div className="flex">
                       {[1,2,3,4,5].map(star => (
-                         <Icons.Star key={star} size={16} className={star <= (product.rating||4.5) ? "fill-gray-900 text-gray-900" : "text-gray-200"} />
+                         <Icons.Star key={star} size={14} className={star <= (product.rating||4.5) ? "fill-gray-900 text-gray-900" : "text-gray-200"} />
                       ))}
                    </div>
-                   <span className="text-[10px] font-bold text-gray-400">({product.reviews?.length || 0} reviews)</span>
+                   <span className="text-[9px] font-bold text-gray-400">({product.reviews?.length || 0} reviews)</span>
                 </div>
 
-                <div className="mb-4">
-                   <span className="text-3xl font-black text-gray-900 tracking-tighter">MRP: ₹{product.price.toLocaleString()}</span>
+                <div className="mb-3">
+                   <span className="text-2xl font-black text-gray-900 tracking-tighter">MRP: ₹{product.price.toLocaleString()}</span>
                 </div>
 
-                <div className="flex items-center gap-2 mb-4 border-b border-gray-100 pb-4">
-                   <div className="size-2 rounded-full bg-green-500" />
-                   <span className="text-[10px] font-black uppercase tracking-widest text-green-600">LIVE INVENTORY: {product.stock || 0} UNITS AVAILABLE</span>
+                <div className="flex items-center gap-2 mb-3 border-b border-gray-100 pb-3">
+                   <div className="size-1.5 rounded-full bg-green-500" />
+                   <span className="text-[9px] font-black uppercase tracking-widest text-green-600">LIVE INVENTORY: {product.stock || 0} UNITS</span>
                 </div>
 
-                <p className="text-sm font-medium text-gray-500 leading-relaxed max-w-md mb-6">
+                <p className="text-xs font-medium text-gray-500 leading-relaxed max-w-md mb-4">
                   {product.description || `Premium ${product.brand} ${product.type} footwear. Engineered for maximum comfort and style.`}
                 </p>
 
                 <div className="mb-3">
                   <div className="flex justify-between items-end mb-2">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-900">SELECT SIZE</h4>
-                    <span className="text-[10px] font-bold text-rose-500 hover:text-rose-600 cursor-pointer">Size Guide</span>
+                    <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-900">SELECT SIZE</h4>
+                    <span className="text-[9px] font-bold text-rose-500 hover:text-rose-600 cursor-pointer">Size Guide</span>
                   </div>
-                  <div className="grid grid-cols-5 gap-3">
+                  <div className="grid grid-cols-6 gap-2">
                     {['6', '7', '8', '9', '10', '11'].map(size => (
                       <button
                         key={size}
                         onClick={() => setSelectedSize(size)}
-                        className={`h-10 rounded-xl border-2 text-xs font-black transition-all ${selectedSize === size ? 'border-[#ff3366] text-[#ff3366] bg-rose-50' : 'border-gray-100 text-gray-600 hover:border-gray-900 hover:text-gray-900'}`}
+                        className={`h-8 rounded-lg border-2 text-[10px] font-black transition-all ${selectedSize === size ? 'border-[#ff3366] text-[#ff3366] bg-rose-50' : 'border-gray-100 text-gray-600 hover:border-gray-900 hover:text-gray-900'}`}
                       >
                         UK {size}
                       </button>
@@ -150,36 +150,36 @@ export default function ProductDetails() {
                   </div>
                 </div>
 
-                <div className="mb-6">
-                   <h4 className="text-[10px] font-black uppercase tracking-widest text-gray-900 mb-3">DELIVERY OPTIONS</h4>
+                <div className="mb-4">
+                   <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-900 mb-2">DELIVERY OPTIONS</h4>
                    <div className="flex">
                        <input 
                            type="text" 
                            placeholder="Enter Pincode" 
-                           className="flex-1 bg-gray-50 border border-gray-100 border-r-0 rounded-l-2xl px-4 py-2 outline-none text-sm font-bold focus:border-gray-300 transition-colors"
+                           className="flex-1 bg-gray-50 border border-gray-100 border-r-0 rounded-l-xl px-3 py-1.5 outline-none text-xs font-bold focus:border-gray-300 transition-colors"
                        />
-                       <button className="bg-gray-50 border border-gray-100 border-l-0 rounded-r-2xl px-4 py-2 text-[10px] font-black text-[#ff3366] uppercase tracking-widest hover:bg-gray-100 transition-colors">
+                       <button className="bg-gray-50 border border-gray-100 border-l-0 rounded-r-xl px-3 py-1.5 text-[9px] font-black text-[#ff3366] uppercase tracking-widest hover:bg-gray-100 transition-colors">
                            CHECK
                        </button>
                    </div>
-                   <p className="text-[9px] font-bold text-gray-400 mt-3 tracking-wide">Free shipping over ₹5000 • Easy 14 days returns</p>
+                   <p className="text-[8px] font-bold text-gray-400 mt-2 tracking-wide">Free shipping over ₹5000 • Easy 14 days returns</p>
                 </div>
 
                 {product.stock > 0 ? (
                   <button
                     onClick={() => addToCart(product.id, 1, selectedSize)}
-                    className="w-full h-12 bg-gray-900 text-white rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-[#ff3366] transition-colors shadow-xl"
+                    className="w-full h-10 bg-gray-900 text-white rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-[#ff3366] transition-colors shadow-lg"
                   >
-                    <Icons.ShoppingBag size={18} /> Add to Cart (₹{product.price.toLocaleString()})
+                    <Icons.ShoppingBag size={16} /> Add to Cart (₹{product.price.toLocaleString()})
                   </button>
                 ) : (
                   <button
                     onClick={() => {
                       toast.info("We'll notify you when this is back in stock!");
                     }}
-                    className="w-full h-12 bg-rose-100 text-[#ff3366] rounded-2xl flex items-center justify-center gap-3 text-xs font-black uppercase tracking-widest hover:bg-rose-200 transition-colors border-2 border-rose-200"
+                    className="w-full h-10 bg-rose-100 text-[#ff3366] rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-rose-200 transition-colors border-2 border-rose-200"
                   >
-                    <Icons.Bell size={18} /> Notify Me When Available
+                    <Icons.Bell size={16} /> Notify Me When Available
                   </button>
                 )}
              </div>
@@ -187,17 +187,17 @@ export default function ProductDetails() {
         </div>
 
         {/* ── Reviews Section ── */}
-        <div className="mt-20 border-t border-gray-100 pt-16">
+        <div className="mt-10 border-t border-gray-100 pt-8">
            <div className="max-w-3xl mx-auto">
-              <h3 className="text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3">
-                 <Icons.MessageSquare size={24} className="text-[#ff3366]" />
+              <h3 className="text-xl font-black uppercase tracking-tighter mb-6 flex items-center gap-2">
+                 <Icons.MessageSquare size={20} className="text-[#ff3366]" />
                  CUSTOMER REVIEWS
               </h3>
 
-              <div className="space-y-8 mb-16">
+              <div className="space-y-6 mb-10">
                  {product.reviews && product.reviews.length > 0 ? (
                     product.reviews.map((rev, i) => (
-                       <div key={i} className="bg-white p-6 rounded-[24px] border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                       <div key={i} className="bg-white p-5 rounded-[20px] border border-gray-100 shadow-sm hover:shadow-md transition-all">
                           <div className="flex justify-between items-start mb-4">
                              <div className="flex items-center gap-3">
                                 <div className="size-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400">
