@@ -16,6 +16,8 @@ export default function ProductDetails() {
   const [loading, setLoading] = useState(true);
   const [activeImage, setActiveImage] = useState(null);
   const [selectedSize, setSelectedSize] = useState('10');
+  const [ratingFormValue, setRatingFormValue] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -232,10 +234,13 @@ export default function ProductDetails() {
                     
                     <form onSubmit={async (e) => {
                        e.preventDefault();
-                       const rating = e.target.rating.value;
                        const comment = e.target.comment.value;
+                       if (ratingFormValue === 0) {
+                          toast.error("Please select a star rating");
+                          return;
+                       }
                        try {
-                          await axios.post(`${API_BASE}/products/${product.id}/reviews`, { rating: parseInt(rating), comment }, {
+                          await axios.post(`${API_BASE}/products/${product.id}/reviews`, { rating: ratingFormValue, comment }, {
                              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                           });
                           toast.success("Review posted successfully!");
@@ -244,14 +249,25 @@ export default function ProductDetails() {
                           toast.error(err.response?.data?.error || "Failed to post review");
                        }
                     }} className="space-y-4">
-                       <div className="flex gap-4">
-                          <select name="rating" required className="bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-xs font-black uppercase tracking-widest outline-none focus:border-[#ff3366]">
-                             <option value="5" className="text-black">5 Stars (Excellent)</option>
-                             <option value="4" className="text-black">4 Stars (Great)</option>
-                             <option value="3" className="text-black">3 Stars (Average)</option>
-                             <option value="2" className="text-black">2 Stars (Poor)</option>
-                             <option value="1" className="text-black">1 Star (Terrible)</option>
-                          </select>
+                       <div className="flex gap-2 mb-2 items-center">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                             <button
+                                type="button"
+                                key={star}
+                                className="focus:outline-none transition-transform hover:scale-110"
+                                onMouseEnter={() => setHoverRating(star)}
+                                onMouseLeave={() => setHoverRating(0)}
+                                onClick={() => setRatingFormValue(star)}
+                             >
+                                <Icons.Star 
+                                   size={28} 
+                                   className={`${star <= (hoverRating || ratingFormValue) ? "fill-[#ff3366] text-[#ff3366]" : "text-gray-500"} transition-colors`} 
+                                />
+                             </button>
+                          ))}
+                          <span className="ml-3 text-xs font-black text-gray-400 uppercase tracking-widest">
+                             {ratingFormValue === 0 ? "Select Rating" : `${ratingFormValue} Star${ratingFormValue > 1 ? 's' : ''}`}
+                          </span>
                        </div>
                        <textarea 
                           name="comment" 
