@@ -223,18 +223,18 @@ export default function UserDashboard() {
           <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-100">
              {activeTab === 'orders' && (
                 <div>
-                   <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter mb-4">Active Shipments</h2>
+                   <h2 className="text-base font-black text-gray-900 uppercase tracking-tighter mb-3">Active Shipments</h2>
                    
                    {orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length === 0 ? (
-                      <div className="text-center py-8 bg-gray-50 rounded-2xl mb-8 border border-dashed border-gray-200">
+                      <div className="text-center py-4 bg-gray-50 rounded-xl mb-4 border border-dashed border-gray-200">
                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">No active shipments</h3>
                       </div>
                    ) : (
-                      <div className="space-y-6 mb-12">
+                      <div className="space-y-3 mb-6">
                          {orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').map(order => (
-                            <div key={order.id} className="border border-gray-100 rounded-2xl p-4 relative bg-white shadow-sm hover:shadow-md transition-all">
-                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-100 pb-4">
-                                  <div className="flex items-center gap-6">
+                            <div key={order.id} className="border border-gray-100 rounded-xl p-3 relative bg-white shadow-sm hover:shadow-md transition-all">
+                               <div className="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-100 pb-3">
+                                  <div className="flex items-center gap-4">
                                      <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tracking ID</p>
                                         <p className="text-sm font-black text-gray-950 mt-1">#{order.tracking_id}</p>
@@ -270,10 +270,10 @@ export default function UserDashboard() {
 
                                   </div>
                                </div>
-                               <div className="space-y-4">
+                               <div className="flex flex-wrap gap-3">
                                   {order.items.map(item => (
                                      <div key={item.id} className="flex items-center gap-4">
-                                        <div className="w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center p-2">
+                                        <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center p-1">
                                            <img src={formatImageUrl(item.product?.image)} alt="" className="max-w-full max-h-full object-contain" />
                                         </div>
                                         <div>
@@ -293,17 +293,17 @@ export default function UserDashboard() {
                       </div>
                    )}
 
-                   <h2 className="text-xl font-black text-gray-900 uppercase tracking-tighter mb-4 mt-8">Past Orders</h2>
+                   <h2 className="text-base font-black text-gray-900 uppercase tracking-tighter mb-3 mt-5">Past Orders</h2>
                    {orders.filter(o => ['Delivered', 'Cancelled', 'Return Requested', 'Returned'].includes(o.status)).length === 0 ? (
-                      <div className="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                      <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">No past orders yet</h3>
                       </div>
                    ) : (
-                      <div className="space-y-6 opacity-80 hover:opacity-100 transition-opacity">
+                      <div className="space-y-2 opacity-80 hover:opacity-100 transition-opacity">
                          {orders.filter(o => ['Delivered', 'Cancelled', 'Return Requested', 'Returned'].includes(o.status)).map(order => (
-                            <div key={order.id} className="border border-gray-100 rounded-2xl p-4 relative bg-gray-50">
-                               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-gray-200 pb-4">
-                                  <div className="flex items-center gap-6">
+                            <div key={order.id} className="border border-gray-100 rounded-xl p-3 relative bg-gray-50">
+                               <div className="flex flex-wrap items-center justify-between gap-2 mb-2 border-b border-gray-200 pb-2">
+                                  <div className="flex items-center gap-4">
                                      <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tracking ID</p>
                                         <p className="text-sm font-black text-gray-600 mt-1">#{order.tracking_id}</p>
@@ -343,10 +343,10 @@ export default function UserDashboard() {
                                      </button>
                                   </div>
                                </div>
-                               <div className="space-y-4">
+                               <div className="flex flex-wrap gap-3">
                                   {order.items.map(item => (
                                      <div key={item.id} className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-white border border-gray-100 rounded-lg flex items-center justify-center p-2 filter grayscale">
+                                        <div className="w-8 h-8 bg-white border border-gray-100 rounded-md flex items-center justify-center p-1 filter grayscale">
                                            <img src={formatImageUrl(item.product?.image)} alt="" className="max-w-full max-h-full object-contain" />
                                         </div>
                                         <div>
@@ -472,3 +472,4 @@ export default function UserDashboard() {
     </div>
   );
 }
+
