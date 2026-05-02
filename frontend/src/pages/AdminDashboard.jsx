@@ -285,7 +285,7 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 pb-16 overflow-hidden selection:bg-rose-500/30">
+    <div className="min-h-screen bg-gray-50 text-gray-900 pb-32 overflow-x-hidden selection:bg-rose-500/30">
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-500/5 blur-[120px] rounded-full" />
       </div>
@@ -578,17 +578,22 @@ export default function AdminDashboard() {
           {activeTab === 'users' && (
             <div className="space-y-12">
                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Users</h2>
-               <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
-                 <table className="w-full text-left">
+               <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl">
+                 <table className="w-full text-left border-collapse">
                   <thead className="bg-gray-50">
-                    <tr><th className="p-8">Identity</th><th className="p-8">Role</th><th className="p-8">Zones</th></tr>
+                    <tr>
+                      <th className="p-8 rounded-tl-[40px]">Identity</th>
+                      <th className="p-8">Role</th>
+                      <th className="p-8 rounded-tr-[40px]">Zones</th>
+                    </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {users.map(u => {
+                    {users.map((u, idx) => {
                       const isNew = u.created_at && new Date(u.created_at) > new Date(Date.now() - 10 * 60 * 1000);
+                      const isLast = idx === users.length - 1;
                       return (
                       <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-blue-50/30' : ''}`}>
-                        <td className="p-8">
+                        <td className={`p-8 ${isLast ? 'rounded-bl-[40px]' : ''}`}>
                            <div className="flex items-center gap-3">
                               <p className="text-sm font-black uppercase">{u.full_name}</p>
                               {isNew && <span className="bg-blue-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black">NEW USER</span>}
@@ -596,7 +601,7 @@ export default function AdminDashboard() {
                            <p className="text-[10px] text-gray-400 font-black uppercase">{u.email}</p>
                         </td>
                         <td className="p-8"><span className="px-6 py-2 text-[9px] font-black uppercase rounded-full bg-gray-50 border border-gray-100">{u.role}</span></td>
-                        <td className="p-8">
+                        <td className={`p-8 ${isLast ? 'rounded-br-[40px]' : ''}`}>
                           {u.role === 'driver' ? (
                             <ZoneSelector currentZones={u.delivery_zones} onUpdate={(newZones) => handleUpdateUserZone(u.id, newZones)} />
                           ) : <span className="text-[10px] text-gray-300 italic">N/A</span>}

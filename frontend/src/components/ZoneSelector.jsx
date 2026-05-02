@@ -73,18 +73,18 @@ export default function ZoneSelector({ currentZones, onUpdate }) {
 
           <div className="max-h-60 overflow-y-auto custom-scrollbar-light space-y-1">
             {filteredLocations.map(loc => {
-              const isSelected = selectedZones.includes(loc.pincode);
+              const isSelected = selectedZones.includes(loc.location);
               return (
                 <div 
                   key={`${loc.pincode}-${loc.location}`}
-                  onClick={() => toggleZone(loc.pincode)}
+                  onClick={() => toggleZone(loc.location)}
                   className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all ${isSelected ? 'bg-rose-50 border-rose-100' : 'hover:bg-gray-50'}`}
                 >
-                  <div>
-                    <p className="text-[10px] font-black text-gray-900">{loc.location}</p>
-                    <p className="text-[9px] font-bold text-gray-400">{loc.pincode}</p>
+                  <div className="flex-1 mr-4 overflow-hidden">
+                    <p className="text-[10px] font-black text-gray-900 truncate" title={loc.location}>{loc.location}</p>
+                    <p className="text-[8px] font-bold text-gray-400">{loc.pincode}</p>
                   </div>
-                  {isSelected && <Icons.Check size={14} className="text-rose-500" />}
+                  {isSelected && <Icons.Check size={14} className="text-rose-500 flex-shrink-0" />}
                 </div>
               );
             })}

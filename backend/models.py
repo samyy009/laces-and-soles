@@ -1,7 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+from extensions import db
 from datetime import datetime
-
-db = SQLAlchemy()
 
 class User(db.Model):
     __tablename__ = 'users'
@@ -52,18 +50,18 @@ class Product(db.Model):
     brand = db.Column(db.String(100), nullable=False)
     image_url = db.Column(db.Text, nullable=False)
     badge = db.Column(db.String(50), nullable=True)
-    category = db.Column(db.String(50), nullable=False, default='men')
+    category = db.Column(db.String(50), nullable=False, default='men', index=True)
     type = db.Column(db.String(50), nullable=False, default='sneakers')
     stock = db.Column(db.Integer, default=10)
     rating = db.Column(db.Float, default=4.5)
     description = db.Column(db.Text, nullable=True)
     colors = db.Column(db.String(255), nullable=True) # comma separated
     sizes = db.Column(db.String(255), nullable=True)  # comma separated
-    collection = db.Column(db.String(100), nullable=True) # e.g. 'urban-explorer'
+    collection = db.Column(db.String(100), nullable=True, index=True) # e.g. 'urban-explorer'
     gallery = db.Column(db.Text, nullable=True) # comma separated image URLs
     discount = db.Column(db.Float, default=0) # percentage discount
     reviews_count = db.Column(db.Integer, default=10) # mock review count
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     
     reviews = db.relationship('Review', backref='product', lazy=True)
 
@@ -93,10 +91,10 @@ class Product(db.Model):
 class Order(db.Model):
     __tablename__ = 'orders'
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
     total_amount = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(50), default='Pending') # Pending, Packed, Shipped, Out for Delivery, Delivered, Cancelled
-    driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    status = db.Column(db.String(50), default='Pending', index=True) # Pending, Packed, Shipped, Out for Delivery, Delivered, Cancelled
+    driver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True, index=True)
     driver_lat = db.Column(db.Float, nullable=True)
     driver_lng = db.Column(db.Float, nullable=True)
     shipping_address = db.Column(db.Text, nullable=True)
@@ -112,7 +110,7 @@ class Order(db.Model):
     return_reason = db.Column(db.String(255), nullable=True)
     cancellation_reason = db.Column(db.String(255), nullable=True)
     
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     
     items = db.relationship('OrderItem', backref='order', lazy=True)
     # The backrefs 'customer' and 'driver' are defined in the User model relationships above
