@@ -10,6 +10,7 @@ from services.email_service import send_delivery_otp_email
 logger = logging.getLogger(__name__)
 driver_bp = Blueprint('driver', __name__)
 
+
 @driver_bp.route('/api/driver/orders', methods=['GET'])
 @jwt_required()
 def get_driver_orders():
@@ -19,6 +20,7 @@ def get_driver_orders():
         return jsonify({'error': 'Unauthorized'}), 403
     orders = Order.query.filter_by(driver_id=driver_id).order_by(Order.created_at.desc()).all()
     return jsonify({'orders': [o.to_dict() for o in orders]}), 200
+
 
 @driver_bp.route('/api/driver/orders/<int:order_id>/status', methods=['PATCH'])
 @jwt_required()
@@ -34,6 +36,7 @@ def update_order_status(order_id):
     db.session.commit()
     socketio.emit('status_updated', {'order_id': order.id, 'status': new_status}, room=f"order_{order.id}")
     return jsonify({'message': f'Status updated to {new_status}'}), 200
+
 
 @driver_bp.route('/api/driver/orders/<int:order_id>/send-otp', methods=['POST'])
 @jwt_required()

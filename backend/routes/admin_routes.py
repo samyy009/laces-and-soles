@@ -1,4 +1,6 @@
 import os
+import json
+
 import random
 import string
 import logging
@@ -110,7 +112,6 @@ def flash_approve_orders():
         order.status = 'Out for Delivery'
         assigned_driver = None
         if order.pincode:
-            import json, os
             locations_path = os.path.join(os.path.dirname(__file__), '../../frontend/src/hubli_locations.json')
             try:
                 with open(locations_path, 'r') as f:
@@ -155,7 +156,9 @@ def bulk_import():
         return jsonify({'error': 'No data payload received.'}), 400
 
     temp_dir = os.path.join(UPLOAD_FOLDER, 'temp_bulk_extraction')
-    if os.path.exists(temp_dir): shutil.rmtree(temp_dir)
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+
     os.makedirs(temp_dir)
 
     imported_count = 0
@@ -203,7 +206,9 @@ def bulk_import():
                 final_price = base_price
                 if randomize:
                     final_price = base_price + random.randint(-500, 1500)
-                    if final_price < 999: final_price = 1299
+                    if final_price < 999:
+                        final_price = 1299
+
 
                 main_image = saved_urls[0]
                 for url in saved_urls:
@@ -211,7 +216,7 @@ def bulk_import():
                         main_image = url
                         break
 
-                new_p = Product(
+                new_p = Product( # type: ignore[call-arg]
                     title=title, price=float(final_price), old_price=final_price + 2000,
                     brand=brand, image_url=main_image, gallery=",".join(saved_urls),
                     category=category, type=inferred_type, collection=collection,
@@ -299,7 +304,7 @@ def add_product():
         image_file.save(image_path)
         image_url = f"http://localhost:5000/uploads/{filename}"
 
-        new_p = Product(
+        new_p = Product( # type: ignore[call-arg]
             title=title, price=float(price), brand=brand, 
             image_url=image_url, badge=request.form.get('badge')
         )
@@ -318,7 +323,9 @@ def delete_product(product_id):
         return jsonify({'error': 'Unauthorized'}), 403
     
     product = db.session.get(Product, product_id)
-    if not product: return jsonify({'error': 'Product not found'}), 404
+    if not product:
+        return jsonify({'error': 'Product not found'}), 404
+
     
     try:
         db.session.delete(product)
@@ -346,7 +353,7 @@ def manage_coupons():
         if Coupon.query.filter_by(code=code).first():
             return jsonify({'error': 'Coupon already exists'}), 400
             
-        new_coupon = Coupon(code=code, discount_percentage=float(discount), is_active=True)
+        new_coupon = Coupon(code=code, discount_percentage=float(discount), is_active=True) # type: ignore[call-arg]
         db.session.add(new_coupon)
         db.session.commit()
         return jsonify({'message': 'Coupon created', 'coupon': new_coupon.to_dict()}), 201
