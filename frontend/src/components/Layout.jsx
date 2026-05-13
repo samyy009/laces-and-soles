@@ -4,6 +4,7 @@ import CartDrawer from './CartDrawer';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
+import ChatBot from './ChatBot';
 
 export default function Layout({ children }) {
   const [showGoTop, setShowGoTop] = useState(false);
@@ -34,11 +35,13 @@ export default function Layout({ children }) {
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'auto' })}
           aria-label="Go to top"
-          className="fixed bottom-8 right-8 z-50 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-rose-500 text-white shadow-2xl transition-all hover:bg-rose-600 hover:-translate-y-2 active:scale-90"
+          className="fixed bottom-8 right-28 z-50 flex h-14 w-14 items-center justify-center rounded-full border-4 border-white bg-rose-500 text-white shadow-2xl transition-all hover:bg-rose-600 hover:-translate-y-2 active:scale-90"
         >
           <Icons.ArrowUp size={24} />
         </button>
       )}
+
+      <ChatBot />
     </div>
   );
 }
