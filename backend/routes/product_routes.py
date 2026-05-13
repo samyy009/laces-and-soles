@@ -103,7 +103,13 @@ def add_review(product_id):
     if not has_purchased:
         return jsonify({'error': 'Only customers who have purchased and received this item can leave a review.'}), 403
         
-    review = Review(user_id=user_id, product_id=product_id, rating=rating, comment=comment)
+    # Explicitly create the review object
+    review = Review()
+    review.user_id = user_id
+    review.product_id = product_id
+    review.rating = int(rating)
+    review.comment = comment
+    
     db.session.add(review)
     db.session.commit()
     

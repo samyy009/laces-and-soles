@@ -59,14 +59,11 @@ def create_app():
     from routes.order_routes import order_bp
     from routes.admin_routes import admin_bp
     from routes.driver_routes import driver_bp
-    from routes.chat_routes import chat_bp
-
     app.register_blueprint(auth_bp)
     app.register_blueprint(product_bp)
     app.register_blueprint(order_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(driver_bp)
-    app.register_blueprint(chat_bp)
 
     # Static folder for uploads
     @app.route('/uploads/<path:filename>')

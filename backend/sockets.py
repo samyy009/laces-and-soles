@@ -6,6 +6,10 @@ from models import Order
 logger = logging.getLogger(__name__)
 
 def init_sockets(socketio):
+    @socketio.on('connect')
+    def on_connect():
+        print("Client connected to Socket.io")
+
     @socketio.on('join_order_tracking')
     def on_join(data):
         order_id = data.get('order_id')
@@ -18,16 +22,10 @@ def init_sockets(socketio):
         order_id = data.get('order_id')
         lat = data.get('lat')
         lng = data.get('lng')
-        
         if all([order_id, lat, lng]):
-            order = db.session.get(Order, order_id)
-            if order:
-                order.driver_lat = lat
-                order.driver_lng = lng
-                db.session.commit()
-                
-                emit('location_broadcast', {
-                    'order_id': order_id,
-                    'lat': lat,
-                    'lng': lng
-                }, room=f"order_{order_id}")
+            # Broadcast to the specific order room
+            emit('location_broadcast', {
+                'order_id': order_id,
+                'lat': lat,
+                'lng': lng
+            }, to=f"order_{order_id}")

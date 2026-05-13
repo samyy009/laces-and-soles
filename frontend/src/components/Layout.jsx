@@ -4,7 +4,6 @@ import CartDrawer from './CartDrawer';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
-import ChatBot from './ChatBot';
 
 export default function Layout({ children }) {
   const [showGoTop, setShowGoTop] = useState(false);
@@ -41,7 +40,8 @@ export default function Layout({ children }) {
         </button>
       )}
 
-      <ChatBot />
+
+      {/* Scroll to top button removed from here if it was near */}
     </div>
   );
 }
