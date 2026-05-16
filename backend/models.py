@@ -234,3 +234,17 @@ class Coupon(db.Model):
             'discount_percentage': self.discount_percentage,
             'is_active': self.is_active
         }
+
+class NewsletterSubscriber(db.Model):
+    __tablename__ = 'newsletter_subscribers'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None
+        }
+

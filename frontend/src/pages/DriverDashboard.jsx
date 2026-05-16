@@ -4,10 +4,11 @@ import { io } from 'socket.io-client';
 import * as Icons from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { API } from '../context/ShopContext';
+import { useShop, API } from '../context/ShopContext';
 
 export default function DriverDashboard() {
   const { user } = useAuth();
+  const { formatImageUrl } = useShop();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isTracking, setIsTracking] = useState(false);
@@ -53,24 +54,7 @@ export default function DriverDashboard() {
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm("Remove this order from your dashboard?")) return;
-    try {
-      const res = await fetch(`${API}/api/orders/${orderId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-      });
-      if (res.ok) {
-        setOrders(orders.filter(o => o.id !== orderId));
-        toast.success("Order removed from view");
-      } else {
-        const data = await res.json();
-        toast.error(data.error || "Failed to remove order");
-      }
-    } catch (err) {
-      toast.error("Error removing order");
-    }
-  };
+
 
   const updateStatus = async (orderId, newStatus) => {
     try {
@@ -189,13 +173,7 @@ export default function DriverDashboard() {
                     }`}>
                       {order.status}
                     </div>
-                    <button 
-                      onClick={() => handleDeleteOrder(order.id)}
-                      className="p-2 text-zinc-600 hover:text-red-500 transition-colors"
-                    >
-                      <Icons.Trash2 size={16} />
-                    </button>
-                  </div>
+                   </div>
                 </div>
 
                 <div className="flex flex-col gap-3 mb-8 bg-zinc-950/30 p-4 rounded-2xl border border-zinc-800/50">
@@ -238,7 +216,7 @@ export default function DriverDashboard() {
                       {order.items.map((item, i) => (
                         <div key={i} className="flex items-center gap-4 bg-zinc-900/80 p-3 rounded-2xl min-w-[280px] border border-zinc-800">
                            <div className="size-20 bg-white rounded-xl p-2 flex items-center justify-center shrink-0 shadow-xl">
-                              <img src={item.product?.image} alt="" className="max-w-full max-h-full object-contain" />
+                              <img src={formatImageUrl(item.product?.image)} alt="" className="max-w-full max-h-full object-contain" />
                            </div>
                            <div className="flex-1 min-w-0">
                               <p className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">{item.product?.brand}</p>
@@ -366,7 +344,8 @@ export default function DriverDashboard() {
                 </div>
               </div>
             ))
-          )}
+          )
+        }
         </div>
       </div>
     </div>

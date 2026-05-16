@@ -53,6 +53,30 @@ export const ShopProvider = ({ children }) => {
           p.id === data.product_id ? { ...p, stock: data.new_stock } : p
         )
       );
+
+      setCartItems(prev => {
+        const itemInCart = prev.find(item => item.id.toString() === data.product_id.toString());
+        if (itemInCart) {
+            if (data.new_stock === 0) {
+                toast.error(
+                  <div className="font-bold text-xs">
+                    <span className="block text-rose-500 font-black mb-1">🚨 CART ALERT: SOLD OUT</span>
+                    Someone just bought the last pair of an item in your cart!
+                  </div>, 
+                  { autoClose: false }
+                );
+            } else if (data.new_stock < itemInCart.quantity) {
+                toast.warning(
+                  <div className="font-bold text-xs">
+                    <span className="block text-yellow-600 font-black mb-1">⚠️ CART ALERT: LOW STOCK</span>
+                    Only {data.new_stock} left for an item in your cart. Checkout soon!
+                  </div>, 
+                  { autoClose: 10000 }
+                );
+            }
+        }
+        return prev;
+      });
     });
 
     socket.on('new_purchase', (data) => {

@@ -20,9 +20,32 @@ export default function Checkout() {
   // Checkout State
   const [step, setStep] = useState(1); // 1: Shipping, 2: KYC, 3: Payment, 4: Success
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
   const [confirmedOrderId, setConfirmedOrderId] = useState('');
   const [confirmedOrder, setConfirmedOrder] = useState(null);
   const [shippingData, setShippingData] = useState({ name: '', phone: '', address: '', city: '', state: '', pincode: '' });
+  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+
+  useEffect(() => {
+    if (cartItems.length === 0 || step === 4) return;
+    const timerId = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          clearInterval(timerId);
+          toast.error("Your cart reservation expired. Items are no longer guaranteed.", { autoClose: false });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timerId);
+  }, [cartItems.length, step]);
+
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+  };
 
   // Discount & Promo State
   const [promoCode, setPromoCode] = useState('');
@@ -115,7 +138,7 @@ export default function Checkout() {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckoutClick = async () => {
     // Hubli Pincode Validation
     const hubliPincodes = hubliLocations.map(l => l.pincode);
     if (!hubliPincodes.includes(shippingData.pincode)) {
@@ -144,6 +167,13 @@ export default function Checkout() {
       return;
     }
     
+    setIsProcessing(false);
+    setShowPaymentOptions(true);
+  };
+
+  const processPayment = async (method) => {
+    setShowPaymentOptions(false);
+    setIsProcessing(true);
     try {
       // Simulation Mode Bypass
       if (import.meta.env.VITE_MOCK_PAYMENT === 'true') {
@@ -435,6 +465,22 @@ export default function Checkout() {
       </section>
 
       <section className="py-10 mx-auto max-w-7xl px-4">
+        {step !== 4 && cartItems.length > 0 && timeLeft > 0 && (
+           <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
+              <div className="flex items-center gap-3">
+                 <div className="size-8 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center animate-pulse shrink-0">
+                    <Icons.Clock size={16} />
+                 </div>
+                 <span className="text-xs font-bold text-rose-800">High Demand! We've reserved your cart. Complete checkout before the timer runs out to guarantee your items.</span>
+              </div>
+              <div className="bg-white px-4 py-2 rounded-xl border border-rose-200 shadow-sm shrink-0">
+                 <span className="text-sm font-black text-rose-600 tracking-wider flex items-center gap-2">
+                    {formatTime(timeLeft)}
+                 </span>
+              </div>
+           </div>
+        )}
+
         {step === 4 ? (
           <div className="text-center py-16 bg-white rounded-[40px] shadow-2xl border border-gray-100 overflow-hidden relative max-w-4xl mx-auto">
             <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-emerald-400 via-green-500 to-teal-600"></div>
@@ -681,7 +727,7 @@ export default function Checkout() {
 
                     <div className="space-y-4 max-w-sm mx-auto">
                       <button 
-                        onClick={handleCheckout} 
+                        onClick={handleCheckoutClick} 
                         disabled={isProcessing}
                         className="w-full bg-[#1A73E8] text-white py-5 text-sm flex items-center justify-center gap-3 font-black uppercase tracking-widest rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-600/20 transition-all disabled:opacity-70 active:scale-95"
                       >
@@ -794,6 +840,44 @@ export default function Checkout() {
                   </div>
                 </div>
 
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Payment Options Modal */}
+        {showPaymentOptions && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white rounded-[32px] p-8 max-w-md w-full shadow-2xl relative animate-fade-in-scale">
+              <button onClick={() => setShowPaymentOptions(false)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900 transition-colors">
+                <Icons.X size={24} />
+              </button>
+              <h3 className="text-xl font-black uppercase text-center mb-6 tracking-tighter">Select Payment Method</h3>
+              
+              {/* QR Code Container */}
+              <div className="bg-[#F8FAFC] rounded-2xl p-6 mb-6 flex flex-col items-center justify-center border border-gray-100 shadow-inner">
+                 <p className="text-[10px] font-black text-gray-400 mb-4 uppercase tracking-[0.2em]">Scan to Pay via UPI</p>
+                 <div className="p-3 bg-white rounded-xl shadow-sm border border-gray-100">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=mock@upi&pn=LacesAndSoles&am=${total.toFixed(2)}`} alt="UPI QR Code" className="size-32" />
+                 </div>
+                 <p className="text-sm font-black text-blue-600 mt-4 tracking-wider">₹{total.toFixed(2)}</p>
+              </div>
+
+              <div className="space-y-3">
+                <button onClick={() => processPayment('UPI')} className="group w-full border border-gray-200 py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-blue-50 hover:border-blue-200 transition-all font-bold text-sm">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/c/cb/UPI-Logo-vector.svg" alt="UPI" className="h-4 group-hover:scale-110 transition-transform" /> Pay via UPI
+                </button>
+                <button onClick={() => processPayment('Card')} className="group w-full border border-gray-200 py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-blue-50 hover:border-blue-200 transition-all font-bold text-sm">
+                  <Icons.CreditCard size={18} className="text-gray-400 group-hover:text-blue-600 transition-colors"/> Pay via Credit/Debit Card
+                </button>
+                <button onClick={() => processPayment('PayPal')} className="group w-full border border-gray-200 py-4 rounded-xl flex items-center justify-center gap-3 hover:bg-blue-50 hover:border-blue-200 transition-all font-bold text-sm">
+                  <img src="https://upload.wikimedia.org/wikipedia/commons/b/b5/PayPal.svg" alt="PayPal" className="h-4 group-hover:scale-110 transition-transform" /> Pay via PayPal
+                </button>
+              </div>
+              
+              <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-center gap-2">
+                 <Icons.ShieldCheck size={14} className="text-green-500" />
+                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Secured by Razorpay</span>
               </div>
             </div>
           </div>

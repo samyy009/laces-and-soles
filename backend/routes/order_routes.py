@@ -1,8 +1,6 @@
-import os
 import random
 import string
 import logging
-import traceback
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -31,7 +29,7 @@ def handle_cart():
         if existing:
             existing.quantity += quantity
         else:
-            db.session.add(CartItem(user_id=user_id, product_id=product_id, quantity=quantity))
+            db.session.add(CartItem(user_id=user_id, product_id=product_id, quantity=quantity))  # type: ignore[call-arg]
         db.session.commit()
         return jsonify({'message': 'Added to cart'}), 200
     elif request.method == 'DELETE':
@@ -53,7 +51,7 @@ def handle_wishlist():
     elif request.method == 'POST':
         product_id = request.get_json().get('product_id')
         if not WishlistItem.query.filter_by(user_id=user_id, product_id=product_id).first():
-            db.session.add(WishlistItem(user_id=user_id, product_id=product_id))
+            db.session.add(WishlistItem(user_id=user_id, product_id=product_id))  # type: ignore[call-arg]
             db.session.commit()
         return jsonify({'message': 'Added to wishlist'}), 200
     elif request.method == 'DELETE':
@@ -106,7 +104,7 @@ def create_razorpay_order():
     
     amount_paise = int(total_price * 100)
     try:
-        razorpay_order = razorpay_client.order.create({"amount": amount_paise, "currency": "INR", "payment_capture": 1})
+        razorpay_order = razorpay_client.order.create({"amount": amount_paise, "currency": "INR", "payment_capture": 1})  # type: ignore
         return jsonify({'razorpay_order_id': razorpay_order['id'], 'amount': total_price, 'currency': 'INR'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -146,20 +144,25 @@ def verify_payment():
         item_total = (item.product.price * item.quantity) + (15.00 if index == 0 else 0)
 
         new_order = Order(
-            user_id=user_id, total_amount=item_total, status='Processing',
-            shipping_address=address_str, pincode=pincode, tracking_id=unique_track_id,
-            payment_method=f"Razorpay ({razorpay_payment_id})", distance_km=distance_km
+            user_id=user_id, total_amount=item_total, status='Processing',  # type: ignore[call-arg]
+            shipping_address=address_str, pincode=pincode, tracking_id=unique_track_id,  # type: ignore[call-arg]
+            payment_method=f"Razorpay ({razorpay_payment_id})", distance_km=distance_km  # type: ignore[call-arg]
         )
         db.session.add(new_order)
         db.session.flush()
 
         # Atomic Stock Update: Only decrement if stock is sufficient
-        affected_rows = Product.query.filter_by(id=item.product_id).filter(Product.stock >= item.quantity).update({"stock": Product.stock - item.quantity})
+        affected_rows = Product.query.filter_by(id=item.product_id).filter(Product.stock >= item.quantity).update({"stock": Product.stock - item.quantity}, synchronize_session=False)
         if not affected_rows:
             db.session.rollback()
             return jsonify({'error': f"Insufficient stock for {item.product.title}"}), 400
 
-        db.session.add(OrderItem(order_id=new_order.id, product_id=item.product_id, quantity=item.quantity, price=item.product.price))
+        # Emit live stock update and recent purchase
+        updated_product = db.session.get(Product, item.product_id)
+        socketio.emit('inventory_updated', {'product_id': item.product_id, 'new_stock': updated_product.stock})
+        socketio.emit('new_purchase', {'user_name': user.full_name, 'product_title': item.product.title, 'product_image': item.product.image_url, 'product_id': item.product.id})
+
+        db.session.add(OrderItem(order_id=new_order.id, product_id=item.product_id, quantity=item.quantity, price=item.product.price))  # type: ignore[call-arg]
         db.session.delete(item)
         created_orders.append(new_order)
 
@@ -199,15 +202,15 @@ def handle_orders():
             item_total = (item.product.price * item.quantity) + (15.00 if index == 0 else 0)
 
             new_order = Order(
-                user_id=user_id, total_amount=item_total, status='Processing',
-                shipping_address=address_str, pincode=pincode, tracking_id=unique_track_id,
-                payment_method=data.get('payment_method', 'COD'), distance_km=distance_km
+                user_id=user_id, total_amount=item_total, status='Processing',  # type: ignore[call-arg]
+                shipping_address=address_str, pincode=pincode, tracking_id=unique_track_id,  # type: ignore[call-arg]
+                payment_method=data.get('payment_method', 'COD'), distance_km=distance_km  # type: ignore[call-arg]
             )
             db.session.add(new_order)
             db.session.flush()
 
             # Atomic Stock Update
-            affected_rows = Product.query.filter_by(id=item.product_id).filter(Product.stock >= item.quantity).update({"stock": Product.stock - item.quantity})
+            affected_rows = Product.query.filter_by(id=item.product_id).filter(Product.stock >= item.quantity).update({"stock": Product.stock - item.quantity}, synchronize_session=False)
             if not affected_rows:
                 db.session.rollback()
                 return jsonify({'error': f"Insufficient stock for {item.product.title}"}), 400
@@ -217,7 +220,7 @@ def handle_orders():
             socketio.emit('inventory_updated', {'product_id': item.product_id, 'new_stock': updated_product.stock})
             socketio.emit('new_purchase', {'user_name': user.full_name, 'product_title': item.product.title, 'product_image': item.product.image_url, 'product_id': item.product.id})
             
-            db.session.add(OrderItem(order_id=new_order.id, product_id=item.product_id, quantity=item.quantity, price=item.product.price))
+            db.session.add(OrderItem(order_id=new_order.id, product_id=item.product_id, quantity=item.quantity, price=item.product.price))  # type: ignore[call-arg]
             db.session.delete(item)
             created_orders.append(new_order)
 
@@ -236,18 +239,34 @@ def cancel_order(tracking_id):
     user_id = int(get_jwt_identity())
     orders = Order.query.filter_by(tracking_id=tracking_id, user_id=user_id).all()
     if not orders: return jsonify({'error': 'Order not found'}), 404
-    data = request.get_json()
+    data = request.get_json() or {}
+    
+    refund_initiated = False
+    
     for order in orders:
         if order.status not in ['Pending', 'Processing', 'Packed']:
             return jsonify({'error': f'Cannot cancel order in {order.status} stage'}), 400
+            
         for item in order.items:
-            Product.query.filter_by(id=item.product_id).update({"stock": Product.stock + item.quantity})
+            Product.query.filter_by(id=item.product_id).update({"stock": Product.stock + item.quantity}, synchronize_session=False)
             updated_product = db.session.get(Product, item.product_id)
             socketio.emit('inventory_updated', {'product_id': item.product_id, 'new_stock': updated_product.stock})
-        order.status = 'Cancelled'
+            
+        # Refund Logic Check
+        if order.payment_method and 'Razorpay' in order.payment_method:
+            order.status = 'Cancelled - Refund Initiated'
+            refund_initiated = True
+        else:
+            order.status = 'Cancelled'
+            
         order.cancellation_reason = data.get('reason', 'User cancelled')
     db.session.commit()
-    return jsonify({'message': 'Order cancelled'}), 200
+    
+    message = 'Order cancelled.'
+    if refund_initiated:
+        message += ' A refund has been initiated and will be credited to your original payment method in 5-7 business days.'
+        
+    return jsonify({'message': message, 'refund_initiated': refund_initiated}), 200
 
 
 @order_bp.route('/api/orders/<tracking_id>/return', methods=['POST'])
@@ -256,7 +275,7 @@ def return_order(tracking_id):
     user_id = int(get_jwt_identity())
     orders = Order.query.filter_by(tracking_id=tracking_id, user_id=user_id).all()
     if not orders: return jsonify({'error': 'Order not found'}), 404
-    data = request.get_json()
+    data = request.get_json() or {}
     for order in orders:
         if order.status != 'Delivered': return jsonify({'error': 'Only delivered items can be returned'}), 400
         order.status = 'Return Requested'
@@ -270,7 +289,7 @@ def update_shipping_address(tracking_id):
     user_id = int(get_jwt_identity())
     orders = Order.query.filter_by(tracking_id=tracking_id, user_id=user_id).all()
     if not orders: return jsonify({'error': 'Order not found'}), 404
-    data = request.get_json()
+    data = request.get_json() or {}
     for order in orders:
         order.shipping_address = data.get('address', order.shipping_address)
         order.pincode = data.get('pincode', order.pincode)
@@ -308,17 +327,28 @@ def cancel_order_v2(order_id):
     order = db.session.get(Order, order_id)
     if not order: return jsonify({'error': 'Order not found'}), 404
     if order.user_id != user_id: return jsonify({'error': 'Unauthorized'}), 403
-    if order.status in ['Shipped', 'Delivered', 'Cancelled']:
+    if order.status in ['Shipped', 'Delivered', 'Cancelled', 'Cancelled - Refund Initiated']:
         return jsonify({'error': f'Cannot cancel an order that is already {order.status}.'}), 400
          
     try:
-        order.status = 'Cancelled'
+        refund_initiated = False
+        if order.payment_method and 'Razorpay' in order.payment_method:
+            order.status = 'Cancelled - Refund Initiated'
+            refund_initiated = True
+        else:
+            order.status = 'Cancelled'
+            
         for item in order.items:
-            Product.query.filter_by(id=item.product_id).update({"stock": Product.stock + item.quantity})
+            Product.query.filter_by(id=item.product_id).update({"stock": Product.stock + item.quantity}, synchronize_session=False)
             updated_product = db.session.get(Product, item.product_id)
             socketio.emit('inventory_updated', {'product_id': item.product_id, 'new_stock': updated_product.stock})
         db.session.commit()
-        return jsonify({'message': 'Order successfully cancelled.'}), 200
+        
+        message = 'Order successfully cancelled.'
+        if refund_initiated:
+            message += ' A refund has been initiated and will be credited to your original payment method in 5-7 business days.'
+            
+        return jsonify({'message': message, 'refund_initiated': refund_initiated}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': 'Failed to cancel order', 'details': str(e)}), 500
@@ -327,42 +357,40 @@ def cancel_order_v2(order_id):
 def track_order(tracking_id):
     if not tracking_id.startswith('L&S'):
         return jsonify({'error': 'Invalid Tracking ID format.'}), 400
+    
     order = Order.query.filter_by(tracking_id=tracking_id).first()
-    if not order: return jsonify({'error': 'Tracking ID not found.'}), 404
+    if not order: 
+        return jsonify({'error': 'Tracking ID not found.'}), 404
     
-    user_id = order.user_id
-    orders = Order.query.filter_by(user_id=user_id).filter(Order.status != 'Cancelled').order_by(Order.created_at.desc()).all()
-    if not orders: return jsonify({'error': 'No active shipments.'}), 404
-    
-    all_items = []
-    active_drivers = []
-    active_driver_order = None
-    for o in orders:
-        for item in o.items:
-            all_items.append({
-                'title': item.product.title, 'image': item.product.image_url, 'brand': item.product.brand,
-                'quantity': item.quantity, 'price': item.price, 'order_id': o.id, 'status': o.status
-            })
-        if o.status == 'Out for Delivery' and o.driver_id:
-            if not any(d['driver_id'] == o.driver_id for d in active_drivers):
-                active_drivers.append({'driver_id': o.driver_id, 'driver_lat': o.driver_lat, 'driver_lng': o.driver_lng, 'order_id': o.id})
-            if not active_driver_order: active_driver_order = o
+    all_items = [item.to_dict() for item in order.items]
 
-    status_priority = {'Pending': 0, 'Packed': 1, 'Shipped': 2, 'Out for Delivery': 3, 'Delivered': 4}
-    current_order = orders[0]
-    max_status = max(orders, key=lambda x: status_priority.get(x.status, 0)).status
+    active_drivers = []
+    driver_lat = None
+    driver_lng = None
+    driver_id = None
+
+    if order.status == 'Out for Delivery' and order.driver_id:
+        active_drivers.append({'driver_id': order.driver_id, 'driver_lat': order.driver_lat, 'driver_lng': order.driver_lng, 'order_id': order.id})
+        driver_lat = order.driver_lat
+        driver_lng = order.driver_lng
+        driver_id = order.driver_id
+
+    status_priority = {'Pending': 0, 'Packed': 1, 'Shipped': 2, 'Out for Delivery': 3, 'Delivered': 4, 'Cancelled': -1, 'Cancelled - Refund Initiated': -1}
+    current_status = order.status
+    
     milestones = {
-        'ordered': current_order.created_at.isoformat(),
-        'packed': (current_order.created_at + timedelta(hours=2)).isoformat() if status_priority.get(max_status, 0) >= 1 else None,
-        'shipped': (current_order.created_at + timedelta(hours=6)).isoformat() if status_priority.get(max_status, 0) >= 2 else None,
-        'delivered': (current_order.created_at + timedelta(hours=24)).isoformat() if max_status == 'Delivered' else None,
+        'ordered': order.created_at.isoformat(),
+        'packed': (order.created_at + timedelta(hours=2)).isoformat() if status_priority.get(current_status, 0) >= 1 else None,
+        'shipped': (order.created_at + timedelta(hours=6)).isoformat() if status_priority.get(current_status, 0) >= 2 else None,
+        'delivered': (order.created_at + timedelta(hours=24)).isoformat() if current_status == 'Delivered' else None,
     }
+    
     return jsonify({
-        'user_id': user_id, 'tracking_id': tracking_id, 'current_status': max_status,
+        'user_id': order.user_id, 'tracking_id': tracking_id, 'current_status': current_status,
         'milestones': milestones, 'courier': 'Delhivery Prepaid', 'items': all_items,
-        'total_amount': sum(o.total_amount for o in orders), 'shipping_address': current_order.shipping_address,
-        'driver_lat': active_driver_order.driver_lat if active_driver_order else None,
-        'driver_lng': active_driver_order.driver_lng if active_driver_order else None,
-        'driver_id': active_driver_order.driver_id if active_driver_order else None,
-        'active_drivers': active_drivers, 'orders_count': len(orders)
+        'total_amount': order.total_amount, 'shipping_address': order.shipping_address,
+        'driver_lat': driver_lat,
+        'driver_lng': driver_lng,
+        'driver_id': driver_id,
+        'active_drivers': active_drivers, 'orders_count': 1
     }), 200

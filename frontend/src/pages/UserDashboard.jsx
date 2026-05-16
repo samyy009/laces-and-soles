@@ -67,9 +67,9 @@ export default function UserDashboard() {
     navigate('/');
   };
 
-  const cancelOrder = async (orderId) => {
+  const cancelOrder = async (trackingId) => {
     try {
-      await axios.patch(`${API}/api/orders/${orderId}/cancel`, {}, {
+      await axios.post(`${API}/api/orders/${trackingId}/cancel`, {}, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       toast.success("Order cancelled");
@@ -156,8 +156,8 @@ export default function UserDashboard() {
         index + 1,
         `${item.product?.title || 'Product'}\n${item.product?.brand || ''}`,
         item.quantity || 1,
-        `INR ${(item.product?.price || 0).toFixed(2)}`,
-        `INR ${((item.product?.price || 0) * (item.quantity || 1)).toFixed(2)}`
+        `INR ${(item.price || 0).toFixed(2)}`,
+        `INR ${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`
       ]);
 
       autoTable(doc, {
@@ -225,13 +225,13 @@ export default function UserDashboard() {
                 <div>
                    <h2 className="text-base font-black text-gray-900 uppercase tracking-tighter mb-3">Active Shipments</h2>
                    
-                   {orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length === 0 ? (
+                   {orders.filter(o => o.status !== 'Delivered' && !o.status?.includes('Cancelled')).length === 0 ? (
                       <div className="text-center py-4 bg-gray-50 rounded-xl mb-4 border border-dashed border-gray-200">
                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">No active shipments</h3>
                       </div>
                    ) : (
                       <div className="space-y-3 mb-6">
-                         {orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').map(order => (
+                         {orders.filter(o => o.status !== 'Delivered' && !o.status?.includes('Cancelled')).map(order => (
                             <div key={order.id} className="border border-gray-100 rounded-xl p-3 relative bg-white shadow-sm hover:shadow-md transition-all">
                                <div className="flex flex-wrap items-center justify-between gap-2 mb-3 border-b border-gray-100 pb-3">
                                   <div className="flex items-center gap-4">
@@ -247,7 +247,7 @@ export default function UserDashboard() {
                                      </div>
                                      <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total</p>
-                                        <p className="text-sm font-black text-[#ff3366] mt-1">â‚¹{order.total_amount.toLocaleString()}</p>
+                                        <p className="text-sm font-black text-[#ff3366] mt-1">₹{order.total_amount.toLocaleString()}</p>
                                      </div>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-end gap-3">
@@ -284,7 +284,7 @@ export default function UserDashboard() {
                                   ))}
                                </div>
                                {order.status === 'Processing' && (
-                                  <button onClick={() => cancelOrder(order.id)} className="mt-4 text-xs font-bold text-gray-400 hover:text-[#ff3366] uppercase tracking-widest transition-colors">
+                                  <button onClick={() => cancelOrder(order.tracking_id)} className="mt-4 text-xs font-bold text-gray-400 hover:text-[#ff3366] uppercase tracking-widest transition-colors">
                                      Cancel Order
                                   </button>
                                )}
@@ -294,13 +294,13 @@ export default function UserDashboard() {
                    )}
 
                    <h2 className="text-base font-black text-gray-900 uppercase tracking-tighter mb-3 mt-5">Past Orders</h2>
-                   {orders.filter(o => ['Delivered', 'Cancelled', 'Return Requested', 'Returned'].includes(o.status)).length === 0 ? (
+                   {orders.filter(o => ['Delivered', 'Return Requested', 'Returned'].includes(o.status) || o.status?.includes('Cancelled')).length === 0 ? (
                       <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">No past orders yet</h3>
                       </div>
                    ) : (
                       <div className="space-y-2 opacity-80 hover:opacity-100 transition-opacity">
-                         {orders.filter(o => ['Delivered', 'Cancelled', 'Return Requested', 'Returned'].includes(o.status)).map(order => (
+                         {orders.filter(o => ['Delivered', 'Return Requested', 'Returned'].includes(o.status) || o.status?.includes('Cancelled')).map(order => (
                             <div key={order.id} className="border border-gray-100 rounded-xl p-3 relative bg-gray-50">
                                <div className="flex flex-wrap items-center justify-between gap-2 mb-2 border-b border-gray-200 pb-2">
                                   <div className="flex items-center gap-4">

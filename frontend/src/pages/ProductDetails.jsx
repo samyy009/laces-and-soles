@@ -10,7 +10,7 @@ const API_BASE = `${API}/api`;
 export default function ProductDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart, formatImageUrl } = useShop();
+  const { addToCart, formatImageUrl, products } = useShop();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +21,18 @@ export default function ProductDetails() {
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [pincode, setPincode] = useState('');
   const [deliveryStatus, setDeliveryStatus] = useState(null);
+  const [viewers, setViewers] = useState(Math.floor(Math.random() * 15) + 5);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setViewers(prev => {
+        const change = Math.floor(Math.random() * 5) - 2;
+        const next = prev + change;
+        return next < 3 ? 3 : (next > 35 ? 35 : next);
+      });
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
 
   const handlePincodeCheck = () => {
     if (pincode.length !== 6) {
@@ -74,6 +86,18 @@ export default function ProductDetails() {
     { img: product.image, label: "Top", transform: "rotate(-15deg) scale(1.1)" },
     { img: product.image, label: "Outsole", transform: "rotate(180deg) scaleY(-1)" }
   ];
+
+  // Related Products Logic
+  const getRelatedProducts = () => {
+    if (!products || !product) return [];
+    let related = products.filter(p => p.id !== product.id && p.brand === product.brand);
+    if (related.length < 4) {
+      const others = products.filter(p => p.id !== product.id && !related.some(r => r.id === p.id));
+      related = [...related, ...others];
+    }
+    return related.slice(0, 4);
+  };
+  const relatedProducts = getRelatedProducts();
 
   const SizeGuideModal = () => (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -202,10 +226,10 @@ export default function ProductDetails() {
           {/* ── Details ── */}
           <div className="flex items-center">
              <div className="flex-1 max-w-xl">
-                <div className="inline-flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full mb-3">
+                <div className="inline-flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full mb-3 transition-all duration-500">
                    <div className="size-1.5 rounded-full bg-green-500 animate-pulse" />
                    <span className="text-[8px] font-black uppercase tracking-widest text-green-700">
-                      11 PEOPLE ARE VIEWING THIS MASTERPIECE
+                      {viewers} PEOPLE ARE VIEWING THIS MASTERPIECE
                    </span>
                 </div>
 
@@ -401,7 +425,74 @@ export default function ProductDetails() {
               </div>
            </div>
         </div>
+
+         {/* ── Related Products ── */}
+         {relatedProducts.length > 0 && (
+           <div className="mt-16 pt-10 border-t border-gray-100 max-w-[1400px] mx-auto px-6">
+              <h3 className="text-xl font-black uppercase tracking-tighter mb-8 text-center flex items-center justify-center gap-2">
+                 <Icons.Sparkles size={20} className="text-[#ff3366]" />
+                 YOU MAY ALSO LIKE
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                 {relatedProducts.map(rp => (
+                   <Link key={rp.id} to={`/product/${rp.id}`} className="group bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-xl hover:border-gray-200 transition-all block">
+                     <div className="aspect-square bg-gray-50 rounded-xl mb-4 overflow-hidden relative">
+                        <img src={formatImageUrl(rp.image)} alt={rp.title} className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-500" />
+                     </div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{rp.brand}</p>
+                     <h4 className="text-xs font-bold text-gray-900 line-clamp-1 mb-2">{rp.title}</h4>
+                     <p className="text-sm font-black text-gray-900">₹{rp.price.toLocaleString()}</p>
+                   </Link>
+                 ))}
+              </div>
+           </div>
+         )}
       </div>
+      {/* Size Guide Modal */}
+      {isSizeGuideOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in">
+           <div className="bg-white rounded-[40px] w-full max-w-lg overflow-hidden shadow-2xl relative animate-in zoom-in-95 slide-in-from-bottom-8">
+              <div className="bg-gray-950 p-8 text-white">
+                 <div className="flex justify-between items-center mb-4">
+                    <div>
+                       <h3 className="text-2xl font-black uppercase tracking-tighter">Size Guide</h3>
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">UK TO CM Conversion</p>
+                    </div>
+                    <button onClick={() => setIsSizeGuideOpen(false)} className="size-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#ff3366] transition-colors">
+                       <Icons.X size={20} />
+                    </button>
+                 </div>
+              </div>
+              <div className="p-8">
+                 <table className="w-full text-left border-collapse">
+                    <thead className="bg-gray-50">
+                       <tr>
+                          <th className="p-4 text-[10px] font-black uppercase tracking-widest text-gray-400">UK Size</th>
+                          <th className="p-4 text-[10px] font-black uppercase tracking-widest text-gray-400">Heel-to-Toe (CM)</th>
+                          <th className="p-4 text-[10px] font-black uppercase tracking-widest text-gray-400">EU Size</th>
+                       </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                       {[
+                          { uk: '6', cm: '24.5', eu: '40' },
+                          { uk: '7', cm: '25.4', eu: '41' },
+                          { uk: '8', cm: '26.2', eu: '42' },
+                          { uk: '9', cm: '27.1', eu: '43' },
+                          { uk: '10', cm: '28.0', eu: '44' },
+                          { uk: '11', cm: '28.8', eu: '45' },
+                       ].map((row, i) => (
+                          <tr key={i} className="hover:bg-gray-50 transition-colors">
+                             <td className="p-4 text-sm font-black text-gray-900">UK {row.uk}</td>
+                             <td className="p-4 text-sm font-bold text-gray-600">{row.cm} cm</td>
+                             <td className="p-4 text-sm font-bold text-gray-400">{row.eu}</td>
+                          </tr>
+                       ))}
+                    </tbody>
+                 </table>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }

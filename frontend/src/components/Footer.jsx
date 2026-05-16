@@ -30,11 +30,27 @@ export default function Footer() {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
     if (email.trim()) {
-      setSubscribed(true);
-      setEmail('');
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${API_URL}/api/newsletter/subscribe`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          toast.success(data.message || 'Subscribed successfully!');
+          setSubscribed(true);
+          setEmail('');
+        } else {
+          toast.error(data.error || 'Failed to subscribe.');
+        }
+      } catch (err) {
+        toast.error('Network error. Please try again.');
+      }
     }
   };
 

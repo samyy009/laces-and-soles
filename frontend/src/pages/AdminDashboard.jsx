@@ -24,6 +24,8 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [coupons, setCoupons] = useState([]);
+  const [subscribers, setSubscribers] = useState([]);
+  const [newsletterData, setNewsletterData] = useState({ subject: '', message: '' });
   const [activeTab, setActiveTab] = useState('overview');
   const [activeOrderSubTab, setActiveOrderSubTab] = useState('active');
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
@@ -73,6 +75,10 @@ export default function AdminDashboard() {
       fetch(`${API}/api/admin/coupons`, { headers })
         .then(res => res.json())
         .then(data => setCoupons(data.coupons || []));
+
+      fetch(`${API}/api/admin/subscribers`, { headers })
+        .then(res => res.json())
+        .then(data => setSubscribers(data.subscribers || []));
 
       const socket = io(API);
       socket.on('order_placed', (data) => {
@@ -146,7 +152,7 @@ export default function AdminDashboard() {
     for (let i = 0; i < bulkData.files.length; i++) formData.append('files', bulkData.files[i]);
 
     try {
-      const res = await fetch(`${API}/api/products/bulk`, {
+      const res = await fetch(`${API}/api/admin/bulk-import`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
         body: formData
@@ -208,6 +214,24 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteOrder = async (orderId) => {
+    if (!window.confirm("Delete this order?")) return;
+    try {
+      const res = await fetch(`${API}/api/orders/${orderId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.ok) {
+        setOrders(orders.filter(o => o.id !== orderId));
+        toast.success("Order deleted");
+      } else {
+        toast.error("Failed to delete order");
+      }
+    } catch (err) {
+      toast.error("Error deleting order");
+    }
+  };
+
   const handleDownloadInvoice = (order) => {
     try {
       const doc = new jsPDF();
@@ -241,7 +265,7 @@ export default function AdminDashboard() {
       });
       const tableData = order.items.map((item, index) => [
         index + 1,
-        `${item.title || 'Product'}\n${item.brand || ''}`,
+        `${item.product?.title || 'Product'}\n${item.product?.brand || ''}`,
         item.quantity || 1,
         `INR ${(item.price || 0).toFixed(2)}`,
         `INR ${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`
@@ -265,24 +289,7 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm("Permanently delete this order?")) return;
-    try {
-      const res = await fetch(`${API}/api/orders/${orderId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-      });
-      if (res.ok) {
-        setOrders(orders.filter(o => o.id !== orderId));
-        toast.success("Order deleted");
-      } else {
-        const data = await res.json();
-        toast.error(data.error || "Delete failed");
-      }
-    } catch (err) {
-      toast.error("Error deleting order");
-    }
-  };
+
 
   const handleAddCoupon = async (e) => {
     e.preventDefault();
@@ -327,10 +334,37 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSendBlast = async (e) => {
+    e.preventDefault();
+    if (!newsletterData.subject || !newsletterData.message) return toast.error("Fill all fields");
+    setIsProcessing(true);
+    try {
+      const res = await fetch(`${API}/api/admin/subscribers/blast`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newsletterData)
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        setNewsletterData({ subject: '', message: '' });
+      } else {
+        toast.error(data.error || "Failed to send blast");
+      }
+    } catch (err) {
+      toast.error("Error sending newsletter");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   const handleUpdateUserZone = async (userId, zones) => {
     try {
       const res = await fetch(`${API}/api/admin/users/${userId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -396,7 +430,8 @@ export default function AdminDashboard() {
               { id: 'inventory', label: 'Products', icon: Icons.Package }, 
               { id: 'orders', label: 'Orders', icon: Icons.ShoppingCart },
               { id: 'users', label: 'Users', icon: Icons.Users },
-              { id: 'coupons', label: 'Coupons', icon: Icons.Ticket }
+              { id: 'coupons', label: 'Coupons', icon: Icons.Ticket },
+              { id: 'newsletter', label: 'Newsletter', icon: Icons.Mail }
             ].map(tab => (
               <button 
                 key={tab.id} 
@@ -574,6 +609,32 @@ export default function AdminDashboard() {
                 </form>
               )}
 
+              {isBulkAdding && (
+                <form onSubmit={handleBulkImport} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 bg-white p-8 rounded-[40px] border border-gray-100 shadow-xl">
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400">Base Price</label>
+                     <input type="number" value={bulkData.basePrice} onChange={e => setBulkData({...bulkData, basePrice: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 text-sm font-bold" />
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400">Category</label>
+                     <select value={bulkData.category} onChange={e => setBulkData({...bulkData, category: e.target.value})} className="w-full bg-gray-50 rounded-xl p-4 text-sm font-bold">
+                        <option value="men">Men</option>
+                        <option value="women">Women</option>
+                        <option value="kids">Kids</option>
+                     </select>
+                   </div>
+                   <div className="space-y-2">
+                     <label className="text-[10px] font-black uppercase text-gray-400">Select ZIP/Images</label>
+                     <input required type="file" multiple onChange={e => setBulkData({...bulkData, files: e.target.files})} className="w-full bg-gray-50 rounded-xl p-4 text-sm font-bold" />
+                   </div>
+                   <div className="flex items-end">
+                     <button type="submit" disabled={isProcessing} className="w-full bg-rose-500 text-white p-4 rounded-xl uppercase font-black text-[10px] tracking-widest flex items-center justify-center gap-2">
+                       {isProcessing ? <Icons.Loader className="animate-spin" size={16} /> : <><Icons.UploadCloud size={16} /> Start Import</>}
+                     </button>
+                   </div>
+                </form>
+              )}
+
               <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
                 <table className="w-full text-left">
                   <thead className="bg-gray-50">
@@ -665,7 +726,7 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {orders
-                      .filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled', 'Returned'].includes(o.status) : ['Delivered', 'Cancelled', 'Returned'].includes(o.status))
+                      .filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled', 'Returned', 'Cancelled - Refund Initiated'].includes(o.status) : ['Delivered', 'Cancelled', 'Returned', 'Cancelled - Refund Initiated'].includes(o.status))
                       .filter(o => 
                         o.customer_name.toLowerCase().includes(orderSearchTerm.toLowerCase()) || 
                         o.tracking_id.toLowerCase().includes(orderSearchTerm.toLowerCase())
@@ -802,6 +863,62 @@ export default function AdminDashboard() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'newsletter' && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl">
+                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Newsletter</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Send Blast Form */}
+                <form onSubmit={handleSendBlast} className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-xl space-y-6">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400">Send Email Blast</h3>
+                  <input 
+                    required placeholder="Subject (e.g. 50% Off Flash Sale!)" 
+                    value={newsletterData.subject} 
+                    onChange={e => setNewsletterData({...newsletterData, subject: e.target.value})} 
+                    className="w-full bg-gray-50 rounded-2xl p-5 text-sm font-bold outline-none" 
+                  />
+                  <textarea 
+                    required placeholder="Write your marketing message here..." rows="6"
+                    value={newsletterData.message} 
+                    onChange={e => setNewsletterData({...newsletterData, message: e.target.value})} 
+                    className="w-full bg-gray-50 rounded-2xl p-5 text-sm font-bold outline-none resize-none" 
+                  />
+                  <button type="submit" disabled={isProcessing} className="w-full bg-rose-500 hover:bg-rose-600 text-white p-5 rounded-[24px] uppercase font-black text-[11px] tracking-widest transition-colors flex items-center justify-center gap-2">
+                    {isProcessing ? <Icons.Loader className="animate-spin" size={16} /> : <><Icons.Send size={16} /> Send to {subscribers.length} Subscribers</>}
+                  </button>
+                </form>
+
+                {/* Subscribers List */}
+                <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl flex flex-col h-[500px]">
+                  <div className="p-8 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400">Active Subscribers</h3>
+                    <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full text-xs font-black">{subscribers.length} Total</span>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                    {subscribers.map((sub, idx) => (
+                      <div key={idx} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl transition-colors border border-transparent hover:border-gray-100">
+                        <div className="size-10 bg-rose-50 rounded-xl flex items-center justify-center text-rose-500">
+                          <Icons.Mail size={16} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">{sub.email}</p>
+                          <p className="text-[10px] font-black uppercase text-gray-400">Joined: {new Date(sub.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {subscribers.length === 0 && (
+                      <div className="h-full flex items-center justify-center text-gray-400 font-bold text-sm">
+                        No subscribers yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           )}

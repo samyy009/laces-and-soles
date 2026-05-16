@@ -188,3 +188,42 @@ def send_delivery_otp_email(receiver_email, customer_name, tracking_id, otp):
     except Exception as e:
         logger.error(f"Delivery OTP email failed: {e}")
         return False
+
+def send_marketing_email(receiver_email, subject, body_text):
+    """Sends a marketing newsletter email."""
+    sender_email = os.environ.get('BREVO_SENDER')
+    api_key = os.environ.get('BREVO_API_KEY')
+
+    html = f"""
+    <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #eee; border-radius: 20px;">
+        <h2 style="color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 20px;">Laces & Soles Newsletter</h2>
+        <p style="color: #666; font-size: 16px; line-height: 1.5;">{body_text}</p>
+        <p style="color: #999; font-size: 12px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
+            You are receiving this because you subscribed to our newsletter.
+        </p>
+    </div>
+    """
+
+    if not all([sender_email, api_key]):
+        logger.warning(f"Mock Marketing Email Sent to {receiver_email}. Subject: {subject}")
+        # Save mock email to logs
+        os.makedirs('logs/emails', exist_ok=True)
+        with open(f'logs/emails/marketing_{int(datetime.utcnow().timestamp())}.html', 'w') as f:
+            f.write(html)
+        return True
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {"accept": "application/json", "content-type": "application/json", "api-key": api_key}
+    payload = {
+        "sender": {"name": "Laces & Soles", "email": sender_email},
+        "to": [{"email": receiver_email}],
+        "subject": subject,
+        "htmlContent": html
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers)
+        return response.status_code in [201, 202]
+    except Exception as e:
+        logger.error(f"Marketing email failed: {e}")
+        return False

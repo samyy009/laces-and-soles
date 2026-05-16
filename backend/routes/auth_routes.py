@@ -1,6 +1,5 @@
 import os
 import random
-import traceback
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -28,11 +27,11 @@ def register():
             return jsonify({'error': 'Email address already in use.'}), 409
         hashed = generate_password_hash(data['password'])
         new_user = User(
-            full_name=data['full_name'], 
-            email=data['email'], 
-            password_hash=hashed, 
-            role='user',
-            phone_number=data.get('phone_number')
+            full_name=data['full_name'],  # type: ignore[call-arg]
+            email=data['email'],  # type: ignore[call-arg]
+            password_hash=hashed,  # type: ignore[call-arg]
+            role='user',  # type: ignore[call-arg]
+            phone_number=data.get('phone_number')  # type: ignore[call-arg]
         )
         db.session.add(new_user)
         db.session.commit()
@@ -76,10 +75,10 @@ def google_login():
         user = User.query.filter_by(email=email).first()
         if not user:
             user = User(
-                full_name=full_name,
-                email=email,
-                password_hash=generate_password_hash(os.urandom(24).hex()),
-                role='user'
+                full_name=full_name,  # type: ignore[call-arg]
+                email=email,  # type: ignore[call-arg]
+                password_hash=generate_password_hash(os.urandom(24).hex()),  # type: ignore[call-arg]
+                role='user'  # type: ignore[call-arg]
             )
             db.session.add(user)
             db.session.commit()
@@ -102,7 +101,7 @@ def facebook_login():
         full_name = "Demo Facebook User"
         user = User.query.filter_by(email=email).first()
         if not user:
-            user = User(full_name=full_name, email=email, password_hash=generate_password_hash('demo123'), role='user')
+            user = User(full_name=full_name, email=email, password_hash=generate_password_hash('demo123'), role='user')  # type: ignore[call-arg]
             db.session.add(user)
             db.session.commit()
         jwt_token = create_access_token(identity=str(user.id))
@@ -118,7 +117,7 @@ def facebook_login():
         
         user = User.query.filter_by(email=email).first()
         if not user:
-            user = User(full_name=full_name, email=email, password_hash=generate_password_hash(os.urandom(24).hex()), role='user')
+            user = User(full_name=full_name, email=email, password_hash=generate_password_hash(os.urandom(24).hex()), role='user')  # type: ignore[call-arg]
             db.session.add(user)
             db.session.commit()
         
@@ -146,7 +145,7 @@ def forgot_password():
             reset_entry.expiry = expiry
             reset_entry.is_verified = False
         else:
-            reset_entry = PasswordReset(email=email, otp=otp, expiry=expiry)
+            reset_entry = PasswordReset(email=email, otp=otp, expiry=expiry)  # type: ignore[call-arg]
             db.session.add(reset_entry)
         
         db.session.commit()
@@ -201,3 +200,29 @@ def update_profile():
     user.zip_code = data.get('zip_code', user.zip_code)
     db.session.commit()
     return jsonify({'message': 'Profile updated successfully', 'user': user.to_dict()}), 200
+
+from models import NewsletterSubscriber
+
+@auth_bp.route('/api/newsletter/subscribe', methods=['POST'])
+def subscribe_newsletter():
+    data = request.get_json()
+    email = data.get('email')
+    if not email:
+        return jsonify({'error': 'Email is required'}), 400
+    try:
+        existing = NewsletterSubscriber.query.filter_by(email=email).first()
+        if existing:
+            return jsonify({'message': 'You are already subscribed!'}), 200
+        new_sub = NewsletterSubscriber(email=email)
+        db.session.add(new_sub)
+        db.session.commit()
+        
+        # Send Welcome Email
+        from services.email_service import send_marketing_email
+        send_marketing_email(email, "Welcome to Laces & Soles!", "Thank you for subscribing to our newsletter. You'll be the first to know about our latest drops and exclusive offers.")
+        
+        return jsonify({'message': 'Successfully subscribed to the newsletter!'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+

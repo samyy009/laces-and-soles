@@ -208,6 +208,7 @@ export default function TrackOrder() {
   ];
 
   const getStatusIndex = (status) => {
+    if (status?.includes('Cancelled')) return -1;
     switch (status) {
       case 'Ordered': return 0;
       case 'Packed': return 1;
@@ -471,6 +472,29 @@ export default function TrackOrder() {
                           Reason: <span className="font-bold underline">{orderInfo.return_reason}</span>. 
                           Our executive will visit your address for pickup soon.
                        </p>
+                    </div>
+                 </div>
+               )}
+
+               {orderInfo.current_status?.includes('Cancelled') && (
+                 <div className="bg-gray-100 border border-gray-200 p-6 rounded-3xl flex items-start gap-4">
+                    <div className="size-10 bg-gray-500 text-white rounded-xl flex items-center justify-center shrink-0">
+                       <Icons.XCircle size={20} />
+                    </div>
+                    <div>
+                       <h4 className="text-sm font-black text-gray-900 uppercase tracking-tight">Order Cancelled</h4>
+                       <p className="text-xs text-gray-700 font-medium mt-1">
+                          Reason: <span className="font-bold underline">{orderInfo.cancellation_reason || 'Customer cancelled'}</span>.
+                       </p>
+                       {orderInfo.current_status === 'Cancelled - Refund Initiated' && (
+                          <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-xl">
+                             <p className="text-xs text-green-700 font-bold flex items-center gap-2">
+                                <Icons.CheckCircle size={14} className="text-green-500" /> 
+                                Refund Initiated Successfully.
+                             </p>
+                             <p className="text-[10px] text-green-600 mt-1">The amount will be credited back to your original payment method in 5-7 business days.</p>
+                          </div>
+                       )}
                     </div>
                  </div>
                )}

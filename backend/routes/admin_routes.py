@@ -2,7 +2,6 @@ import os
 import json
 
 import random
-import string
 import logging
 import zipfile
 import shutil
@@ -10,8 +9,6 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
-from werkzeug.security import generate_password_hash
-
 from extensions import db, socketio
 from models import User, Product, Order, OrderItem, Coupon
 
@@ -239,11 +236,11 @@ def bulk_import():
                         break
 
                 new_p = Product( # type: ignore[call-arg]
-                    title=title, price=float(final_price), old_price=final_price + 2000,
-                    brand=brand, image_url=main_image, gallery=",".join(saved_urls),
-                    category=category, type=inferred_type, collection=collection,
-                    stock=random.randint(10, 80),
-                    description=f"Premium {brand} {title} performance footwear."
+                    title=title, price=float(final_price), old_price=final_price + 2000,  # type: ignore[call-arg]
+                    brand=brand, image_url=main_image, gallery=",".join(saved_urls),  # type: ignore[call-arg]
+                    category=category, type=inferred_type, collection=collection,  # type: ignore[call-arg]
+                    stock=random.randint(10, 80),  # type: ignore[call-arg]
+                    description=f"Premium {brand} {title} performance footwear."  # type: ignore[call-arg]
                 )
                 db.session.add(new_p)
                 imported_count += 1
@@ -267,7 +264,7 @@ def get_all_users():
     users = User.query.all()
     return jsonify({'users': [u.to_dict() for u in users]}), 200
 
-@admin_bp.route('/api/admin/users/<int:user_id>', methods=['PUT'])
+@admin_bp.route('/api/admin/users/<int:user_id>', methods=['PATCH'])
 @jwt_required()
 def update_user_details(user_id):
     user = db.session.get(User, int(get_jwt_identity()))
@@ -280,6 +277,7 @@ def update_user_details(user_id):
     if 'role' in data: target_user.role = data.get('role')
     db.session.commit()
     return jsonify({'message': 'User updated', 'user': target_user.to_dict()}), 200
+
 
 @admin_bp.route('/api/admin/orders/<int:order_id>/assign', methods=['POST'])
 @jwt_required()
@@ -327,8 +325,8 @@ def add_product():
         image_url = f"http://localhost:5000/uploads/{filename}"
 
         new_p = Product( # type: ignore[call-arg]
-            title=title, price=float(price), brand=brand, 
-            image_url=image_url, badge=request.form.get('badge')
+            title=title, price=float(price), brand=brand,  # type: ignore[call-arg]
+            image_url=image_url, badge=request.form.get('badge')  # type: ignore[call-arg]
         )
         db.session.add(new_p)
         db.session.commit()
@@ -422,3 +420,35 @@ def approve_return(id):
         
     db.session.commit()
     return jsonify({'message': 'Return approved and items restocked successfully.'}), 200
+
+from models import NewsletterSubscriber
+from services.email_service import send_marketing_email
+
+@admin_bp.route('/api/admin/subscribers', methods=['GET'])
+@jwt_required()
+def get_subscribers():
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    subs = NewsletterSubscriber.query.order_by(NewsletterSubscriber.created_at.desc()).all()
+    return jsonify({'subscribers': [s.to_dict() for s in subs]}), 200
+
+@admin_bp.route('/api/admin/subscribers/blast', methods=['POST'])
+@jwt_required()
+def send_newsletter_blast():
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    data = request.get_json()
+    subject = data.get('subject')
+    message = data.get('message')
+    if not subject or not message:
+        return jsonify({'error': 'Subject and message are required.'}), 400
+    
+    subs = NewsletterSubscriber.query.all()
+    count = 0
+    for s in subs:
+        if send_marketing_email(s.email, subject, message):
+            count += 1
+            
+    return jsonify({'message': f'Newsletter blast sent to {count} subscribers.'}), 200

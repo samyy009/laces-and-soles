@@ -34,7 +34,7 @@ def update_order_status(order_id):
         return jsonify({'error': 'OTP verification required'}), 400
     order.status = new_status
     db.session.commit()
-    socketio.emit('status_updated', {'order_id': order.id, 'status': new_status}, room=f"order_{order.id}")
+    socketio.emit('status_updated', {'order_id': order.id, 'status': new_status}, to=f"order_{order.id}")
     return jsonify({'message': f'Status updated to {new_status}'}), 200
 
 
@@ -76,7 +76,7 @@ def mark_delivery_failed(order_id):
     order.status = 'Delivery Attempt Failed'
     order.failure_reason = reason
     db.session.commit()
-    socketio.emit('status_updated', {'order_id': order.id, 'status': 'Delivery Attempt Failed', 'reason': reason}, room=f"order_{order.id}")
+    socketio.emit('status_updated', {'order_id': order.id, 'status': 'Delivery Attempt Failed', 'reason': reason}, to=f"order_{order.id}")
     return jsonify({'message': 'Delivery attempt failed'}), 200
 
 @driver_bp.route('/api/driver/location', methods=['POST'])
@@ -105,7 +105,7 @@ def update_location():
             'tracking_id': order.tracking_id,
             'lat': lat,
             'lng': lng
-        }, room=f"order_{order.id}")
+        }, to=f"order_{order.id}")
         
     db.session.commit()
     return jsonify({'message': 'Location updated'}), 200

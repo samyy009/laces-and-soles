@@ -201,6 +201,4 @@ input[type=number] {
   animation-name: zoom-in-modal;
 }
 
-.slide-in-from-top-4 {
-  /* Handled by zoom-in-modal transform */
-}
+/* Handled by zoom-in-modal transform */

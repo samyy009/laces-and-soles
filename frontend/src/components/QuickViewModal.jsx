@@ -6,6 +6,8 @@ import { Link } from 'react-router-dom';
 export default function QuickViewModal({ product, onClose, showFullDetails }) {
   const { addToCart, toggleWishlist, wishlistItems, isInWishlist, formatImageUrl } = useShop();
   const [activeImage, setActiveImage] = useState(product?.image);
+  const [selectedSize, setSelectedSize] = useState('10');
+  const sizes = ['7', '8', '9', '10', '11'];
 
   if (!product) return null;
 
@@ -78,9 +80,24 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
               {product.description || "Premium footwear engineered for maximum comfort and style."}
             </p>
 
+            <div className="mb-6">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Select Size</span>
+              <div className="flex gap-2">
+                {sizes.map(size => (
+                  <button 
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`size-10 rounded-lg text-xs font-black transition-all ${selectedSize === size ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <button 
-              onClick={() => { addToCart(product.id, 1); onClose(); }}
-              className="w-full mb-4 flex items-center justify-center gap-2 rounded-xl bg-gray-900 py-4 text-sm font-bold uppercase tracking-wider text-white hover:bg-gray-800 transition-colors"
+              onClick={() => { addToCart(product.id, 1, selectedSize); onClose(); }}
+              className="w-full mb-4 flex items-center justify-center gap-2 rounded-xl bg-gray-900 py-4 text-sm font-bold uppercase tracking-wider text-white hover:bg-[#ff3366] transition-colors"
             >
               <ShoppingCart size={20} /> Add to Cart
             </button>
