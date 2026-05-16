@@ -44,40 +44,62 @@ def get_metrics():
     period = request.args.get('period', '7d')
     total_revenue = db.session.query(db.func.sum(Order.total_amount)).scalar() or 0.0
     
+    # 1. Revenue Chart Data
     daily_stats = []
+    now = datetime.now()
     if period == '7d':
         for i in range(6, -1, -1):
-            day = datetime.now() - timedelta(days=i)
+            day = now - timedelta(days=i)
             day_str = day.strftime('%a')
             rev = db.session.query(db.func.sum(Order.total_amount)).filter(db.func.date(Order.created_at) == day.date()).scalar() or 0.0
             daily_stats.append({'name': day_str, 'revenue': float(rev)})
-    # ... (skipping 6m/1y for brevity in this step, but I should include them)
-    # Actually I'll include them to not break logic.
     elif period == '6m':
         for i in range(5, -1, -1):
-            first_day = (datetime.now().replace(day=1) - timedelta(days=i*30)).replace(day=1)
-            month_str = first_day.strftime('%b')
+            target_date = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
+            month_str = target_date.strftime('%b')
             rev = db.session.query(db.func.sum(Order.total_amount))\
-                .filter(db.func.extract('month', Order.created_at) == first_day.month)\
-                .filter(db.func.extract('year', Order.created_at) == first_day.year)\
+                .filter(db.func.extract('month', Order.created_at) == target_date.month)\
+                .filter(db.func.extract('year', Order.created_at) == target_date.year)\
                 .scalar() or 0.0
             daily_stats.append({'name': month_str, 'revenue': float(rev)})
-    elif period == '1y':
-        for i in range(11, -1, -1):
-            first_day = (datetime.now().replace(day=1) - timedelta(days=i*30)).replace(day=1)
-            month_str = first_day.strftime('%b')
-            rev = db.session.query(db.func.sum(Order.total_amount))\
-                .filter(db.func.extract('month', Order.created_at) == first_day.month)\
-                .filter(db.func.extract('year', Order.created_at) == first_day.year)\
-                .scalar() or 0.0
-            daily_stats.append({'name': month_str, 'revenue': float(rev)})
+
+    # 2. Top Selling Products
+    top_products = db.session.query(
+        Product.title, 
+        db.func.sum(OrderItem.quantity).label('total_sold')
+    ).join(OrderItem).group_by(Product.id).order_by(db.text('total_sold DESC')).limit(5).all()
+    
+    top_selling_data = [{'name': p.title, 'value': int(p.total_sold)} for p in top_products]
+
+    # 3. Category Distribution
+    categories = db.session.query(
+        Product.category, 
+        db.func.count(Order.id)
+    ).join(OrderItem, Product.id == OrderItem.product_id)\
+     .join(Order, OrderItem.order_id == Order.id)\
+     .group_by(Product.category).all()
+    
+    category_data = [{'name': cat.capitalize(), 'value': count} for cat, count in categories]
+
+    # 4. Recent Activity Feed
+    recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
+    activity_feed = [{
+        'id': o.id,
+        'customer': o.customer.full_name if o.customer else 'Guest',
+        'amount': o.total_amount,
+        'status': o.status,
+        'time': o.created_at.strftime('%I:%M %p')
+    } for o in recent_orders]
 
     return jsonify({
         'total_users': User.query.count(),
         'total_products': Product.query.count(),
         'total_orders': Order.query.count(),
         'total_revenue': float(total_revenue),
-        'chart_data': daily_stats
+        'chart_data': daily_stats,
+        'top_selling': top_selling_data,
+        'category_distribution': category_data,
+        'recent_activity': activity_feed
     }), 200
 
 @admin_bp.route('/api/admin/orders', methods=['GET'])

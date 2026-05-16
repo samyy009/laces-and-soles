@@ -4,7 +4,6 @@ import * as Icons from 'lucide-react';
 import content from '../content.json';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
-import Lordicon from './premium/Lordicon';
 
 export default function Navbar() {
   const { wishlistItems, getCartCount, getCartTotal, setIsCartOpen } = useShop();
@@ -58,29 +57,7 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md py-1 shadow-lg border-b border-gray-100' : 'bg-transparent py-2 md:py-3'}`}>
-      {/* ─── Global Search Overlay */}
-      <div className={`absolute top-full left-0 w-full bg-white  border-b border-gray-100 shadow-2xl transition-all duration-300 origin-top ${searchOpen ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0 pointer-events-none'}`}>
-        <form onSubmit={handleSearchSubmit} className="mx-auto max-w-7xl px-4 py-4 flex items-center gap-6">
-          <Icons.Search className="text-gray-400 " size={24} />
-          <input 
-            type="text" 
-            autoFocus={searchOpen}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search our premium collection..."
-            className="flex-1 bg-transparent border-none text-xl font-bold font-heading outline-none placeholder:text-gray-300 text-gray-900 "
-          />
-          <button 
-            type="button"
-            onClick={() => setSearchOpen(false)}
-            className="group rounded-xl p-2 hover:bg-rose-50 transition-colors"
-          >
-            <Icons.X size={24} className="text-gray-400  group-hover:text-rose-500" />
-          </button>
-        </form>
-      </div>
-
+    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md py-1 shadow-lg border-b border-gray-100' : 'bg-transparent py-2 md:py-3'}`}>
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6">
         {/* ─── Site logo */}
         <div 
@@ -116,10 +93,14 @@ export default function Navbar() {
         <div className="flex items-center gap-1 sm:gap-3 lg:gap-6">
 
           <button 
-            onClick={() => setSearchOpen(!searchOpen)} 
-            className="group relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl transition-all hover:bg-gray-50"
+            onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+            className="group relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl transition-all hover:bg-gray-50 border border-transparent hover:border-gray-100"
+            title="Search (Ctrl+K)"
           >
-            <Icons.Search className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${searchOpen ? 'text-rose-500' : 'text-gray-900 group-hover:text-rose-500'}`} />
+            <Icons.Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-900 group-hover:text-rose-500 transition-colors" />
+            <div className="absolute -bottom-1 -right-1 hidden lg:flex h-4 w-4 items-center justify-center rounded-md bg-white border border-gray-200 shadow-sm">
+               <span className="text-[8px] font-black text-gray-400">K</span>
+            </div>
           </button>
 
           <Link to={user ? "/dashboard" : "/login"} className="group relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl transition-all hover:bg-gray-50">

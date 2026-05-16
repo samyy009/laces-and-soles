@@ -1,6 +1,7 @@
 import Navbar from './Navbar';
 import Footer from './Footer';
 import CartDrawer from './CartDrawer';
+import CommandPalette from './CommandPalette';
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
@@ -24,6 +25,7 @@ export default function Layout({ children }) {
     <div className="flex min-h-screen flex-col bg-white font-inter">
       {!isDashboard && <Navbar />}
       {!isDashboard && <CartDrawer />}
+      {!isDashboard && <CommandPalette />}
       <main className={`flex-grow ${!isDashboard ? 'pt-14' : ''} animate-fade-in`}>
         {children}
       </main>

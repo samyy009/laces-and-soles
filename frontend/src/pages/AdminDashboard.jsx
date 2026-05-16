@@ -5,7 +5,10 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useAuth } from '../context/AuthContext';
 import { useShop } from '../context/ShopContext';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, BarChart, Bar, Legend 
+} from 'recharts';
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import ZoneSelector from '../components/ZoneSelector';
@@ -37,6 +40,8 @@ export default function AdminDashboard() {
     files: null 
   });
   const [newCoupon, setNewCoupon] = useState({ code: '', discount_percentage: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [orderSearchTerm, setOrderSearchTerm] = useState('');
 
   const fetchMetrics = () => {
     const token = localStorage.getItem('token') || '';
@@ -410,109 +415,130 @@ export default function AdminDashboard() {
 
         <main className="lg:col-span-4 space-y-10">
           {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Header */}
-              <div className="flex items-center gap-4">
-                <div className="h-1 w-12 bg-rose-500 rounded-full" />
-                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Performance Metrics</h2>
-              </div>
-
+            <div className="space-y-10">
               {/* Stat Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  {
-                    label: 'Total Revenue',
-                    value: `₹${(metrics.total_revenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`,
-                    icon: Icons.IndianRupee,
-                    color: 'rose',
-                    bg: 'bg-rose-50',
-                    text: 'text-rose-500',
-                    border: 'border-rose-100'
-                  },
-                  {
-                    label: 'Total Orders',
-                    value: metrics.total_orders || 0,
-                    icon: Icons.ShoppingBag,
-                    color: 'blue',
-                    bg: 'bg-blue-50',
-                    text: 'text-blue-500',
-                    border: 'border-blue-100'
-                  },
-                  {
-                    label: 'Total Users',
-                    value: metrics.total_users || 0,
-                    icon: Icons.Users,
-                    color: 'emerald',
-                    bg: 'bg-emerald-50',
-                    text: 'text-emerald-500',
-                    border: 'border-emerald-100'
-                  },
-                  {
-                    label: 'Products',
-                    value: metrics.total_products || 0,
-                    icon: Icons.Package,
-                    color: 'violet',
-                    bg: 'bg-violet-50',
-                    text: 'text-violet-500',
-                    border: 'border-violet-100'
-                  }
-                ].map(({ label, value, icon: Icon, bg, text, border }) => (
-                  <div key={label} className={`bg-white border ${border} rounded-[24px] p-6 shadow-lg flex flex-col gap-3`}>
-                    <div className={`w-10 h-10 ${bg} rounded-xl flex items-center justify-center`}>
-                      <Icon size={18} className={text} />
+                  { label: 'Revenue', value: `₹${(metrics.total_revenue || 0).toLocaleString()}`, icon: Icons.IndianRupee, color: 'rose' },
+                  { label: 'Orders', value: metrics.total_orders || 0, icon: Icons.ShoppingBag, color: 'blue' },
+                  { label: 'Users', value: metrics.total_users || 0, icon: Icons.Users, color: 'emerald' },
+                  { label: 'Products', value: metrics.total_products || 0, icon: Icons.Package, color: 'violet' }
+                ].map(({ label, value, icon: Icon, color }) => (
+                  <div key={label} className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-xl hover:-translate-y-1 transition-transform">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`p-3 rounded-2xl bg-${color}-50 text-${color}-500`}>
+                        <Icon size={20} />
+                      </div>
+                      <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">+12%</span>
                     </div>
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</p>
-                      <p className="text-2xl font-black text-gray-900">{value}</p>
-                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</p>
+                    <p className="text-2xl font-black text-gray-950">{value}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Period Switcher + Chart */}
-              <div className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-xl space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-500">Revenue Overview</p>
-                  <div className="flex gap-2">
-                    {[
-                      { label: 'Week', value: '7d' },
-                      { label: '6 Months', value: '6m' },
-                      { label: 'Year', value: '1y' }
-                    ].map(({ label, value }) => (
-                      <button
-                        key={value}
-                        onClick={() => setSelectedPeriod(value)}
-                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                          selectedPeriod === value
-                            ? 'bg-rose-500 text-white shadow-lg shadow-rose-200'
-                            : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                        }`}
-                      >
-                        {label}
-                      </button>
+              {/* Main Charts Row */}
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                {/* Revenue Chart */}
+                <div className="xl:col-span-2 bg-white border border-gray-100 rounded-[40px] p-8 shadow-2xl">
+                  <div className="flex items-center justify-between mb-8">
+                    <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400">Revenue Growth</h3>
+                    <div className="flex gap-2">
+                      {['7d', '6m'].map(p => (
+                        <button key={p} onClick={() => setSelectedPeriod(p)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase ${selectedPeriod === p ? 'bg-rose-500 text-white' : 'bg-gray-50 text-gray-400'}`}>
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="h-[300px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={chartData}>
+                        <defs>
+                          <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2}/>
+                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} fontSize={10} fontWeight={700} stroke="#94a3b8" />
+                        <YAxis axisLine={false} tickLine={false} fontSize={10} fontWeight={700} stroke="#94a3b8" />
+                        <Tooltip contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                        <Area type="monotone" dataKey="revenue" stroke="#f43f5e" strokeWidth={4} fillOpacity={1} fill="url(#revGrad)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Category Pie Chart */}
+                <div className="bg-white border border-gray-100 rounded-[40px] p-8 shadow-2xl">
+                   <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 mb-8">Sales by Category</h3>
+                   <div className="h-[300px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={metrics.category_distribution || [{name: 'Loading', value: 1}]}
+                            innerRadius={60}
+                            outerRadius={80}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {(metrics.category_distribution || []).map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={['#f43f5e', '#3b82f6', '#10b981', '#8b5cf6'][index % 4]} />
+                            ))}
+                          </Pie>
+                          <Tooltip />
+                          <Legend verticalAlign="bottom" height={36}/>
+                        </PieChart>
+                      </ResponsiveContainer>
+                   </div>
+                </div>
+              </div>
+
+              {/* Bottom Row: Top Selling & Activity Feed */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Top Selling Products */}
+                <div className="bg-white border border-gray-100 rounded-[40px] p-8 shadow-2xl">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 mb-8">Top Selling Products</h3>
+                  <div className="h-[250px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={metrics.top_selling || []}>
+                        <XAxis dataKey="name" hide />
+                        <YAxis hide />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#f43f5e" radius={[10, 10, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="mt-4 space-y-3">
+                    {(metrics.top_selling || []).map((item, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-gray-600 truncate max-w-[200px]">{item.name}</span>
+                        <span className="text-xs font-black text-rose-500">{item.value} Sold</span>
+                      </div>
                     ))}
                   </div>
                 </div>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.15} />
-                          <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="4 4" stroke="#f1f5f9" vertical={false} />
-                      <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#94a3b8" fontSize={11} fontWeight={600} tickLine={false} axisLine={false}
-                        tickFormatter={v => v === 0 ? '0' : `₹${(v/1000).toFixed(0)}k`} />
-                      <Tooltip
-                        formatter={(val) => [`₹${Number(val).toLocaleString('en-IN')}`, 'Revenue']}
-                        contentStyle={{ borderRadius: 12, border: '1px solid #f1f5f9', fontSize: 12 }}
-                      />
-                      <Area type="monotone" dataKey="revenue" stroke="#f43f5e" strokeWidth={3} fill="url(#revenueGrad)" dot={false} activeDot={{ r: 5, fill: '#f43f5e' }} />
-                    </AreaChart>
-                  </ResponsiveContainer>
+
+                {/* Recent Activity */}
+                <div className="bg-white border border-gray-100 rounded-[40px] p-8 shadow-2xl">
+                   <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 mb-8">Recent Activity</h3>
+                   <div className="space-y-6">
+                      {(metrics.recent_activity || []).map((act) => (
+                        <div key={act.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                               <Icons.ShoppingBag size={18} className="text-rose-500" />
+                            </div>
+                            <div>
+                               <p className="text-sm font-black uppercase tracking-tight">{act.customer}</p>
+                               <p className="text-[10px] text-gray-400 font-bold">Ordered shoes for ₹{act.amount}</p>
+                            </div>
+                          </div>
+                          <p className="text-[10px] font-black text-gray-400 uppercase">{act.time}</p>
+                        </div>
+                      ))}
+                   </div>
                 </div>
               </div>
             </div>
@@ -520,11 +546,21 @@ export default function AdminDashboard() {
 
           {activeTab === 'inventory' && (
             <div className="space-y-8">
-              <div className="flex items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl">
+              <div className="flex flex-col md:flex-row items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl gap-4">
                   <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Inventory</h2>
+                  <div className="flex-1 max-w-md w-full relative">
+                      <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                      <input 
+                        type="text" 
+                        placeholder="Search products by title or brand..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-rose-500/20 transition-all"
+                      />
+                  </div>
                   <div className="flex gap-4">
-                      <button onClick={() => { setIsBulkAdding(!isBulkAdding); setIsAdding(false); }} className="bg-rose-50 text-rose-500 px-8 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest">Bulk Import</button>
-                      <button onClick={() => { setIsAdding(!isAdding); setIsBulkAdding(false); }} className="bg-gray-950 text-white px-8 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest">Add Product</button>
+                      <button onClick={() => { setIsBulkAdding(!isBulkAdding); setIsAdding(false); }} className="bg-rose-50 text-rose-500 px-8 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Bulk Import</button>
+                      <button onClick={() => { setIsAdding(!isAdding); setIsBulkAdding(false); }} className="bg-gray-950 text-white px-8 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Add Product</button>
                   </div>
               </div>
 
@@ -544,7 +580,10 @@ export default function AdminDashboard() {
                     <tr><th className="p-8">Details</th><th className="p-8">Stock</th><th className="p-8">Price</th><th className="p-8"></th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {products.map(p => {
+                    {products.filter(p => 
+                      p.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                      p.brand.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).map(p => {
                       const isNew = p.created_at && new Date(p.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-emerald-50/30' : ''}`}>
@@ -574,8 +613,8 @@ export default function AdminDashboard() {
 
           {activeTab === 'orders' && (
             <div className="space-y-12">
-              <div className="flex flex-col md:flex-row md:items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl gap-6">
-                  <div>
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl gap-6">
+                  <div className="flex-1">
                     <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Orders</h2>
                     <div className="flex gap-4 mt-4">
                       <button 
@@ -592,6 +631,18 @@ export default function AdminDashboard() {
                       </button>
                     </div>
                   </div>
+
+                  <div className="flex-1 max-w-md w-full relative">
+                      <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                      <input 
+                        type="text" 
+                        placeholder="Search by Customer or Tracking ID..." 
+                        value={orderSearchTerm}
+                        onChange={(e) => setOrderSearchTerm(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                      />
+                  </div>
+
                   <button 
                     onClick={async () => {
                       setIsProcessing(true);
@@ -601,7 +652,7 @@ export default function AdminDashboard() {
                       setIsProcessing(false);
                       fetch(`${API}/api/admin/orders`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } }).then(r => r.json()).then(d => setOrders(d.orders || []));
                     }}
-                    className="bg-blue-600 text-white px-8 py-5 rounded-[22px] text-[10px] font-black uppercase tracking-widest flex items-center gap-4"
+                    className="bg-blue-600 text-white px-8 py-5 rounded-[22px] text-[10px] font-black uppercase tracking-widest flex items-center gap-4 whitespace-nowrap"
                   >
                     <Icons.Zap size={18} /> {isProcessing ? 'Processing...' : 'Flash Speed'}
                   </button>
@@ -613,7 +664,13 @@ export default function AdminDashboard() {
                     <tr><th className="p-8">Order ID</th><th className="p-8">Customer</th><th className="p-8">Status</th><th className="p-8">Assign</th><th className="p-8"></th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {orders.filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled', 'Returned'].includes(o.status) : ['Delivered', 'Cancelled', 'Returned'].includes(o.status)).map(o => {
+                    {orders
+                      .filter(o => activeOrderSubTab === 'active' ? !['Delivered', 'Cancelled', 'Returned'].includes(o.status) : ['Delivered', 'Cancelled', 'Returned'].includes(o.status))
+                      .filter(o => 
+                        o.customer_name.toLowerCase().includes(orderSearchTerm.toLowerCase()) || 
+                        o.tracking_id.toLowerCase().includes(orderSearchTerm.toLowerCase())
+                      )
+                      .map(o => {
                       const isNew = o.created_at && new Date(o.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={o.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-rose-50/30' : ''}`}>

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -324,8 +324,7 @@ export default function UserDashboard() {
                                      }`}>
                                         {order.status}
                                      </span>
-                                     
-                                     {order.status === 'Delivered' && (
+                                                                        {order.status === 'Delivered' && (
                                         <button 
                                           onClick={() => requestReturn(order.tracking_id)} 
                                           className="px-4 py-1.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-orange-500 transition-colors shadow-sm"
@@ -334,6 +333,14 @@ export default function UserDashboard() {
                                         </button>
                                      )}
 
+                                     <button 
+                                       onClick={() => handleDownloadInvoice(order)} 
+                                       className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                                       title="Download Invoice"
+                                     >
+                                        <Icons.FileText size={18} />
+                                     </button>
+ 
                                      <button 
                                        onClick={() => deleteOrder(order.id)} 
                                        className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"

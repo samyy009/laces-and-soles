@@ -14,10 +14,26 @@ export default function ProductDetails() {
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeImage, setActiveImage] = useState(null);
+  const [activeAngle, setActiveAngle] = useState(null);
   const [selectedSize, setSelectedSize] = useState('10');
   const [ratingFormValue, setRatingFormValue] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [pincode, setPincode] = useState('');
+  const [deliveryStatus, setDeliveryStatus] = useState(null);
+
+  const handlePincodeCheck = () => {
+    if (pincode.length !== 6) {
+      setDeliveryStatus("Please enter a valid 6-digit pincode");
+      return;
+    }
+    // Simulate check
+    if (pincode.startsWith('580')) {
+      setDeliveryStatus("✅ Delivery Available! Usually arrives in 2-4 hours.");
+    } else {
+      setDeliveryStatus("❌ Outside current delivery zone (Hubli-Dharwad only)");
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -25,7 +41,7 @@ export default function ProductDetails() {
       try {
         const res = await axios.get(`${API_BASE}/products/${id}`);
         setProduct(res.data.product);
-        setActiveImage(res.data.product.image);
+        setActiveAngle({ img: res.data.product.image, transform: "scaleX(1)", label: "Left Side" });
       } catch (err) {
         console.error('Failed to fetch product:', err);
       } finally {
@@ -51,22 +67,89 @@ export default function ProductDetails() {
     </div>
   );
 
-  const demoImages = [
-    product.image, // Left (Original image)
-    'https://images.unsplash.com/photo-1579338559194-a162d19bf842?w=800&q=80', // Right mock
-    'https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=800&q=80', // Top mock
-    'https://images.unsplash.com/photo-1608231387042-66d1773070a5?w=800&q=80' // Bottom mock
+  // 4-Angle CSS Perspective Engine
+  const galleryAngles = [
+    { img: product.image, label: "Left Side", transform: "scaleX(1)" },
+    { img: product.image, label: "Right Side", transform: "scaleX(-1)" },
+    { img: product.image, label: "Top", transform: "rotate(-15deg) scale(1.1)" },
+    { img: product.image, label: "Outsole", transform: "rotate(180deg) scaleY(-1)" }
   ];
 
-  const galleryAngles = [
-    { img: product.gallery?.[0] || demoImages[0], label: "Left" },
-    { img: product.gallery?.[1] || demoImages[1], label: "Right" },
-    { img: product.gallery?.[2] || demoImages[2], label: "Top" },
-    { img: product.gallery?.[3] || demoImages[3], label: "Bottom" }
-  ];
+  const SizeGuideModal = () => (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsSizeGuideOpen(false)} />
+      <div className="relative w-full max-w-2xl bg-white rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="p-8 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h3 className="text-2xl font-black uppercase tracking-tighter">Find Your Perfect Fit</h3>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mt-1">{product.brand} Official Sizing Guide</p>
+          </div>
+          <button onClick={() => setIsSizeGuideOpen(false)} className="p-2 hover:bg-rose-50 rounded-xl transition-colors">
+            <Icons.X size={24} className="text-gray-400 hover:text-rose-500" />
+          </button>
+        </div>
+        
+        <div className="p-8 overflow-y-auto max-h-[70vh] custom-scrollbar">
+          <div className="grid grid-cols-4 gap-4 mb-8 text-center">
+            {['UK', 'US', 'EU', 'CM'].map((label, idx) => (
+              <div key={label} className={`p-4 rounded-2xl border-2 transition-all ${idx === 0 ? 'border-rose-500 bg-rose-50' : 'border-gray-50 bg-gray-50'}`}>
+                <span className={`text-xs font-black uppercase ${idx === 0 ? 'text-rose-500' : 'text-gray-400'}`}>{label}</span>
+              </div>
+            ))}
+          </div>
+
+          <table className="w-full text-center border-collapse mb-8">
+             <thead>
+                <tr className="bg-gray-50 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                   <th className="p-4 border border-gray-100">UK SIZE</th>
+                   <th className="p-4 border border-gray-100">US SIZE</th>
+                   <th className="p-4 border border-gray-100">EU SIZE</th>
+                   <th className="p-4 border border-gray-100">FOOT LENGTH</th>
+                </tr>
+             </thead>
+             <tbody className="text-xs font-bold text-gray-900">
+                {[
+                  { uk: '6', us: '7', eu: '40', cm: '25.0' },
+                  { uk: '7', us: '8', eu: '41', cm: '26.0' },
+                  { uk: '8', us: '9', eu: '42.5', cm: '27.0' },
+                  { uk: '9', us: '10', eu: '44', cm: '28.0' },
+                  { uk: '10', us: '11', eu: '45', cm: '29.0' },
+                  { uk: '11', us: '12', eu: '46', cm: '30.0' }
+                ].map(row => (
+                  <tr key={row.uk} className={selectedSize === row.uk ? 'bg-rose-50/50' : ''}>
+                     <td className="p-4 border border-gray-100">{row.uk}</td>
+                     <td className="p-4 border border-gray-100">{row.us}</td>
+                     <td className="p-4 border border-gray-100">{row.eu}</td>
+                     <td className="p-4 border border-gray-100">{row.cm} CM</td>
+                  </tr>
+                ))}
+             </tbody>
+          </table>
+
+          <div className="bg-gray-900 rounded-3xl p-6 text-white relative overflow-hidden">
+             <div className="relative z-10 flex items-start gap-4">
+                <div className="p-3 bg-white/10 rounded-xl">
+                   <Icons.Info size={24} className="text-rose-500" />
+                </div>
+                <div>
+                   <h4 className="text-sm font-black uppercase tracking-tight mb-1">Fitting Tip for {product.brand}</h4>
+                   <p className="text-xs text-gray-400 font-medium leading-relaxed">
+                     {product.brand === 'Nike' ? 'Most Nike sneakers run true to size. If you have wider feet, we recommend going up by half a size.' : 
+                      product.brand === 'Adidas' ? 'Adidas shoes are known for their consistent fit. Stick to your usual UK size for the best experience.' :
+                      'This brand generally runs true to size. Refer to the CM measurement for the most accurate fit.'}
+                   </p>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="pb-16 bg-gray-50 min-h-screen">
+      {isSizeGuideOpen && <SizeGuideModal />}
+      
       <div className="w-full bg-white border-b border-gray-100 mb-0">
           <nav className="flex items-center gap-4 px-6 pt-1 pb-2 text-[10px] font-black uppercase tracking-widest text-gray-400 max-w-[1400px] mx-auto">
             <Link to="/" className="hover:text-[#ff3366] transition-colors">Home</Link>
@@ -83,27 +166,33 @@ export default function ProductDetails() {
           {/* ── Gallery ── */}
           <div className="space-y-3">
             <div className="relative aspect-[4/3] md:aspect-square md:max-h-[400px] bg-[#f5f5f5] rounded-[24px] flex items-center justify-center p-6 overflow-hidden border border-gray-100 shadow-sm">
-              <img
-                src={formatImageUrl(activeImage)}
-                alt={product.title}
-                className="w-full h-full object-contain drop-shadow-2xl"
-              />
+              {activeAngle && (
+                <img
+                  src={formatImageUrl(activeAngle.img)}
+                  alt={product.title}
+                  className="w-full h-full object-contain drop-shadow-2xl transition-all duration-700 ease-in-out"
+                  style={{ transform: activeAngle.transform }}
+                />
+              )}
             </div>
 
-            <div className="flex justify-center gap-3">
+            <div className="flex justify-center gap-4 mt-6">
               {galleryAngles.map((angleObj, i) => (
                 <button
                   key={i}
-                  onClick={() => setActiveImage(angleObj.img)}
-                  className={`size-14 rounded-2xl bg-[#f5f5f5] border-2 flex items-center justify-center p-2 relative overflow-hidden transition-all ${activeImage === angleObj.img ? 'border-[#ff3366]' : 'border-transparent hover:border-gray-300'}`}
+                  onClick={() => setActiveAngle(angleObj)}
+                  className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white border-4 flex flex-col items-center justify-between p-2 relative overflow-hidden transition-all duration-300 ${activeAngle?.label === angleObj.label ? 'border-[#ff3366] shadow-[0_8px_20px_rgba(255,51,102,0.2)] scale-105' : 'border-[#1a202c] hover:border-gray-400 hover:scale-105'}`}
                 >
-                  <img
-                    src={formatImageUrl(angleObj.img)}
-                    alt={`${angleObj.label} view`}
-                    className="w-full h-full object-contain"
-                  />
-                  <div className="absolute inset-x-0 bottom-0 bg-white/80 py-0.5 text-center">
-                      <span className="text-[7px] font-black uppercase tracking-wider text-gray-900">{angleObj.label}</span>
+                  <div className="flex-1 w-full flex items-center justify-center p-1">
+                     <img
+                       src={formatImageUrl(angleObj.img)}
+                       alt={`${angleObj.label} view`}
+                       className="w-full h-full object-contain drop-shadow-md transition-transform duration-500"
+                       style={{ transform: angleObj.transform }}
+                     />
+                  </div>
+                  <div className="w-full text-center pb-1">
+                      <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-[#1a202c]">{angleObj.label}</span>
                   </div>
                 </button>
               ))}
@@ -149,7 +238,12 @@ export default function ProductDetails() {
                 <div className="mb-3">
                   <div className="flex justify-between items-end mb-2">
                     <h4 className="text-[9px] font-black uppercase tracking-widest text-gray-900">SELECT SIZE</h4>
-                    <span className="text-[9px] font-bold text-rose-500 hover:text-rose-600 cursor-pointer">Size Guide</span>
+                    <button 
+                      onClick={() => setIsSizeGuideOpen(true)}
+                      className="text-[9px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 cursor-pointer border-b border-rose-500"
+                    >
+                      Size Guide
+                    </button>
                   </div>
                   <div className="grid grid-cols-6 gap-2">
                     {['6', '7', '8', '9', '10', '11'].map(size => (
@@ -170,12 +264,23 @@ export default function ProductDetails() {
                        <input 
                            type="text" 
                            placeholder="Enter Pincode" 
+                           maxLength="6"
+                           value={pincode}
+                           onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
                            className="flex-1 bg-gray-50 border border-gray-100 border-r-0 rounded-l-xl px-3 py-1.5 outline-none text-xs font-bold focus:border-gray-300 transition-colors"
                        />
-                       <button className="bg-gray-50 border border-gray-100 border-l-0 rounded-r-xl px-3 py-1.5 text-[9px] font-black text-[#ff3366] uppercase tracking-widest hover:bg-gray-100 transition-colors">
+                       <button 
+                         onClick={handlePincodeCheck}
+                         className="bg-gray-50 border border-gray-100 border-l-0 rounded-r-xl px-3 py-1.5 text-[9px] font-black text-[#ff3366] uppercase tracking-widest hover:bg-gray-100 transition-colors"
+                       >
                            CHECK
                        </button>
                    </div>
+                   {deliveryStatus && (
+                     <p className={`text-[8px] font-black uppercase mt-2 tracking-widest ${deliveryStatus.includes('Available') ? 'text-green-600' : 'text-rose-500'}`}>
+                       {deliveryStatus}
+                     </p>
+                   )}
                    <p className="text-[8px] font-bold text-gray-400 mt-2 tracking-wide">Free shipping over ₹5000 • Easy 14 days returns</p>
                 </div>
 
