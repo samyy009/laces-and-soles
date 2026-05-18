@@ -82,6 +82,15 @@ export default function CollectionExplore() {
   const [activeGender, setActiveGender] = useState('All');
   const [activeSort, setActiveSort] = useState('newest');
 
+  const hasActiveFilters = activeBrand !== 'All' || activeGender !== 'All' || search !== '';
+
+  const handleFreshStart = () => {
+    setActiveBrand('All');
+    setActiveGender('All');
+    setSearch('');
+    setPage(1);
+  };
+
   const brands = ['All', 'Nike', 'Adidas', 'Jordan', 'Puma', 'Reebok', 'Asics', 'New Balance', 'Under Armour'];
   const genders = ['All', 'Men', 'Women'];
 
@@ -206,6 +215,14 @@ export default function CollectionExplore() {
                 </div>
             </div>
 
+            {hasActiveFilters && (
+              <button
+                onClick={handleFreshStart}
+                className="w-full mt-6 bg-[#ff3366] hover:bg-rose-600 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-rose-200 active:scale-95 border border-rose-500"
+              >
+                <Icons.RotateCcw size={14} className="animate-spin-slow" /> Fresh Start
+              </button>
+            )}
         </aside>
 
         {/* Product Grid */}
@@ -272,12 +289,12 @@ export default function CollectionExplore() {
                 </div>
             ) : (
                 <div className="py-20 text-center bg-gray-50 rounded-[32px] border border-gray-100">
-                    <p className="text-gray-500 font-bold uppercase tracking-widest">No products found matching these filters.</p>
+                    <p className="text-gray-500 font-bold uppercase tracking-widest mb-6">No products found matching these filters.</p>
                     <button 
-                        onClick={() => { setActiveBrand('All'); setActiveGender('All'); setSearch(''); }}
-                        className="mt-6 text-xs font-black uppercase tracking-widest text-white bg-gray-900 px-6 py-3 rounded-xl hover:bg-[#ff3366]"
+                        onClick={handleFreshStart}
+                        className="text-xs font-black uppercase tracking-widest text-white bg-gray-900 px-6 py-3.5 rounded-2xl hover:bg-[#ff3366] transition-all active:scale-95 shadow-lg flex items-center gap-2 mx-auto justify-center"
                     >
-                        Clear Filters
+                        <Icons.RotateCcw size={14} /> Fresh Start / Reset Filters
                     </button>
                 </div>
             )}

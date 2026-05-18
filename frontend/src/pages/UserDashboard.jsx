@@ -182,27 +182,29 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="pb-8 bg-gray-50 min-h-screen">
-      <div className="bg-white border-b border-gray-100">
-          <div className="max-w-[1400px] mx-auto px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 pt-0">
+    <div className="pt-24 pb-12 bg-gray-50/50 min-h-screen mesh-gradient">
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-100/80 sticky top-[72px] z-30 shadow-sm transition-all duration-300">
+          <div className="max-w-[1400px] mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h1 className="text-3xl font-black uppercase text-gray-900 tracking-tighter">My Dashboard</h1>
-              <p className="mt-1 text-sm font-bold text-gray-400">Welcome back, {user.full_name}</p>
+              <h1 className="text-3xl font-black uppercase text-gray-900 tracking-tight font-heading flex items-center gap-3">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-pink-600">My Dashboard</span>
+              </h1>
+              <p className="mt-1.5 text-xs font-black uppercase tracking-wider text-gray-400">Welcome back, {user.full_name}</p>
             </div>
             <button 
               onClick={handleLogout}
-              className="px-6 py-3 border border-gray-200 rounded-xl text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-white hover:bg-[#ff3366] hover:border-[#ff3366] transition-colors flex items-center gap-2 relative z-50"
+              className="px-6 py-3 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-rose-500 hover:to-pink-600 hover:border-transparent hover:shadow-[0_4px_15px_rgba(244,63,94,0.3)] transition-all duration-350 flex items-center gap-2 relative z-50 cursor-pointer active:scale-95"
             >
-              <Icons.LogOut size={16} /> Logout
+              <Icons.LogOut size={14} className="transition-transform group-hover:translate-x-1" /> Logout
             </button>
           </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-4">
-        <div className="grid lg:grid-cols-[200px_1fr] gap-6">
+      <div className="max-w-[1400px] mx-auto px-6 py-8">
+        <div className="grid lg:grid-cols-[240px_1fr] gap-8">
           
           {/* Sidebar */}
-          <aside className="space-y-2">
+          <aside className="space-y-2.5">
              {[
                 { id: 'orders', icon: Icons.Package, label: 'My Orders' },
                 { id: 'wishlist', icon: Icons.Heart, label: 'Wishlist', action: () => navigate('/wishlist') },
@@ -212,9 +214,14 @@ export default function UserDashboard() {
                 <button 
                   key={tab.id}
                   onClick={tab.action || (() => setActiveTab(tab.id))}
-                  className={`w-full flex items-center gap-4 text-left px-5 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-colors ${activeTab === tab.id ? 'bg-[#ff3366] text-white shadow-md' : 'text-gray-500 hover:bg-white hover:text-gray-900'}`}
+                  className={`w-full flex items-center gap-4 text-left px-5 py-3.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-300 transform active:scale-95 cursor-pointer ${
+                    activeTab === tab.id 
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-[0_6px_20px_rgba(244,63,94,0.25)] border border-rose-400/10 scale-[1.02]' 
+                      : 'text-gray-500 bg-white/60 hover:bg-white hover:text-rose-500 hover:shadow-md border border-transparent'
+                  }`}
                 >
-                  <tab.icon size={18} /> {tab.label}
+                  <tab.icon size={16} className={`transition-transform duration-300 ${activeTab === tab.id ? 'scale-110' : 'group-hover:scale-110'}`} /> 
+                  <span>{tab.label}</span>
                 </button>
              ))}
           </aside>
@@ -247,24 +254,24 @@ export default function UserDashboard() {
                                      </div>
                                      <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total</p>
-                                        <p className="text-sm font-black text-[#ff3366] mt-1">₹{order.total_amount.toLocaleString()}</p>
+                                        <p className="text-sm font-black text-rose-500 mt-1">₹{order.total_amount.toLocaleString()}</p>
                                      </div>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-end gap-3">
-                                     <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shrink-0 ${
-                                        order.status === 'Out for Delivery' ? 'bg-rose-50 text-[#ff3366] border-rose-100' : 'bg-gray-50 text-gray-500 border-gray-100'
+                                     <span className={`px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border shrink-0 ${
+                                        order.status === 'Out for Delivery' ? 'bg-rose-50 text-rose-500 border-rose-100' : 'bg-gray-50 text-gray-500 border-gray-100'
                                      }`}>
                                         {order.status}
                                      </span>
                                      
                                      {order.status === 'Out for Delivery' && order.delivery_otp && (
-                                       <div className="flex items-center gap-2 bg-rose-600 text-white px-4 py-1.5 rounded-full shadow-md">
+                                       <div className="flex items-center gap-2 bg-gradient-to-r from-rose-500 to-pink-600 text-white px-4 py-1.5 rounded-full shadow-md">
                                           <Icons.ShieldCheck size={14} className="animate-pulse" />
-                                          <span className="text-[10px] font-black uppercase tracking-widest">Active OTP: {order.delivery_otp}</span>
+                                          <span className="text-xs font-black uppercase tracking-wider">Active OTP: {order.delivery_otp}</span>
                                        </div>
                                      )}
 
-                                     <Link to={`/track?id=${order.tracking_id}`} className="px-4 py-1.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-[#ff3366] transition-colors whitespace-nowrap shadow-md hover:shadow-lg">
+                                     <Link to={`/track?id=${order.tracking_id}`} className="px-5 py-2 bg-gray-900 text-white text-xs font-black uppercase tracking-wider rounded-xl hover:bg-gradient-to-r hover:from-rose-500 hover:to-pink-600 hover:shadow-[0_4px_15px_rgba(244,63,94,0.35)] transition-all duration-300 whitespace-nowrap active:scale-95">
                                         Track Live
                                      </Link>
 
@@ -273,18 +280,18 @@ export default function UserDashboard() {
                                <div className="flex flex-wrap gap-3">
                                   {order.items.map(item => (
                                      <div key={item.id} className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center p-1">
-                                           <img src={formatImageUrl(item.product?.image)} alt="" className="max-w-full max-h-full object-contain" />
+                                        <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center p-1 border border-gray-100">
+                                           <img src={formatImageUrl(item.product?.image)} alt="" className="max-w-full max-h-full object-contain animate-pulse-gentle" />
                                         </div>
                                         <div>
-                                           <p className="text-sm font-black text-gray-900 uppercase">{item.product?.title}</p>
+                                           <p className="text-sm font-black text-gray-900 uppercase tracking-tight">{item.product?.title}</p>
                                            <p className="text-xs font-bold text-gray-400">Qty: {item.quantity}</p>
                                         </div>
                                      </div>
                                   ))}
                                </div>
                                {order.status === 'Processing' && (
-                                  <button onClick={() => cancelOrder(order.tracking_id)} className="mt-4 text-xs font-bold text-gray-400 hover:text-[#ff3366] uppercase tracking-widest transition-colors">
+                                  <button onClick={() => cancelOrder(order.tracking_id)} className="mt-4 text-xs font-black text-rose-500 hover:text-rose-600 uppercase tracking-widest transition-colors cursor-pointer active:scale-95">
                                      Cancel Order
                                   </button>
                                )}
@@ -316,7 +323,7 @@ export default function UserDashboard() {
                                      </div>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-end gap-3">
-                                     <span className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border shrink-0 ${
+                                     <span className={`px-3 py-1.5 rounded-full text-xs font-black uppercase tracking-wider border shrink-0 ${
                                         order.status === 'Delivered' ? 'bg-green-50 text-green-600 border-green-100' :
                                         order.status === 'Returned' ? 'bg-purple-50 text-purple-600 border-purple-100' :
                                         order.status === 'Return Requested' ? 'bg-orange-50 text-orange-600 border-orange-100' :
@@ -327,7 +334,7 @@ export default function UserDashboard() {
                                                                         {order.status === 'Delivered' && (
                                         <button 
                                           onClick={() => requestReturn(order.tracking_id)} 
-                                          className="px-4 py-1.5 bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest rounded-full hover:bg-orange-500 transition-colors shadow-sm"
+                                          className="px-4 py-2 bg-gray-900 text-white text-xs font-black uppercase tracking-wider rounded-xl hover:bg-orange-500 hover:shadow-[0_4px_12px_rgba(249,115,22,0.25)] transition-all duration-300 transform active:scale-95 cursor-pointer"
                                         >
                                            Return Order
                                         </button>
@@ -335,7 +342,7 @@ export default function UserDashboard() {
 
                                      <button 
                                        onClick={() => handleDownloadInvoice(order)} 
-                                       className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
+                                       className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50/50 rounded-xl transition-all duration-300 cursor-pointer active:scale-90"
                                        title="Download Invoice"
                                      >
                                         <Icons.FileText size={18} />
@@ -343,7 +350,7 @@ export default function UserDashboard() {
  
                                      <button 
                                        onClick={() => deleteOrder(order.id)} 
-                                       className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                       className="p-2.5 text-gray-400 hover:text-rose-600 hover:bg-rose-50/50 rounded-xl transition-all duration-300 cursor-pointer active:scale-90"
                                        title="Remove from history"
                                      >
                                         <Icons.Trash2 size={18} />
@@ -461,10 +468,10 @@ export default function UserDashboard() {
                             </div>
                          </div>
                          <div className="flex gap-3 pt-2">
-                            <button type="submit" className="bg-gray-900 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#ff3366] transition-colors">
+                            <button type="submit" className="bg-gray-900 text-white px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-gradient-to-r hover:from-rose-500 hover:to-pink-600 hover:shadow-[0_4px_15px_rgba(244,63,94,0.3)] transition-all duration-300 transform active:scale-95 cursor-pointer">
                                Save Address
                             </button>
-                            <button type="button" onClick={() => setIsEditingAddress(false)} className="bg-white border border-gray-200 text-gray-500 px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-colors">
+                            <button type="button" onClick={() => setIsEditingAddress(false)} className="bg-white border border-gray-200 text-gray-500 px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider hover:bg-gray-50 hover:text-gray-900 transition-all duration-300 transform active:scale-95 cursor-pointer">
                                Cancel
                             </button>
                          </div>

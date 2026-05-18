@@ -48,6 +48,17 @@ export default function Store() {
 
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
+  const hasActiveFilters = activeFilter !== 'All' || searchQuery !== '' || onlyInStock === true || maxPrice !== 30000;
+
+  const handleFreshStart = () => {
+    setActiveFilter('All');
+    setSearchQuery('');
+    setOnlyInStock(false);
+    setMaxPrice(30000);
+    setSortBy('newest');
+    setSearchParams({});
+  };
+
   return (
     <div className="pb-16 bg-white min-h-screen">
       {/* Header Area */}
@@ -159,6 +170,15 @@ export default function Store() {
                  className="w-full h-1.5 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-rose-500" 
               />
             </div>
+
+            {hasActiveFilters && (
+              <button
+                onClick={handleFreshStart}
+                className="w-full mt-6 bg-[#ff3366] hover:bg-rose-600 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shadow-lg shadow-rose-200 active:scale-95 border border-rose-500"
+              >
+                <Icons.RotateCcw size={14} className="animate-spin-slow" /> Fresh Start
+              </button>
+            )}
           </aside>
 
           {/* Product Feed */}
@@ -259,16 +279,22 @@ export default function Store() {
               })}
             </div>
             
-            {filteredProducts.length === 0 && (
-               <div className="py-20 text-center flex flex-col items-center">
-                   <div className="w-64 h-64 mb-4">
-                     <LottieAnimation 
-                       src="/animations/no-results.json" 
-                     />
-                   </div>
-                   <p className="text-lg font-bold text-gray-400 uppercase tracking-widest">No masterpieces found.</p>
-               </div>
-            )}
+             {filteredProducts.length === 0 && (
+                <div className="py-20 text-center flex flex-col items-center">
+                    <div className="w-64 h-64 mb-4">
+                      <LottieAnimation 
+                        src="/animations/no-results.json" 
+                      />
+                    </div>
+                    <p className="text-lg font-bold text-gray-400 uppercase tracking-widest mb-6">No masterpieces found.</p>
+                    <button
+                      onClick={handleFreshStart}
+                      className="bg-[#ff3366] hover:bg-rose-600 text-white px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-lg shadow-rose-200 active:scale-95"
+                    >
+                      <Icons.RotateCcw size={14} /> Fresh Start / Reset Filters
+                    </button>
+                </div>
+             )}
           </div>
         </div>
       </section>

@@ -200,6 +200,17 @@ export default function Checkout() {
             setSearchParams({ id: firstOrder.tracking_id }, { replace: true });
             clearCart();
             toast.success("Demo Payment Successful!");
+
+            // Dispatch interactive unboxing
+            const firstItem = firstOrder.items?.[0];
+            const shoePayload = firstItem ? { 
+              name: firstItem.product?.title || firstItem.name, 
+              image: firstItem.product?.image || firstItem.image, 
+              brand: firstItem.product?.brand || firstItem.brand 
+            } : null;
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('open-unboxing', { detail: shoePayload }));
+            }, 1000);
           }
         } catch (err) {
           console.error("Mock Verify Error:", err);
@@ -246,6 +257,17 @@ export default function Checkout() {
               setSearchParams({ id: firstOrder.tracking_id }, { replace: true });
               clearCart();
               toast.success("Payment Successful! Order Placed.");
+
+              // Dispatch interactive unboxing
+              const firstItem = firstOrder.items?.[0];
+              const shoePayload = firstItem ? { 
+                name: firstItem.product?.title || firstItem.name, 
+                image: firstItem.product?.image || firstItem.image, 
+                brand: firstItem.product?.brand || firstItem.brand 
+              } : null;
+              setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('open-unboxing', { detail: shoePayload }));
+              }, 1000);
             }
           } catch (err) {
             console.error("Verification Error:", err);

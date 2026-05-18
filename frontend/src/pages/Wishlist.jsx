@@ -8,7 +8,7 @@ export default function Wishlist() {
   const { wishlistItems, toggleWishlist, addToCart, getProductById, formatImageUrl } = useShop();
 
   return (
-    <div className="pb-16 bg-white  min-h-screen">
+    <div className="pt-24 pb-16 bg-white  min-h-screen">
       {/* ─── Header ─── */}
       <section className="relative pt-4 pb-2 overflow-hidden">
         <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">

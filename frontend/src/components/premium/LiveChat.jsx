@@ -307,6 +307,26 @@ export default function LiveChat() {
       };
     }
 
+    // NEW INTERACTIVE PORTALS (Design Lab, Matchmaker, AR Try-On, Unboxing)
+    if (query.includes('design') || query.includes('customize') || query.includes('customizer')) {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('open-design-lab'));
+      }, 500);
+      return {
+        text: "🧪 **Design Lab Portal Active!**\n\n\"I've initialized our high-fidelity Sneaker Customizer Lab directly on your screen! You can personalize base leather, accent panels, custom braided patterns, and calibrate reactive posture weights. Let me know what you think!\""
+      };
+    }
+
+
+    if (query.includes('unbox') || query.includes('unboxing') || query.includes('package') || query.includes('box game')) {
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('open-unboxing'));
+      }, 500);
+      return {
+        text: "🎁 **Premium Cardbox Package Loaded!**\n\n\"Ready to unbox? Click through to untie the leather ribbons, slide off the custom cardboard lid, tear the tissue wrappers, and let your bespoke sneaker rise under the particle halo!\""
+      };
+    }
+
     // 1. HUMAN AGENT HANDOFF
     if (query.includes('human') || query.includes('agent') || query.includes('customer care')) {
       return { 
@@ -873,9 +893,16 @@ export default function LiveChat() {
                         <img src={p.image} alt={p.name} className="w-full h-28 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform" />
                         <h5 className="text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{p.name}</h5>
                         <p className="text-[11px] font-bold text-rose-500 mb-3">{p.price}</p>
-                        <button className="w-full py-2 flex items-center justify-center gap-1.5 bg-gray-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 transition-colors">
-                          <Icons.ShoppingBag size={12} /> View
-                        </button>
+                          <button 
+                            onClick={() => {
+                              if (p.id) {
+                                window.location.href = `/product/${p.id}`;
+                              }
+                            }}
+                            className="w-full py-2 flex items-center justify-center gap-1.5 bg-gray-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 transition-colors"
+                          >
+                            <Icons.ShoppingBag size={12} /> View
+                          </button>
                       </div>
                     ))}
                   </div>

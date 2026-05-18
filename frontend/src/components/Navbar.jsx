@@ -12,6 +12,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [labsOpen, setLabsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -62,9 +63,9 @@ export default function Navbar() {
         {/* ─── Site logo */}
         <div 
           onClick={handleLogoClick}
-          className="cursor-pointer select-none group flex items-center"
+          className="cursor-pointer select-none group flex items-center shrink-0 mr-4"
         >
-          <div className="flex items-center font-heading text-xl md:text-2xl font-black tracking-tighter uppercase transition-transform group-hover:scale-105">
+          <div className="flex items-center font-heading text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-black tracking-tighter uppercase transition-transform group-hover:scale-105">
             <span className="text-rose-500">{content.header.logo.textHighlight1}</span>
             <span className="text-gray-900">{content.header.logo.textMain}</span>
             <span className="text-rose-500">{content.header.logo.textHighlight2}</span>
@@ -73,24 +74,54 @@ export default function Navbar() {
         </div>
 
         {/* ─── Desktop navigation menu */}
-        <nav className="hidden lg:flex items-center gap-10">
+        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 flex-1 justify-center min-w-0 px-2">
           {content.header.menu.map((item) => (
             <NavLink
               key={item.label}
               to={item.label === 'Home' ? '/' : `/${item.label.toLowerCase()}`}
               className={({ isActive }) =>
-                `text-[11px] font-black uppercase tracking-[0.3em] transition-all relative py-2 ${
-                  isActive ? 'text-rose-500 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-rose-500 after:rounded-full after:shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'text-gray-900  hover:text-rose-500'
+                `text-[13px] xl:text-[14px] font-black uppercase tracking-wider transition-all relative py-2 outline-none focus:outline-none whitespace-nowrap ${
+                  isActive ? 'text-rose-500 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-rose-500 after:rounded-full after:shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'text-gray-900 hover:text-rose-500'
                 }`
               }
             >
               {item.label}
             </NavLink>
           ))}
+          {/* ─── Premium Experience Labs Dropdown */}
+          <div 
+            className="relative shrink-0" 
+            onMouseEnter={() => setLabsOpen(true)} 
+            onMouseLeave={() => setLabsOpen(false)}
+          >
+            <button 
+              className={`text-[11px] xl:text-xs font-black uppercase tracking-wider text-rose-600 bg-rose-50/70 hover:bg-rose-100/80 border border-rose-100/70 px-3.5 py-1.5 rounded-full transition-all duration-300 flex items-center justify-center gap-1.5 hover:scale-[1.03] active:scale-95 shrink-0 outline-none focus:outline-none cursor-pointer shadow-sm hover:shadow ${labsOpen ? 'bg-rose-100/85' : ''}`}
+            >
+              <Icons.Sparkles size={12} className="animate-pulse text-rose-500" />
+              <span>Interactive Labs</span>
+              <Icons.ChevronDown size={12} className={`transition-transform duration-300 ${labsOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu with Premium Glassmorphism */}
+            <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-gray-100 py-2 transition-all duration-300 z-50 origin-top ${labsOpen ? 'opacity-100 scale-100 translate-y-0 visible' : 'opacity-0 scale-95 -translate-y-2 invisible'}`}>
+              <button 
+                onClick={() => { setLabsOpen(false); window.dispatchEvent(new CustomEvent('open-design-lab')); }}
+                className="w-full px-4 py-2.5 text-left hover:bg-rose-50/50 flex items-center gap-3 transition-colors group"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 border border-rose-100 text-rose-500 shadow-sm shrink-0">
+                  <Icons.Sparkles size={14} className="animate-pulse" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-900 group-hover:text-[#ff3366]">Design Lab</div>
+                  <div className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">3D Sneaker Customizer</div>
+                </div>
+              </button>
+            </div>
+          </div>
         </nav>
 
         {/* ─── Action icons & Mobile Menu ─── */}
-        <div className="flex items-center gap-1 sm:gap-3 lg:gap-6">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-4 xl:gap-5 shrink-0">
 
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
@@ -219,6 +250,21 @@ export default function Navbar() {
             </div>
             <span className="font-bold tracking-wide">My Wishlist</span>
           </Link>
+        </div>
+
+        {/* ─── Mobile Interactive Labs Section */}
+        <div className="mt-8 space-y-4 border-t border-gray-100 pt-6">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-4 font-heading">Interactive Labs</h4>
+          
+          <button 
+            onClick={() => { setMenuOpen(false); window.dispatchEvent(new CustomEvent('open-design-lab')); }}
+            className="flex items-center gap-4 w-full text-left text-gray-800 hover:text-rose-500 transition-colors"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 border border-rose-100 shadow-sm text-rose-500 shrink-0">
+              <Icons.Sparkles size={18} className="animate-pulse" />
+            </div>
+            <span className="font-bold tracking-wide">Design Lab Customizer</span>
+          </button>
         </div>
       </aside>
     </>

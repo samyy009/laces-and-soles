@@ -26,6 +26,10 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import ProtectedRoute from './components/ProtectedRoute';
 import LiveChat from './components/premium/LiveChat';
+import DesignLab from './components/premium/DesignLab';
+
+import UnboxingModal from './components/premium/UnboxingModal';
+import { useShop } from './context/ShopContext';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -36,20 +40,38 @@ function ScrollToTop() {
 }
 
 export default function App() {
+  const { products, addToCart } = useShop();
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
+  const [isDesignLabOpen, setIsDesignLabOpen] = useState(false);
+  const [isUnboxingOpen, setIsUnboxingOpen] = useState(false);
+  const [unboxProduct, setUnboxProduct] = useState(null);
 
-  // One-time cleanup to ensure 'dark' mode is cleared from browser storage/DOM
+  // One-time cleanup and event binders
   useEffect(() => {
     document.documentElement.classList.remove('dark');
     localStorage.removeItem('theme');
 
+
+    const handleOpenDesignLab = () => setIsDesignLabOpen(true);
+    const handleOpenUnboxing = (e) => {
+      setUnboxProduct(e.detail || null);
+      setIsUnboxingOpen(true);
+    };
+
+    window.addEventListener('open-design-lab', handleOpenDesignLab);
+    window.addEventListener('open-unboxing', handleOpenUnboxing);
+
     const timer = setTimeout(() => {
       setFadeOut(true);
-      setTimeout(() => setShowSplash(false), 800); // 800ms fade transition
-    }, 5000); // Show splash for 5 seconds
+      setTimeout(() => setShowSplash(false), 800);
+    }, 5000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('open-design-lab', handleOpenDesignLab);
+      window.removeEventListener('open-unboxing', handleOpenUnboxing);
+    };
   }, []);
 
   return (
@@ -148,6 +170,18 @@ export default function App() {
       </Routes>
     </Layout>
     <LiveChat />
+    
+    <DesignLab 
+      isOpen={isDesignLabOpen} 
+      onClose={() => setIsDesignLabOpen(false)} 
+      onAddToCart={(item) => addToCart(item, 'UK 9')} 
+    />
+
+    <UnboxingModal 
+      isOpen={isUnboxingOpen} 
+      onClose={() => setIsUnboxingOpen(false)} 
+      product={unboxProduct}
+    />
     </>
   );
 }
