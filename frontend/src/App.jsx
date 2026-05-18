@@ -146,8 +146,8 @@ export default function App() {
         <Route path="/driver" element={<ProtectedRoute allowedRoles={['driver']}><DriverDashboard /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
       </Routes>
-        <LiveChat />
     </Layout>
+    <LiveChat />
     </>
   );
 }
