@@ -95,7 +95,7 @@ export default function LiveChat() {
       .trim();
 
     const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.rate = 1.05;
+    utterance.rate = 1.22;
     utterance.pitch = 1.05;
 
     // Load available voices
@@ -849,23 +849,7 @@ export default function LiveChat() {
                     )}
                     {msg.text}
                   </div>
-                  {msg.sender === 'bot' && (
-                    <button 
-                      onClick={() => speakText(msg.text)} 
-                      className={`size-7 rounded-lg flex items-center justify-center border transition-all ${
-                        isPlayingVoice === msg.text 
-                          ? 'bg-rose-500 text-white border-rose-500 animate-pulse pointer-events-auto opacity-100' 
-                          : 'bg-white text-gray-400 hover:text-gray-900 hover:bg-gray-50 border-gray-100 opacity-0 group-hover:opacity-100 pointer-events-auto transition-opacity duration-300'
-                      }`}
-                      title={isPlayingVoice === msg.text ? "Mute" : "Speak text"}
-                    >
-                      {isPlayingVoice === msg.text ? (
-                        <Icons.Volume2 size={14} className="animate-bounce" />
-                      ) : (
-                        <Icons.Volume size={14} />
-                      )}
-                    </button>
-                  )}
+                  {/* Only using the global header speaker toggle to avoid confusing the user */}
                 </div>
 
                 {/* RICH COMPONENTS */}
