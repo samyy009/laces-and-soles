@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { useShop } from '../../context/ShopContext';
 
@@ -60,6 +61,7 @@ const StoreMap = () => {
 
 export default function LiveChat() {
   const { products, formatImageUrl } = useShop();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { text: "Hi! I'm your Laces & Soles virtual assistant. Looking for your perfect fit today?", sender: 'bot' }
@@ -327,6 +329,29 @@ export default function LiveChat() {
       };
     }
 
+    // === Q&A KNOWLEDGE BASE ===
+    if (query.includes('return') || query.includes('refund') || query.includes('policy')) {
+      return { text: "We accept returns within 30 days of purchase, as long as the shoes are unworn and in their original packaging. Just drop us an email or ask a live stylist to initiate a return! 📦" };
+    }
+    if (query.includes('cash on delivery') || query.includes('cod')) {
+      return { text: "Yes! We offer Cash on Delivery (COD) on all orders nationwide. You can select this option right at the final checkout screen. 🚚💵" };
+    }
+    if (query.includes('shipping') || query.includes('how long') || query.includes('delivery time')) {
+      return { text: "Standard shipping usually takes 3-5 business days. If you are in the Hubli-Dharwad zone, you might be eligible for our ultra-fast 2-4 hour delivery! ⚡" };
+    }
+    if (query.includes('warranty') || query.includes('guarantee')) {
+      return { text: "All our premium sneakers come with a 6-month authentic manufacturer warranty covering any manufacturing defects. Your invoice acts as your warranty card! 🛡️" };
+    }
+    if (query.includes('change') && query.includes('address')) {
+      return { text: "You can easily change your delivery address from your User Dashboard before the order is 'Shipped'. If it's already shipped, please connect to a live stylist to intercept the package! 📍" };
+    }
+    if (query.includes('compare') || query.includes('vs')) {
+      return { 
+        text: "Comparing shoes? 👟\n\nIf you're looking at **Adidas Ultraboost** vs **Nike Pegasus**:\n- **Ultraboost**: Unmatched plush Boost cushioning, perfect for all-day casual wear and gym sessions.\n- **Pegasus**: Firmer, highly responsive React foam, built strictly for running and performance longevity.\n\nNeed a specific comparison? Ask a live stylist!",
+        options: ["Talk to Human 🧑‍💼"]
+      };
+    }
+
     // 1. HUMAN AGENT HANDOFF
     if (query.includes('human') || query.includes('agent') || query.includes('customer care')) {
       return { 
@@ -338,34 +363,36 @@ export default function LiveChat() {
     // 2. CHECK COUPONS
     if (query.includes('coupon') || query.includes('discount') || query.includes('promo')) {
       return { 
-        text: "You can use the coupon code 'FLIPKART10' at checkout to get a flat 10% discount on your entire order! 🛍️"
+        text: "You can use the coupon code 'LACES10' at checkout to get a flat 10% discount on your entire order! 🛍️"
       };
     }
 
     // 4. PRODUCT CARDS WITH AR TRY-ON
     if (query.includes('trending') || query.includes('popular')) {
       // Use real products if available
-      const trendingProducts = products && products.length >= 3 ? products.slice(0, 3).map(p => ({
+      const trendingProducts = products && products.length >= 5 ? products.slice(0, 5).map(p => ({
         id: p.id,
         name: p.title,
         price: `₹${p.price.toLocaleString()}`,
         image: formatImageUrl(p.image),
-        ar: Math.random() > 0.5 // Randomize AR availability
+        ar: false // Disabled AR badge as requested
       })) : [
-        { name: "Nike Air Jordan 1", price: "₹12,499", image: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=200", ar: true },
-        { name: "Adidas Ultraboost", price: "₹18,999", image: "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?auto=format&fit=crop&q=80&w=200", ar: true },
-        { name: "Puma RS-X3", price: "₹8,999", image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&q=80&w=200", ar: false }
+        { id: 1, name: "Nike Air Jordan 1", price: "₹12,499", image: "https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&q=80&w=200", ar: false },
+        { id: 2, name: "Adidas Ultraboost", price: "₹18,999", image: "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?auto=format&fit=crop&q=80&w=200", ar: false },
+        { id: 3, name: "Puma RS-X3", price: "₹8,999", image: "https://images.unsplash.com/photo-1608231387042-66d1773070a5?auto=format&fit=crop&q=80&w=200", ar: false },
+        { id: 4, name: "New Balance 550", price: "₹10,999", image: "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&q=80&w=200", ar: false },
+        { id: 5, name: "Converse Chuck 70", price: "₹5,999", image: "https://images.unsplash.com/photo-1607522370275-f14206abe5d3?auto=format&fit=crop&q=80&w=200", ar: false }
       ];
 
       return { 
-        text: "Here are the top 3 pairs trending this week. Tap 'AR Try-on' to see how they look on your feet!",
+        text: "Here are the top 5 pairs trending this week. Tap 'View' to see their full details!",
         products: trendingProducts
       };
     }
 
     // 3. REAL ORDER TIMELINE & DYNAMIC SCANNER
-    const trackMatch = query.match(/track\s+(l&s-[a-z0-9\-]+)/i) || query.match(/(l&s-[a-z0-9\-]+)/i) || query.match(/\b([a-z0-9\-]{5,15})\b/i);
-    if (trackMatch || query.includes('track') || query.includes('delivery') || query.includes('order status') || query.includes('where is my')) {
+    const trackMatch = query.match(/track\s+(l&s-[a-z0-9\-]+)/i) || query.match(/(l&s-[a-z0-9\-]+)/i) || query.match(/\bord\d{4,10}\b/i);
+    if (trackMatch || query.includes('track') || query.includes('delivery ') || query.includes('order status') || query.includes('where is my order')) {
       let orderId = trackMatch ? (trackMatch[1] || trackMatch[0]).toUpperCase() : null;
       
       // Auto-correct prefix if they forgot the boutique's L&S- prefix but supplied a code
@@ -623,10 +650,12 @@ export default function LiveChat() {
         );
       }
 
-      // Dynamic Numeric Price Limit Parser (e.g., under 12000, below 15000)
-      const priceLimitMatch = query.match(/(?:under|below|less\s+than)\s*(\d+)/i) || query.match(/(\d+)\s*(?:under|below|less\s+than)/i);
+      // Dynamic Numeric Price Limit Parser (e.g., under 12000, below 4k, under rs 4000)
+      const priceLimitMatch = query.match(/(?:under|below|less\s+than)\s*(?:rs\.?\s*|₹\s*)?(\d+(?:,\d+)?)(k?)/i) || query.match(/(?:rs\.?\s*|₹\s*)?(\d+(?:,\d+)?)(k?)\s*(?:under|below|less\s+than)/i);
       if (priceLimitMatch) {
-        const limitValue = parseInt(priceLimitMatch[1]);
+        let rawVal = priceLimitMatch[1].replace(/,/g, '');
+        let limitValue = parseInt(rawVal);
+        if (priceLimitMatch[2].toLowerCase() === 'k') limitValue *= 1000;
         if (!isNaN(limitValue)) {
           matched = matched.filter(p => p.price <= limitValue);
         }
@@ -673,6 +702,14 @@ export default function LiveChat() {
           products: topMatches
         };
       } else {
+        if (priceLimitMatch) {
+           return {
+             text: `I couldn't find any exact matches under ₹${priceLimitMatch[1]}${priceLimitMatch[2]}. Premium sneakers in our boutique usually start a bit higher! However, here are our closest budget-friendly alternatives:`,
+             products: [...products].sort((a,b) => a.price - b.price).slice(0, 3).map(p => ({
+               id: p.id, name: p.title, price: `₹${p.price.toLocaleString()}`, image: formatImageUrl(p.image), ar: false
+             }))
+           };
+        }
         return {
           text: "I couldn't find any direct matches in our live database for that specific search, but we have 80+ other premium styles available! Would you like to check out some popular shoe collections?",
           options: ["Men's Footwear 👨", "Women's Footwear 👩", "Sports Footwear ⚡", "Trending Shoes 🔥"]
@@ -885,18 +922,13 @@ export default function LiveChat() {
                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 snap-x custom-scrollbar-hide">
                     {msg.products.map((p, i) => (
                       <div key={i} className="w-[160px] bg-white border border-gray-100 rounded-2xl p-2 shadow-md snap-center shrink-0 group hover:border-rose-500 transition-colors relative">
-                        {p.ar && (
-                           <div className="absolute top-4 left-4 z-10 bg-white/90 backdrop-blur-sm text-gray-900 text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-md shadow-sm flex items-center gap-1">
-                             <Icons.Scan size={10} className="text-rose-500" /> AR Try-on
-                           </div>
-                        )}
                         <img src={p.image} alt={p.name} className="w-full h-28 object-cover rounded-xl mb-3 group-hover:scale-105 transition-transform" />
                         <h5 className="text-[11px] font-black uppercase tracking-tight text-gray-900 truncate">{p.name}</h5>
                         <p className="text-[11px] font-bold text-rose-500 mb-3">{p.price}</p>
                           <button 
                             onClick={() => {
                               if (p.id) {
-                                window.location.href = `/product/${p.id}`;
+                                navigate(`/product/${p.id}`);
                               }
                             }}
                             className="w-full py-2 flex items-center justify-center gap-1.5 bg-gray-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-500 transition-colors"
@@ -1113,8 +1145,8 @@ export default function LiveChat() {
       {/* Size Guide Modal */}
       {showSizeGuide && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-gray-950/70 backdrop-blur-xl animate-in fade-in duration-500 pointer-events-auto">
-           <div className="bg-white rounded-[3rem] w-full max-w-md overflow-hidden shadow-[0_50px_150px_rgba(0,0,0,0.6)] relative animate-in zoom-in-95 slide-in-from-bottom-16 duration-500">
-              <div className="bg-gray-900 p-10 text-white flex justify-between items-center relative overflow-hidden">
+           <div className="bg-white rounded-[3rem] w-full max-w-md shadow-[0_50px_150px_rgba(0,0,0,0.6)] relative animate-in zoom-in-95 slide-in-from-bottom-16 duration-500 flex flex-col max-h-[90vh]">
+              <div className="bg-gray-900 p-10 text-white flex justify-between items-center relative overflow-hidden rounded-t-[3rem] shrink-0">
                  <div className="relative z-10">
                    <h4 className="text-[11px] font-black uppercase tracking-[0.4em] text-rose-500 mb-2">Technical Specs</h4>
                    <h3 className="text-2xl font-black uppercase tracking-widest">Sizing Chart</h3>
@@ -1124,7 +1156,7 @@ export default function LiveChat() {
                  </button>
                  <div className="absolute top-0 right-0 size-48 bg-rose-500/20 rounded-full -mr-24 -mt-24 blur-3xl"></div>
               </div>
-              <div className="p-10">
+              <div className="p-10 overflow-y-auto custom-scrollbar-light rounded-b-[3rem]">
                  <div className="space-y-5">
                     <div className="grid grid-cols-3 gap-4 text-[11px] font-black uppercase tracking-[0.3em] text-gray-400 pb-4 border-b-2 border-gray-100">
                        <span>UK Size</span>

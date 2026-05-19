@@ -49,6 +49,26 @@ export default function ProductDetails() {
 
   useEffect(() => {
     const fetchProduct = async () => {
+      // ⚡ Zero-Latency Fast Path: Check if product is already in global memory
+      if (products && products.length > 0) {
+        const cachedProduct = products.find(p => p.id.toString() === id.toString());
+        if (cachedProduct) {
+          setProduct(cachedProduct);
+          setActiveAngle({ img: cachedProduct.image, transform: "scaleX(1)", label: "Left Side" });
+          setLoading(false);
+          
+          // Still fetch quietly in the background to ensure reviews/stock are perfectly fresh
+          axios.get(`${API_BASE}/products/${id}`).then(res => {
+            if (res.data && res.data.product) {
+              setProduct(res.data.product);
+            }
+          }).catch(err => console.error('Background sync failed:', err));
+          
+          return;
+        }
+      }
+
+      // Standard Path (if navigating directly via URL and not in cache)
       setLoading(true);
       try {
         const res = await axios.get(`${API_BASE}/products/${id}`);
@@ -60,9 +80,12 @@ export default function ProductDetails() {
         setLoading(false);
       }
     };
-    fetchProduct();
+    
+    // Slight delay to ensure context is hydrated
+    const timeout = setTimeout(fetchProduct, 50);
     window.scrollTo(0, 0);
-  }, [id]);
+    return () => clearTimeout(timeout);
+  }, [id, products]);
 
   if (loading) return (
     <div className="flex h-screen items-center justify-center">
