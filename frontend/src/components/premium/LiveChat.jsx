@@ -892,7 +892,7 @@ export default function LiveChat() {
           {/* Messages */}
           <div className="flex-1 min-h-0 p-6 bg-[#fcfdfe] overflow-y-auto flex flex-col gap-6 custom-scrollbar-light">
             {messages.map((msg, idx) => (
-              <div key={idx} className="flex flex-col gap-4">
+              <div key={idx} className="flex flex-col gap-4 animate-in slide-in-from-bottom-4 fade-in duration-300">
                 <div className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2 group`}>
                   <div className={`max-w-[90%] p-4 rounded-3xl text-[12px] font-bold leading-relaxed shadow-sm whitespace-pre-wrap transition-all ${
                     msg.sender === 'user' 
@@ -1058,11 +1058,11 @@ export default function LiveChat() {
               </div>
             ))}
             {isTyping && (
-              <div className="flex justify-start">
-                <div className={`border p-4 rounded-3xl rounded-bl-none shadow-sm flex gap-2 ${isAgentHandoff ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-gray-100'}`}>
+              <div className="flex justify-start animate-in slide-in-from-bottom-4 fade-in duration-300">
+                <div className={`border p-4 rounded-3xl rounded-bl-none shadow-sm flex gap-2 items-center h-[52px] ${isAgentHandoff ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-gray-100'}`}>
                   <div className={`size-2 rounded-full animate-bounce ${isAgentHandoff ? 'bg-indigo-500' : 'bg-rose-500'}`}></div>
-                  <div className={`size-2 rounded-full animate-bounce ${isAgentHandoff ? 'bg-indigo-500' : 'bg-rose-500'}`} style={{ animationDelay: '0.2s' }}></div>
-                  <div className={`size-2 rounded-full animate-bounce ${isAgentHandoff ? 'bg-indigo-500' : 'bg-rose-500'}`} style={{ animationDelay: '0.4s' }}></div>
+                  <div className={`size-2 rounded-full animate-bounce ${isAgentHandoff ? 'bg-indigo-500' : 'bg-rose-500'}`} style={{ animationDelay: '0.15s' }}></div>
+                  <div className={`size-2 rounded-full animate-bounce ${isAgentHandoff ? 'bg-indigo-500' : 'bg-rose-500'}`} style={{ animationDelay: '0.3s' }}></div>
                 </div>
               </div>
             )}
@@ -1076,7 +1076,7 @@ export default function LiveChat() {
                  <button 
                   key={i}
                   onClick={() => handleSend(null, reply)}
-                  className="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-xl text-[10px] font-bold hover:border-rose-500 hover:text-rose-500 transition-all active:scale-95 shadow-sm"
+                  className="bg-white border border-gray-200 text-gray-600 px-3 py-1.5 rounded-xl text-[10px] font-bold hover:border-rose-500 hover:text-rose-500 transition-all hover:-translate-y-1 active:scale-95 shadow-sm hover:shadow-md"
                  >
                    {reply}
                  </button>
@@ -1135,7 +1135,7 @@ export default function LiveChat() {
         <button 
           onClick={() => setIsOpen(!isOpen)}
           className={`pointer-events-auto size-16 rounded-[1.75rem] flex items-center justify-center shadow-[0_20px_50px_rgba(244,63,94,0.4)] transition-all duration-700 transform hover:scale-110 active:scale-90 ${
-            isOpen ? 'bg-gray-900 -rotate-90' : 'bg-rose-500 rotate-0'
+            isOpen ? 'bg-gray-900 -rotate-90' : 'bg-rose-500 rotate-0 hover:shadow-[0_20px_50px_rgba(244,63,94,0.6)] animate-[pulse_3s_ease-in-out_infinite]'
           }`}
         >
           {isOpen ? <Icons.X size={32} className="text-white" /> : <Icons.MessageCircle size={32} className="text-white" />}
