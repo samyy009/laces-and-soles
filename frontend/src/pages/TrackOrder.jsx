@@ -7,11 +7,12 @@ import { io } from 'socket.io-client';
 import { MapContainer, TileLayer, Marker, Popup, useMap, Polyline } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { API } from '../context/ShopContext';
+import { API, useShop } from '../context/ShopContext';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 // Fix Leaflet marker icon issue
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -72,6 +73,7 @@ export default function TrackOrder() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { formatImageUrl } = useShop();
   const [trackingId, setTrackingId] = useState('');
   const [orderInfo, setOrderInfo] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -81,6 +83,7 @@ export default function TrackOrder() {
   const [homeCoords, setHomeCoords] = useState(null);
   const [locationPermission, setLocationPermission] = useState('prompt'); // 'prompt', 'granted', 'denied'
   const socketRef = useRef(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   useEffect(() => {
     if (orderInfo?.shipping_address) {
@@ -276,7 +279,7 @@ export default function TrackOrder() {
 
       const tableData = order.items.map((item, index) => [
         index + 1,
-        `${item.title}\n${item.brand || ''}`,
+        `${item.product?.title || item.title || 'Product'}\n${item.product?.brand || item.brand || ''}`,
         item.quantity || 1,
         `INR ${(item.price || 0).toFixed(2)}`,
         `INR ${((item.price || 0) * (item.quantity || 1)).toFixed(2)}`
@@ -418,11 +421,16 @@ export default function TrackOrder() {
                          {orderInfo.items.map((item, idx) => (
                             <div key={idx} className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:bg-white hover:shadow-lg transition-all group">
                                <div className="size-16 bg-white rounded-xl flex items-center justify-center p-2 shadow-sm shrink-0">
-                                  <img src={item.image} alt="" className="max-w-full max-h-full object-contain" />
+                                  <img 
+                                    src={formatImageUrl(item.product?.image || item.image)} 
+                                    alt={item.product?.title || item.title || 'Product'} 
+                                    className="max-w-full max-h-full object-contain" 
+                                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=400'; }}
+                                  />
                                </div>
                                <div className="flex-1 min-w-0">
-                                  <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-0.5">{item.brand}</p>
-                                  <h4 className="text-xs font-black text-gray-950 uppercase truncate">{item.title}</h4>
+                                  <p className="text-[9px] font-black text-rose-500 uppercase tracking-widest mb-0.5">{item.product?.brand || item.brand || ''}</p>
+                                  <h4 className="text-xs font-black text-gray-950 uppercase truncate">{item.product?.title || item.title || 'Product'}</h4>
                                   <div className="flex items-center gap-3 mt-1.5">
                                      <span className="text-[9px] font-bold text-gray-400 uppercase">Qty: {item.quantity}</span>
                                      <div className="size-1 bg-gray-200 rounded-full"></div>
@@ -503,18 +511,23 @@ export default function TrackOrder() {
                <div className="flex flex-wrap gap-4">
                  {(['Processing', 'Packed', 'Pending'].includes(orderInfo.current_status)) && (
                    <button 
-                    onClick={async () => {
-                      if (window.confirm("Are you sure you want to cancel this order?")) {
-                        try {
-                          await axios.post(`${API}/api/orders/${orderInfo.tracking_id}/cancel`, {}, {
-                            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                          });
-                          toast.success("Order Cancelled Successfully");
-                          fetchOrder(orderInfo.tracking_id);
-                        } catch (err) {
-                          toast.error(err.response?.data?.error || "Cancellation failed");
-                        }
-                      }
+                    onClick={() => {
+                       setConfirmModal({
+                         isOpen: true,
+                         title: "Cancel Order",
+                         message: "Are you sure you want to cancel this order? This action cannot be undone.",
+                         onConfirm: async () => {
+                           try {
+                             await axios.post(`${API}/api/orders/${orderInfo.tracking_id}/cancel`, {}, {
+                               headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                             });
+                             toast.success("Order Cancelled Successfully");
+                             fetchOrder(orderInfo.tracking_id);
+                           } catch (err) {
+                             toast.error(err.response?.data?.error || "Cancellation failed");
+                           }
+                         }
+                       });
                     }}
                     className="flex-1 bg-white border-2 border-rose-500 text-rose-500 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/10"
                    >
@@ -522,49 +535,71 @@ export default function TrackOrder() {
                    </button>
                  )}
 
-                 {(['Processing', 'Pending'].includes(orderInfo.current_status)) && (
-                   <button 
-                    onClick={async () => {
-                      const newAddr = window.prompt("Enter new shipping address:", orderInfo.shipping_address);
-                      if (newAddr) {
-                        try {
-                          await axios.patch(`${API}/api/orders/${orderInfo.tracking_id}/address`, { address: newAddr }, {
-                            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                          });
-                          toast.success("Address Updated!");
-                          fetchOrder(orderInfo.tracking_id);
-                        } catch (err) {
-                          toast.error(err.response?.data?.error || "Update failed");
-                        }
-                      }
-                    }}
-                    className="flex-1 bg-white border-2 border-gray-950 text-gray-950 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-950 hover:text-white transition-all shadow-lg shadow-gray-950/10 flex items-center justify-center gap-2"
-                   >
-                     <Icons.MapPin size={14} /> Update Address
-                   </button>
-                 )}
-
-                 {orderInfo.current_status === 'Delivered' && (
+                  {(['Processing', 'Pending'].includes(orderInfo.current_status)) && (
                     <button 
-                      onClick={async () => {
-                        const reason = window.prompt("Please enter the reason for return (e.g. Wrong Size, Damaged):");
-                        if (reason) {
-                          try {
-                            await axios.post(`${API}/api/orders/${orderInfo.tracking_id}/return`, { reason }, {
-                              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                            });
-                            toast.success("Return request submitted!");
-                            fetchOrder(orderInfo.tracking_id);
-                          } catch (err) {
-                            toast.error(err.response?.data?.error || "Return failed");
-                          }
-                        }
-                      }}
-                      className="flex-1 bg-white border-2 border-blue-500 text-blue-500 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-500 hover:text-white transition-all shadow-lg shadow-blue-500/10"
+                     onClick={() => {
+                       setConfirmModal({
+                         isOpen: true,
+                         title: "Change Shipping Address",
+                         message: "Please enter the new shipping address:",
+                         showInput: true,
+                         placeholder: "Enter new address...",
+                         defaultValue: orderInfo.shipping_address,
+                         onConfirm: async (newAddr) => {
+                           if (!newAddr || !newAddr.trim()) {
+                             toast.error("Address cannot be empty.");
+                             return;
+                           }
+                           try {
+                             await axios.patch(`${API}/api/orders/${orderInfo.tracking_id}/address`, { address: newAddr }, {
+                               headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                             });
+                             toast.success("Address Updated!");
+                             fetchOrder(orderInfo.tracking_id);
+                           } catch (err) {
+                             toast.error(err.response?.data?.error || "Failed to update address");
+                           }
+                         }
+                       });
+                     }}
+                     className="flex-1 bg-white border-2 border-gray-900 text-gray-900 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-900 hover:text-white transition-all"
                     >
-                      Request Return
+                      Change Shipping Address
                     </button>
-                 )}
+                  )}
+
+                  {(['Delivered'].includes(orderInfo.current_status) && !orderInfo.return_requested) && (
+                     <button
+                      onClick={() => {
+                        setConfirmModal({
+                          isOpen: true,
+                          title: "Return Order",
+                          message: "Please enter the reason for return (e.g. Wrong Size, Damaged):",
+                          showInput: true,
+                          placeholder: "Reason for return...",
+                          defaultValue: "",
+                          onConfirm: async (reason) => {
+                            if (!reason || !reason.trim()) {
+                              toast.error("A return reason is required.");
+                              return;
+                            }
+                            try {
+                              await axios.post(`${API}/api/orders/${orderInfo.tracking_id}/return`, { reason }, {
+                                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                              });
+                              toast.success("Return Request Submitted!");
+                              fetchOrder(orderInfo.tracking_id);
+                            } catch (err) {
+                              toast.error(err.response?.data?.error || "Failed to submit return request");
+                            }
+                          }
+                        });
+                      }}
+                      className="flex-1 bg-red-600 text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-900/20"
+                     >
+                       Return Order
+                     </button>
+                  )}
                </div>
 
                {/* MAP SECTION */}
@@ -757,6 +792,13 @@ export default function TrackOrder() {
           </div>
         )}
       </div>
+      <ConfirmModal 
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+      />
     </div>
   );
 }

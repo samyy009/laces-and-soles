@@ -355,6 +355,49 @@ def delete_product(product_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@admin_bp.route('/api/products/<int:product_id>', methods=['PUT', 'PATCH'])
+@jwt_required()
+def update_product(product_id):
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    product = db.session.get(Product, product_id)
+    if not product:
+        return jsonify({'error': 'Product not found'}), 404
+        
+    try:
+        # Check if it's form data (with image) or JSON data
+        if request.is_json:
+            data = request.get_json()
+            if 'title' in data: product.title = data['title']
+            if 'price' in data: product.price = float(data['price'])
+            if 'brand' in data: product.brand = data['brand']
+            if 'image_url' in data: product.image_url = data['image_url']
+            if 'stock' in data: product.stock = int(data['stock'])
+        else:
+            title = request.form.get('title')
+            price = request.form.get('price')
+            brand = request.form.get('brand')
+            image_file = request.files.get('image')
+            
+            if title: product.title = title
+            if price: product.price = float(price)
+            if brand: product.brand = brand
+            
+            if image_file:
+                filename = secure_filename(image_file.filename)
+                filename = f"{int(datetime.now().timestamp())}_{filename}"
+                image_path = os.path.join(UPLOAD_FOLDER, filename)
+                image_file.save(image_path)
+                product.image_url = f"http://localhost:5000/uploads/{filename}"
+
+        db.session.commit()
+        return jsonify({'message': 'Product updated successfully', 'product': product.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @admin_bp.route('/api/admin/coupons', methods=['GET', 'POST'])
 @jwt_required()
 def manage_coupons():

@@ -12,6 +12,7 @@ import {
 import { io } from 'socket.io-client';
 import { toast } from 'react-toastify';
 import ZoneSelector from '../components/ZoneSelector';
+import ConfirmModal from '../components/ConfirmModal';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -32,8 +33,10 @@ export default function AdminDashboard() {
   
   const [isAdding, setIsAdding] = useState(false);
   const [isBulkAdding, setIsBulkAdding] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newProduct, setNewProduct] = useState({ title: '', price: '', oldPrice: '', brand: '', image: null, badge: '' });
+  const [editProductForm, setEditProductForm] = useState({ title: '', price: '', brand: '', image: null });
   const [bulkData, setBulkData] = useState({ 
     basePrice: '2499', 
     randomize: true, 
@@ -44,6 +47,7 @@ export default function AdminDashboard() {
   const [newCoupon, setNewCoupon] = useState({ code: '', discount_percentage: '' });
   const [searchTerm, setSearchTerm] = useState('');
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
   const fetchMetrics = () => {
     const token = localStorage.getItem('token') || '';
@@ -129,15 +133,56 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteProduct = async (id) => {
-    if (!window.confirm("Delete this product?")) return;
+  const handleDeleteProduct = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Product",
+      message: "Are you sure you want to permanently delete this product?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`${API}/api/products/${id}`, { 
+            method: 'DELETE', 
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` } 
+          });
+          if (res.ok) {
+            setProducts(products.filter(p => p.id !== id));
+            toast.success("Product deleted successfully");
+          } else {
+            toast.error("Failed to delete product");
+          }
+        } catch (err) {
+          toast.error("Error deleting product");
+        }
+      }
+    });
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    if (editProductForm.title) formData.append('title', editProductForm.title);
+    if (editProductForm.price) formData.append('price', editProductForm.price);
+    if (editProductForm.brand) formData.append('brand', editProductForm.brand);
+    if (editProductForm.image) formData.append('image', editProductForm.image);
+
     try {
-      const res = await fetch(`${API}/api/products/${id}`, { 
-        method: 'DELETE', 
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` } 
+      const res = await fetch(`${API}/api/products/${editingProduct.id}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` },
+        body: formData
       });
-      if (res.ok) setProducts(products.filter(p => p.id !== id));
-    } catch (err) {}
+      if (res.ok) {
+        const data = await res.json();
+        setProducts(products.map(p => p.id === editingProduct.id ? data.product : p));
+        setEditingProduct(null);
+        toast.success("Product updated successfully!");
+      } else {
+        const errData = await res.json();
+        toast.error(errData.error || "Failed to update product");
+      }
+    } catch (err) {
+      toast.error("An error occurred while updating");
+    }
   };
 
   const handleBulkImport = async (e) => {
@@ -214,22 +259,28 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteOrder = async (orderId) => {
-    if (!window.confirm("Delete this order?")) return;
-    try {
-      const res = await fetch(`${API}/api/orders/${orderId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      if (res.ok) {
-        setOrders(orders.filter(o => o.id !== orderId));
-        toast.success("Order deleted");
-      } else {
-        toast.error("Failed to delete order");
+  const handleDeleteOrder = (orderId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Order",
+      message: "Are you sure you want to permanently delete this order?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`${API}/api/orders/${orderId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          if (res.ok) {
+            setOrders(orders.filter(o => o.id !== orderId));
+            toast.success("Order deleted");
+          } else {
+            toast.error("Failed to delete order");
+          }
+        } catch (err) {
+          toast.error("Error deleting order");
+        }
       }
-    } catch (err) {
-      toast.error("Error deleting order");
-    }
+    });
   };
 
   const handleDownloadInvoice = (order) => {
@@ -316,22 +367,28 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteCoupon = async (id) => {
-    if (!window.confirm("Delete this coupon?")) return;
-    try {
-      const res = await fetch(`${API}/api/admin/coupons/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-      });
-      if (res.ok) {
-        toast.success("Coupon deleted");
-        setCoupons(coupons.filter(c => c.id !== id));
-      } else {
-        toast.error("Failed to delete coupon");
+  const handleDeleteCoupon = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Coupon",
+      message: "Are you sure you want to permanently delete this coupon code?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`${API}/api/admin/coupons/${id}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+          });
+          if (res.ok) {
+            toast.success("Coupon deleted");
+            setCoupons(coupons.filter(c => c.id !== id));
+          } else {
+            toast.error("Failed to delete coupon");
+          }
+        } catch (err) {
+          toast.error("Error deleting coupon");
+        }
       }
-    } catch (err) {
-      toast.error("Error deleting coupon");
-    }
+    });
   };
 
   const handleSendBlast = async (e) => {
@@ -635,6 +692,37 @@ export default function AdminDashboard() {
                 </form>
               )}
 
+              {editingProduct && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[999] flex items-center justify-center p-4">
+                  <div className="bg-white rounded-[40px] p-8 w-full max-w-xl shadow-2xl relative">
+                    <button onClick={() => setEditingProduct(null)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-900">
+                       <Icons.X size={24} />
+                    </button>
+                    <h3 className="text-2xl font-black uppercase tracking-tight mb-6">Edit Product</h3>
+                    <form onSubmit={handleUpdateProduct} className="grid grid-cols-2 gap-6">
+                       <div className="col-span-2 flex items-center gap-4 p-4 bg-gray-50 rounded-2xl mb-2">
+                          <img src={formatImageUrl(editingProduct.image)} className="w-16 h-16 object-contain bg-white rounded-xl shadow-sm" />
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-gray-400">Current Image</p>
+                            <p className="text-sm font-bold truncate max-w-[200px]">{editingProduct.title}</p>
+                          </div>
+                       </div>
+                       
+                       <input placeholder="Title" value={editProductForm.title} onChange={e => setEditProductForm({...editProductForm, title: e.target.value})} className="col-span-2 bg-gray-50 rounded-2xl p-5 text-sm font-bold border border-gray-100" />
+                       <input placeholder="Brand" value={editProductForm.brand} onChange={e => setEditProductForm({...editProductForm, brand: e.target.value})} className="bg-gray-50 rounded-2xl p-5 text-sm font-bold border border-gray-100" />
+                       <input type="number" placeholder="Price" value={editProductForm.price} onChange={e => setEditProductForm({...editProductForm, price: e.target.value})} className="bg-gray-50 rounded-2xl p-5 text-sm font-bold border border-gray-100" />
+                       
+                       <div className="col-span-2">
+                         <label className="text-[10px] font-black uppercase text-gray-400 mb-2 block">Upload New Image (Optional)</label>
+                         <input type="file" onChange={e => setEditProductForm({...editProductForm, image: e.target.files[0]})} className="w-full bg-gray-50 rounded-2xl p-5 text-sm font-bold border border-gray-100" />
+                       </div>
+
+                       <button type="submit" className="col-span-2 bg-blue-500 text-white p-6 rounded-[24px] uppercase font-black text-[11px] tracking-widest hover:bg-blue-600 transition-colors">Update Product</button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
                 <table className="w-full text-left">
                   <thead className="bg-gray-50">
@@ -660,7 +748,11 @@ export default function AdminDashboard() {
                         </td>
                         <td className="p-8"><span className="text-[10px] font-black uppercase">{p.stock} Units</span></td>
                         <td className="p-8 font-black">₹{p.price.toLocaleString()}</td>
-                        <td className="p-8 text-right">
+                        <td className="p-8 text-right flex gap-3 justify-end items-center h-full">
+                          <button onClick={() => {
+                             setEditingProduct(p);
+                             setEditProductForm({ title: p.title, brand: p.brand, price: p.price, image: null });
+                          }} className="text-gray-400 hover:text-blue-500 transition-colors"><Icons.Edit2 size={20} /></button>
                           <button onClick={() => handleDeleteProduct(p.id)} className="text-gray-400 hover:text-rose-500 transition-colors"><Icons.Trash2 size={20} /></button>
                         </td>
                       </tr>
@@ -924,6 +1016,13 @@ export default function AdminDashboard() {
           )}
         </main>
       </div>
+      <ConfirmModal 
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+      />
     </div>
   );
 }

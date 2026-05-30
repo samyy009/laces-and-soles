@@ -14,7 +14,7 @@ from models import db, Product
 
 def sync_images():
     # Path to content.json (up one level from backend, then into src)
-    content_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'content.json')
+    content_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'content.json')
     
     if not os.path.exists(content_path):
         print(f"Error: {content_path} not found.")

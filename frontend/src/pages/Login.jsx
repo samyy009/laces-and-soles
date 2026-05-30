@@ -193,8 +193,7 @@ export default function Login() {
                     if (loginResponse.authResponse) {
                       processFacebookToken(loginResponse.authResponse.accessToken);
                     } else {
-                      alert("CRITICAL FB ERROR: " + JSON.stringify(loginResponse));
-                      toast.error("Facebook Login was cancelled or failed.");
+                      toast.error("Facebook Login was cancelled or failed. Please try again.");
                     }
                   }, { scope: 'public_profile,email' });
                 }}

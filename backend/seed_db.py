@@ -19,9 +19,12 @@ def seed():
                 role='admin'
             )
             db.session.add(admin)
+        else:
+            admin.email = 'admin@laces.com'
+            admin.password_hash = generate_password_hash('admin123')
 
         # Products Seed
-        json_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'content.json')
+        json_path = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'src', 'content.json')
         if os.path.exists(json_path):
             with open(json_path, 'r', encoding='utf-8') as f:
                 content_data = json.load(f)

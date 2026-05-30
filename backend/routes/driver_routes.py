@@ -6,6 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db, socketio
 from models import User, Order
 from services.email_service import send_delivery_otp_email
+from services.sms_service import send_sms_otp
 
 logger = logging.getLogger(__name__)
 driver_bp = Blueprint('driver', __name__)
@@ -48,9 +49,20 @@ def send_delivery_otp(order_id):
     otp = str(random.randint(100000, 999999))
     order.delivery_otp = otp
     db.session.commit()
-    if send_delivery_otp_email(order.customer.email, order.customer.full_name, order.tracking_id, otp):
-        return jsonify({'message': 'OTP sent!', 'otp': otp}), 200
-    return jsonify({'message': 'OTP generated (Email failed)', 'otp': otp}), 200
+    
+    email_sent = send_delivery_otp_email(order.customer.email, order.customer.full_name, order.tracking_id, otp)
+    sms_sent = False
+    
+    if order.customer.phone_number:
+        sms_sent = send_sms_otp(order.customer.phone_number, otp, order.tracking_id)
+        
+    msg = []
+    if email_sent: msg.append("Email")
+    if sms_sent: msg.append("SMS")
+    
+    if msg:
+        return jsonify({'message': f'OTP sent via {" & ".join(msg)}!', 'otp': otp}), 200
+    return jsonify({'message': 'OTP generated (Delivery failed or not configured)', 'otp': otp}), 200
 
 @driver_bp.route('/api/driver/orders/<int:order_id>/verify-otp', methods=['POST'])
 @jwt_required()

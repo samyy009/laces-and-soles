@@ -30,7 +30,9 @@ def create_app():
         DB_PASSWORD = os.environ.get('DB_PASSWORD', 'root')
         DB_HOST = os.environ.get('DB_HOST', 'localhost')
         DB_NAME = os.environ.get('DB_NAME', 'laces_and_soles')
-        app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
+        import urllib.parse
+        encoded_password = urllib.parse.quote_plus(DB_PASSWORD)
+        app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{DB_USER}:{encoded_password}@{DB_HOST}/{DB_NAME}'
     
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_key')

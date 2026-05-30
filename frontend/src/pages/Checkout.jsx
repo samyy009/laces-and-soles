@@ -25,6 +25,7 @@ export default function Checkout() {
   const [confirmedOrder, setConfirmedOrder] = useState(null);
   const [shippingData, setShippingData] = useState({ name: '', phone: '', address: '', city: '', state: '', pincode: '' });
   const [timeLeft, setTimeLeft] = useState(600); // 10 minutes
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
 
   useEffect(() => {
     if (cartItems.length === 0 || step === 4) return;
@@ -84,6 +85,23 @@ export default function Checkout() {
       recoverOrder();
     }
   }, [searchParams]);
+
+  // Auto-redirect to tracking page after order confirmation
+  useEffect(() => {
+    if (step !== 4 || !confirmedOrderId) return;
+    setRedirectCountdown(5);
+    const interval = setInterval(() => {
+      setRedirectCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          navigate(`/track?id=${confirmedOrderId}`);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step, confirmedOrderId]);
 
   const subtotal = getCartTotal();
   
@@ -419,7 +437,7 @@ export default function Checkout() {
       toast.success("Invoice Downloaded!");
     } catch (err) {
       console.error("PDF GEN ERROR:", err);
-      alert("Could not generate invoice. " + err.message);
+      toast.error("Could not generate invoice: " + (err.message || 'Unknown error'));
     }
   };
 
@@ -539,6 +557,14 @@ export default function Checkout() {
                </div>
             </div>
 
+            {/* Auto-redirect countdown */}
+            <div className="mb-6 flex items-center justify-center gap-2">
+              <div className="animate-pulse size-2 bg-blue-400 rounded-full"></div>
+              <p className="text-xs font-bold text-gray-400">
+                Redirecting to your tracking page in <span className="text-blue-600 font-black">{redirectCountdown}s</span>...
+              </p>
+            </div>
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-8">
               <button 
                 onClick={handleDownloadInvoice}
@@ -548,13 +574,13 @@ export default function Checkout() {
                 Invoice
               </button>
               
-              <Link 
-                to={`/track?id=${confirmedOrderId}`} 
+              <button 
+                onClick={() => navigate(`/track?id=${confirmedOrderId}`)}
                 className="group w-full sm:w-auto bg-blue-600 text-white px-8 py-4 text-xs font-black uppercase tracking-[0.15em] hover:bg-blue-700 shadow-lg shadow-blue-50 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-95"
               >
                 <Icons.Package size={18} className="group-hover:scale-110 transition-transform" />
-                Track Order
-              </Link>
+                Track Order Now
+              </button>
               
               <Link 
                 to="/" 

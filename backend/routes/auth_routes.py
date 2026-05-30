@@ -213,7 +213,7 @@ def subscribe_newsletter():
         existing = NewsletterSubscriber.query.filter_by(email=email).first()
         if existing:
             return jsonify({'message': 'You are already subscribed!'}), 200
-        new_sub = NewsletterSubscriber(email=email)
+        new_sub = NewsletterSubscriber(email=email)  # type: ignore[call-arg]
         db.session.add(new_sub)
         db.session.commit()
         

@@ -25,10 +25,11 @@ import TrackOrder from './pages/TrackOrder';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import ProtectedRoute from './components/ProtectedRoute';
+import GuestRoute from './components/GuestRoute';
 import LiveChat from './components/premium/LiveChat';
 import DesignLab from './components/premium/DesignLab';
+import CustomCursor from './components/premium/CustomCursor';
 
-import UnboxingModal from './components/premium/UnboxingModal';
 import { useShop } from './context/ShopContext';
 
 function ScrollToTop() {
@@ -44,8 +45,6 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const [isDesignLabOpen, setIsDesignLabOpen] = useState(false);
-  const [isUnboxingOpen, setIsUnboxingOpen] = useState(false);
-  const [unboxProduct, setUnboxProduct] = useState(null);
 
   // One-time cleanup and event binders
   useEffect(() => {
@@ -54,13 +53,8 @@ export default function App() {
 
 
     const handleOpenDesignLab = () => setIsDesignLabOpen(true);
-    const handleOpenUnboxing = (e) => {
-      setUnboxProduct(e.detail || null);
-      setIsUnboxingOpen(true);
-    };
 
     window.addEventListener('open-design-lab', handleOpenDesignLab);
-    window.addEventListener('open-unboxing', handleOpenUnboxing);
 
     const timer = setTimeout(() => {
       setFadeOut(true);
@@ -70,12 +64,12 @@ export default function App() {
     return () => {
       clearTimeout(timer);
       window.removeEventListener('open-design-lab', handleOpenDesignLab);
-      window.removeEventListener('open-unboxing', handleOpenUnboxing);
     };
   }, []);
 
   return (
     <>
+      <CustomCursor />
       {showSplash && (
         <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#050505] transition-opacity duration-1000 ${fadeOut ? 'opacity-0' : 'opacity-100'}`}>
           
@@ -156,10 +150,10 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/terms" element={<Terms />} />
         {/* Auth Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
+        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+        <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+        <Route path="/admin-login" element={<GuestRoute><AdminLogin /></GuestRoute>} />
 
         {/* Protected Private Routes */}
         <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
@@ -177,11 +171,6 @@ export default function App() {
       onAddToCart={(item) => addToCart(item, 'UK 9')} 
     />
 
-    <UnboxingModal 
-      isOpen={isUnboxingOpen} 
-      onClose={() => setIsUnboxingOpen(false)} 
-      product={unboxProduct}
-    />
     </>
   );
 }

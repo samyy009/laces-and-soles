@@ -65,7 +65,7 @@ export default function Navbar() {
           onClick={handleLogoClick}
           className="cursor-pointer select-none group flex items-center shrink-0 mr-4"
         >
-          <div className="flex items-center font-heading text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-black tracking-tighter uppercase transition-transform group-hover:scale-105">
+          <div className="flex items-center font-heading text-3xl md:text-4xl xl:text-3xl 2xl:text-4xl font-black tracking-tighter uppercase transition-transform group-hover:scale-105">
             <span className="text-rose-500">{content.header.logo.textHighlight1}</span>
             <span className="text-gray-900">{content.header.logo.textMain}</span>
             <span className="text-rose-500">{content.header.logo.textHighlight2}</span>
@@ -74,13 +74,13 @@ export default function Navbar() {
         </div>
 
         {/* ─── Desktop navigation menu */}
-        <nav className="hidden lg:flex items-center gap-5 xl:gap-7 flex-1 justify-center min-w-0 px-2">
+        <nav className="hidden xl:flex items-center gap-4 2xl:gap-7 flex-1 justify-center min-w-0 px-2">
           {content.header.menu.map((item) => (
             <NavLink
               key={item.label}
               to={item.label === 'Home' ? '/' : `/${item.label.toLowerCase()}`}
               className={({ isActive }) =>
-                `text-[13px] xl:text-[14px] font-black uppercase tracking-wider transition-all relative py-2 outline-none focus:outline-none whitespace-nowrap ${
+                `text-[12px] 2xl:text-[14px] font-black uppercase tracking-wider transition-all relative py-2 outline-none focus:outline-none whitespace-nowrap ${
                   isActive ? 'text-rose-500 after:absolute after:bottom-0 after:left-0 after:right-0 after:h-[2px] after:bg-rose-500 after:rounded-full after:shadow-[0_0_10px_rgba(244,63,94,0.5)]' : 'text-gray-900 hover:text-rose-500'
                 }`
               }
@@ -95,7 +95,7 @@ export default function Navbar() {
             onMouseLeave={() => setLabsOpen(false)}
           >
             <button 
-              className={`text-[11px] xl:text-xs font-black uppercase tracking-wider text-rose-600 bg-rose-50/70 hover:bg-rose-100/80 border border-rose-100/70 px-3.5 py-1.5 rounded-full transition-all duration-300 flex items-center justify-center gap-1.5 hover:scale-[1.03] active:scale-95 shrink-0 outline-none focus:outline-none cursor-pointer shadow-sm hover:shadow ${labsOpen ? 'bg-rose-100/85' : ''}`}
+              className={`text-[11px] 2xl:text-xs font-black uppercase tracking-wider text-rose-600 bg-rose-50/70 hover:bg-rose-100/80 border border-rose-100/70 px-3 2xl:px-3.5 py-1.5 rounded-full transition-all duration-300 flex items-center justify-center gap-1.5 hover:scale-[1.03] active:scale-95 shrink-0 outline-none focus:outline-none cursor-pointer shadow-sm hover:shadow ${labsOpen ? 'bg-rose-100/85' : ''}`}
             >
               <Icons.Sparkles size={12} className="animate-pulse text-rose-500" />
               <span>Interactive Labs</span>
@@ -121,7 +121,7 @@ export default function Navbar() {
         </nav>
 
         {/* ─── Action icons & Mobile Menu ─── */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 lg:gap-4 xl:gap-5 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 xl:gap-4 2xl:gap-5 shrink-0">
 
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
@@ -134,7 +134,15 @@ export default function Navbar() {
             </div>
           </button>
 
-          <Link to={user ? "/dashboard" : "/login"} className="group relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl transition-all hover:bg-gray-50">
+          <Link 
+            to={
+              !user ? "/login" : 
+              user.role === 'admin' ? "/admin" : 
+              user.role === 'driver' ? "/driver" : 
+              "/dashboard"
+            } 
+            className="group relative flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl sm:rounded-2xl transition-all hover:bg-gray-50"
+          >
             <Icons.User className={`h-4 w-4 sm:h-5 sm:w-5 transition-colors ${user ? 'text-rose-500' : 'text-gray-900 group-hover:text-rose-500'}`} />
           </Link>
 
@@ -162,7 +170,7 @@ export default function Navbar() {
 
           {/* ─── Mobile menu toggle button */}
           <button
-            className="lg:hidden rounded-xl bg-gray-900 p-1.5 sm:p-2.5 text-white shadow-xl transition-all hover:bg-rose-500 active:scale-90"
+            className="xl:hidden rounded-xl bg-gray-900 p-1.5 sm:p-2.5 text-white shadow-xl transition-all hover:bg-rose-500 active:scale-90"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
           >
@@ -225,14 +233,24 @@ export default function Navbar() {
           <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-6 font-heading">My Account</h4>
           
           <Link 
-            to={user ? "/dashboard" : "/login"} 
+            to={
+              !user ? "/login" : 
+              user.role === 'admin' ? "/admin" : 
+              user.role === 'driver' ? "/driver" : 
+              "/dashboard"
+            } 
             onClick={() => setMenuOpen(false)}
             className="flex items-center gap-4 text-gray-800 hover:text-rose-500 transition-colors"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gray-50 border border-gray-100">
               <Icons.User size={20} className={user ? 'text-rose-500' : ''} />
             </div>
-            <span className="font-bold tracking-wide">{user ? "Dashboard" : "Login / Register"}</span>
+            <span className="font-bold tracking-wide">
+              {!user ? "Login / Register" : 
+               user.role === 'admin' ? "Admin Dashboard" : 
+               user.role === 'driver' ? "Driver Dashboard" : 
+               "My Dashboard"}
+            </span>
           </Link>
 
           <Link 

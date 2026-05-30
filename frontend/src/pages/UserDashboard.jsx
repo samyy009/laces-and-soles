@@ -4,6 +4,7 @@ import * as Icons from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useShop, API } from '../context/ShopContext';
 import { toast } from 'react-toastify';
+import ConfirmModal from '../components/ConfirmModal';
 import axios from 'axios';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -15,6 +16,7 @@ export default function UserDashboard() {
   
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('orders');
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', showInput: false, placeholder: '', defaultValue: '', onConfirm: null });
 
   // Address Form States
   const [isEditingAddress, setIsEditingAddress] = useState(false);
@@ -41,8 +43,14 @@ export default function UserDashboard() {
   };
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/login');
+    if (!loading) {
+      if (!user) {
+        navigate('/login');
+      } else if (user.role === 'admin') {
+        navigate('/admin', { replace: true });
+      } else if (user.role === 'driver') {
+        navigate('/driver', { replace: true });
+      }
     }
   }, [user, loading, navigate]);
 
@@ -83,34 +91,54 @@ export default function UserDashboard() {
     }
   };
 
-  const deleteOrder = async (orderId) => {
-    if(!window.confirm("Permanently remove this order from your history?")) return;
-    try {
-      await axios.delete(`${API}/api/orders/${orderId}`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      setOrders(orders.filter(o => o.id !== orderId));
-      toast.success("Order removed.");
-    } catch (err) {
-      toast.error("Failed to delete order.");
-    }
+  const deleteOrder = (orderId) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Remove Order History",
+      message: "Are you sure you want to permanently remove this order from your history?",
+      showInput: false,
+      onConfirm: async () => {
+        try {
+          await axios.delete(`${API}/api/orders/${orderId}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          setOrders(orders.filter(o => o.id !== orderId));
+          toast.success("Order removed.");
+        } catch (err) {
+          toast.error("Failed to delete order.");
+        }
+      }
+    });
   };
 
-  const requestReturn = async (tracking_id) => {
-    const reason = window.prompt("Please provide a reason for the return:");
-    if (!reason) return;
-    try {
-      await axios.post(`${API}/api/orders/${tracking_id}/return`, { reason }, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      toast.success("Return requested successfully");
-      const res = await axios.get(`${API}/api/orders`, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      setOrders(res.data.orders);
-    } catch (err) {
-      toast.error(err.response?.data?.error || "Failed to request return");
-    }
+  const requestReturn = (tracking_id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Request Return",
+      message: "Please specify the reason for return below:",
+      showInput: true,
+      placeholder: "e.g. Wrong Size, Damaged, Don't want it anymore",
+      defaultValue: "",
+      onConfirm: async (reason) => {
+        if (!reason || !reason.trim()) {
+          toast.error("A return reason is required.");
+          return;
+        }
+        try {
+          await axios.post(`${API}/api/orders/${tracking_id}/return`, { reason }, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          toast.success("Return request submitted.");
+          // Refresh orders
+          const res = await axios.get(`${API}/api/orders`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+          });
+          setOrders(res.data.orders);
+        } catch (err) {
+          toast.error(err.response?.data?.error || "Failed to submit return request");
+        }
+      }
+    });
   };
 
   const handleDownloadInvoice = (order) => {
@@ -483,6 +511,16 @@ export default function UserDashboard() {
 
         </div>
       </div>
+      <ConfirmModal 
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        showInput={confirmModal.showInput}
+        placeholder={confirmModal.placeholder}
+        defaultValue={confirmModal.defaultValue}
+      />
     </div>
   );
 }

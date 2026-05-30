@@ -5,6 +5,7 @@ import * as Icons from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { useShop, API } from '../context/ShopContext';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function DriverDashboard() {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ export default function DriverDashboard() {
   const [activeOrderId, setActiveOrderId] = useState(null);
   const socketRef = useRef(null);
   const watchIdRef = useRef(null);
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', showInput: false, placeholder: '', defaultValue: '', onConfirm: null });
 
   useEffect(() => {
     fetchOrders();
@@ -110,11 +112,46 @@ export default function DriverDashboard() {
 
   const stopTracking = () => {
     if (watchIdRef.current) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
+      if (typeof watchIdRef.current === 'number' && watchIdRef.current > 1000) {
+        clearInterval(watchIdRef.current);
+      } else {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
       watchIdRef.current = null;
     }
     setIsTracking(false);
     setActiveOrderId(null);
+  };
+
+  const simulateTracking = (orderId) => {
+    setActiveOrderId(orderId);
+    setIsTracking(true);
+    updateStatus(orderId, 'Out for Delivery');
+
+    let currentLat = 15.3784; 
+    let currentLng = 75.1274;
+
+    toast.info("Simulated GPS Tracking Started!");
+    
+    const simIntervalId = setInterval(async () => {
+      currentLat += 0.0005;
+      currentLng += 0.0005;
+      
+      socketRef.current.emit('update_driver_location', {
+        order_id: orderId,
+        lat: currentLat,
+        lng: currentLng
+      });
+      
+      try {
+        await axios.post(`${API}/api/driver/location`, { lat: currentLat, lng: currentLng }, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        });
+      } catch (err) {}
+    }, 2000);
+    
+    // Assign a large number so we can identify it as an interval ID
+    watchIdRef.current = simIntervalId + 10000;
   };
 
   if (loading) return (
@@ -243,27 +280,46 @@ export default function DriverDashboard() {
                   )}
 
                   {order.status === 'Shipped' && (
-                    <button 
-                      onClick={() => startTracking(order.id)}
-                      className="flex-1 bg-rose-600 text-white font-black py-4 rounded-2xl hover:bg-rose-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-rose-900/20"
-                    >
-                      <Icons.MapPin size={18} /> START DELIVERY & TRACKING
-                    </button>
+                    <div className="flex-1 flex gap-2 w-full">
+                       <button 
+                         onClick={() => startTracking(order.id)}
+                         className="flex-1 bg-rose-600 text-white font-black py-4 rounded-2xl hover:bg-rose-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-rose-900/20"
+                       >
+                         <Icons.MapPin size={14} /> REAL TRACKING
+                       </button>
+                       <button 
+                         onClick={() => simulateTracking(order.id)}
+                         className="flex-1 bg-blue-600 text-white font-black py-4 rounded-2xl hover:bg-blue-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-900/20"
+                       >
+                         <Icons.Play size={14} /> SIMULATE (TEST)
+                       </button>
+                    </div>
                   )}
 
                     <div className="w-full space-y-4">
                       <div className="flex gap-4">
                         <button 
                           onClick={() => {
-                            const reason = window.prompt("Reason for failure (e.g. User not available, Locked house):");
-                            if (reason) {
-                              axios.patch(`${API}/api/driver/orders/${order.id}/fail`, { reason }, {
-                                headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-                              }).then(() => {
-                                toast.warning("Delivery marked as failed");
-                                fetchOrders();
-                              });
-                            }
+                            setConfirmModal({
+                              isOpen: true,
+                              title: "Failed Delivery",
+                              message: "Please enter the reason for the failed delivery:",
+                              showInput: true,
+                              placeholder: "e.g. User not available, Locked house",
+                              defaultValue: "",
+                              onConfirm: (reason) => {
+                                if (!reason || !reason.trim()) {
+                                  toast.error("A reason for failure is required.");
+                                  return;
+                                }
+                                axios.patch(`${API}/api/driver/orders/${order.id}/fail`, { reason }, {
+                                  headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+                                }).then(() => {
+                                  toast.warning("Delivery marked as failed");
+                                  fetchOrders();
+                                });
+                              }
+                            });
                           }}
                           className="px-6 bg-zinc-800 text-rose-500 border border-rose-500/30 font-black py-4 rounded-2xl hover:bg-rose-500/10 transition-all flex items-center justify-center gap-2"
                         >
@@ -348,6 +404,16 @@ export default function DriverDashboard() {
         }
         </div>
       </div>
+      <ConfirmModal 
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        showInput={confirmModal.showInput}
+        placeholder={confirmModal.placeholder}
+        defaultValue={confirmModal.defaultValue}
+      />
     </div>
   );
 }

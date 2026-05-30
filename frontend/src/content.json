@@ -1522,6 +1522,10 @@
       {
         "label": "Contact Us",
         "href": "/contact"
+      },
+      {
+        "label": "Admin Portal",
+        "href": "/admin-login"
       }
     ],
     "openingTime": [
