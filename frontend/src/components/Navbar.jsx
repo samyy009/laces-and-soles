@@ -98,7 +98,7 @@ export default function Navbar() {
               className={`text-[11px] 2xl:text-xs font-black uppercase tracking-wider text-rose-600 bg-rose-50/70 hover:bg-rose-100/80 border border-rose-100/70 px-3 2xl:px-3.5 py-1.5 rounded-full transition-all duration-300 flex items-center justify-center gap-1.5 hover:scale-[1.03] active:scale-95 shrink-0 outline-none focus:outline-none cursor-pointer shadow-sm hover:shadow ${labsOpen ? 'bg-rose-100/85' : ''}`}
             >
               <Icons.Sparkles size={12} className="animate-pulse text-rose-500" />
-              <span>Interactive Labs</span>
+              <span>{content.header.labels.interactiveLabs}</span>
               <Icons.ChevronDown size={12} className={`transition-transform duration-300 ${labsOpen ? 'rotate-180' : ''}`} />
             </button>
 
@@ -112,8 +112,8 @@ export default function Navbar() {
                   <Icons.Sparkles size={14} className="animate-pulse" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-900 group-hover:text-[#ff3366]">Design Lab</div>
-                  <div className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">3D Sneaker Customizer</div>
+                  <div className="text-[10px] font-black uppercase tracking-widest text-gray-900 group-hover:text-[#ff3366]">{content.header.labels.designLab}</div>
+                  <div className="text-[8px] font-bold text-gray-400 uppercase tracking-wider">{content.header.labels.sneakerCustomizer}</div>
                 </div>
               </button>
             </div>
@@ -230,7 +230,7 @@ export default function Navbar() {
 
         {/* ─── Mobile Quick Actions (Login / Wishlist) */}
         <div className="mt-12 space-y-4 border-t border-gray-100 pt-8">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-6 font-heading">My Account</h4>
+          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-6 font-heading">{content.header.labels.myAccount}</h4>
           
           <Link 
             to={
@@ -266,13 +266,13 @@ export default function Navbar() {
                 </span>
               )}
             </div>
-            <span className="font-bold tracking-wide">My Wishlist</span>
+            <span className="font-bold tracking-wide">{content.header.labels.myWishlist}</span>
           </Link>
         </div>
 
         {/* ─── Mobile Interactive Labs Section */}
         <div className="mt-8 space-y-4 border-t border-gray-100 pt-6">
-          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-4 font-heading">Interactive Labs</h4>
+          <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 mb-4 font-heading">{content.header.labels.interactiveLabs}</h4>
           
           <button 
             onClick={() => { setMenuOpen(false); window.dispatchEvent(new CustomEvent('open-design-lab')); }}
@@ -281,7 +281,7 @@ export default function Navbar() {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-50 border border-rose-100 shadow-sm text-rose-500 shrink-0">
               <Icons.Sparkles size={18} className="animate-pulse" />
             </div>
-            <span className="font-bold tracking-wide">Design Lab Customizer</span>
+            <span className="font-bold tracking-wide">{content.header.labels.designLabCustomizer}</span>
           </button>
         </div>
       </aside>

@@ -36,6 +36,14 @@
       "wishlistCount": 5,
       "cartCount": 4,
       "cartTotal": 318
+    },
+    "labels": {
+      "interactiveLabs": "Interactive Labs",
+      "designLab": "Design Lab",
+      "sneakerCustomizer": "3D Sneaker Customizer",
+      "myAccount": "My Account",
+      "myWishlist": "My Wishlist",
+      "designLabCustomizer": "Design Lab Customizer"
     }
   },
   "hero": {
