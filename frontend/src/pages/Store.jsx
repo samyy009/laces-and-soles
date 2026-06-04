@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import * as Icons from 'lucide-react';
-import content from '../content.json';
 import { useShop } from '../context/ShopContext';
 import QuickViewModal from '../components/QuickViewModal';
 import LottieAnimation from '../components/premium/LottieAnimation';

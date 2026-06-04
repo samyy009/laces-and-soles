@@ -11,7 +11,7 @@ import autoTable from 'jspdf-autotable';
 
 export default function UserDashboard() {
   const { user, logout, loading, updateUser } = useAuth();
-  const { wishlistItems, formatImageUrl } = useShop();
+  const { formatImageUrl } = useShop();
   const navigate = useNavigate();
   
   const [orders, setOrders] = useState([]);
@@ -104,7 +104,7 @@ export default function UserDashboard() {
           });
           setOrders(orders.filter(o => o.id !== orderId));
           toast.success("Order removed.");
-        } catch (err) {
+        } catch {
           toast.error("Failed to delete order.");
         }
       }

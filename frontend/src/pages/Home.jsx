@@ -6,7 +6,7 @@ import { useShop } from '../context/ShopContext';
 import QuickViewModal from '../components/QuickViewModal';
 
 export default function Home() {
-  const { addToCart, products, formatImageUrl, toggleWishlist, wishlistItems, isInWishlist } = useShop();
+  const { addToCart, products, formatImageUrl, toggleWishlist, isInWishlist } = useShop();
   const [activeFilter, setActiveFilter] = useState('All');
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 

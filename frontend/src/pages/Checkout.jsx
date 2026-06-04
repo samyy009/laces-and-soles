@@ -189,7 +189,7 @@ export default function Checkout() {
     setShowPaymentOptions(true);
   };
 
-  const processPayment = async (method) => {
+  const processPayment = async () => {
     setShowPaymentOptions(false);
     setIsProcessing(true);
     try {

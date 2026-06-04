@@ -47,7 +47,9 @@ export const ShopProvider = ({ children }) => {
           return; // Serve from cache, skip fetch
         }
       }
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
 
     fetch(`${API}/api/products?limit=1000`)
       .then(res => res.json())
@@ -59,7 +61,9 @@ export const ShopProvider = ({ children }) => {
               data: data.products,
               timestamp: Date.now()
             }));
-          } catch (_) {}
+          } catch {
+            // ignore
+          }
         }
       })
       .catch(err => console.warn("Live DB fetch failed, using static JSON:", err));
@@ -237,7 +241,9 @@ export const ShopProvider = ({ children }) => {
     setCartItems(prev => prev.filter(item => !(item.id === productId && item.size === size)));
     try {
       await axios.delete(`${API}/api/cart?product_id=${productId}`, getAuthHeaders());
-    } catch (err) {}
+    } catch {
+      // ignore
+    }
   };
 
   const updateQuantity = (productId, size, delta) => {
