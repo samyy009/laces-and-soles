@@ -1,36 +1,51 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import Layout from './components/Layout';
-import Home from './pages/Home';
-import About from './pages/About';
-import Collections from './pages/Collections';
-import Store from './pages/Store';
-import Blog from './pages/Blog';
-import Contact from './pages/Contact';
-import Wishlist from './pages/Wishlist';
-import Checkout from './pages/Checkout';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import UserDashboard from './pages/UserDashboard';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
-import DriverDashboard from './pages/DriverDashboard';
-import MensFootwear from './pages/MensFootwear';
-import ProductDetails from './pages/ProductDetails';
-import WomensFootwear from './pages/WomensFootwear';
-import SportsFootwear from './pages/SportsFootwear';
-import CollectionExplore from './pages/CollectionExplore';
-import ForgotPassword from './pages/ForgotPassword';
-import TrackOrder from './pages/TrackOrder';
-import Privacy from './pages/Privacy';
-import Terms from './pages/Terms';
 import ProtectedRoute from './components/ProtectedRoute';
 import GuestRoute from './components/GuestRoute';
 import LiveChat from './components/premium/LiveChat';
 import DesignLab from './components/premium/DesignLab';
 import CustomCursor from './components/premium/CustomCursor';
 
+// Lazy-loaded pages — each page is only downloaded when first visited
+const Home               = lazy(() => import('./pages/Home'));
+const About              = lazy(() => import('./pages/About'));
+const Collections        = lazy(() => import('./pages/Collections'));
+const Store              = lazy(() => import('./pages/Store'));
+const Blog               = lazy(() => import('./pages/Blog'));
+const Contact            = lazy(() => import('./pages/Contact'));
+const Wishlist           = lazy(() => import('./pages/Wishlist'));
+const Checkout           = lazy(() => import('./pages/Checkout'));
+const Login              = lazy(() => import('./pages/Login'));
+const Register           = lazy(() => import('./pages/Register'));
+const UserDashboard      = lazy(() => import('./pages/UserDashboard'));
+const AdminLogin         = lazy(() => import('./pages/AdminLogin'));
+const AdminDashboard     = lazy(() => import('./pages/AdminDashboard'));
+const DriverDashboard    = lazy(() => import('./pages/DriverDashboard'));
+const MensFootwear       = lazy(() => import('./pages/MensFootwear'));
+const ProductDetails     = lazy(() => import('./pages/ProductDetails'));
+const WomensFootwear     = lazy(() => import('./pages/WomensFootwear'));
+const SportsFootwear     = lazy(() => import('./pages/SportsFootwear'));
+const CollectionExplore  = lazy(() => import('./pages/CollectionExplore'));
+const ForgotPassword     = lazy(() => import('./pages/ForgotPassword'));
+const TrackOrder         = lazy(() => import('./pages/TrackOrder'));
+const Privacy            = lazy(() => import('./pages/Privacy'));
+const Terms              = lazy(() => import('./pages/Terms'));
+
+// Minimal page-transition fallback — appears for <100ms on fast connections
+function PageLoader() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-10 h-10 border-4 border-gray-100 border-t-rose-500 rounded-full animate-spin" />
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-300">Loading</span>
+      </div>
+    </div>
+  );
+}
+
 import { useShop } from './context/ShopContext';
+
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -58,8 +73,8 @@ export default function App() {
 
     const timer = setTimeout(() => {
       setFadeOut(true);
-      setTimeout(() => setShowSplash(false), 800);
-    }, 5000);
+      setTimeout(() => setShowSplash(false), 400);
+    }, 600);
 
     return () => {
       clearTimeout(timer);
@@ -133,36 +148,38 @@ export default function App() {
       )}
       <Layout>
         <ScrollToTop />
-        <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/collections" element={<Collections />} />
-        <Route path="/store" element={<Store />} />
-        <Route path="/blog" element={<Blog />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/mens-footwear" element={<MensFootwear />} />
-        <Route path="/womens-footwear" element={<WomensFootwear />} />
-        <Route path="/sports-footwear" element={<SportsFootwear />} />
-        <Route path="/collection/:slug" element={<CollectionExplore />} />
-        <Route path="/product/:id" element={<ProductDetails />} />
-        <Route path="/track" element={<TrackOrder />} />
-        <Route path="/privacy" element={<Privacy />} />
-        <Route path="/terms" element={<Terms />} />
-        {/* Auth Routes */}
-        <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
-        <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
-        <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
-        <Route path="/admin-login" element={<GuestRoute><AdminLogin /></GuestRoute>} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/collections" element={<Collections />} />
+          <Route path="/store" element={<Store />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/mens-footwear" element={<MensFootwear />} />
+          <Route path="/womens-footwear" element={<WomensFootwear />} />
+          <Route path="/sports-footwear" element={<SportsFootwear />} />
+          <Route path="/collection/:slug" element={<CollectionExplore />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/track" element={<TrackOrder />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+          {/* Auth Routes */}
+          <Route path="/login" element={<GuestRoute><Login /></GuestRoute>} />
+          <Route path="/register" element={<GuestRoute><Register /></GuestRoute>} />
+          <Route path="/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
+          <Route path="/admin-login" element={<GuestRoute><AdminLogin /></GuestRoute>} />
 
-        {/* Protected Private Routes */}
-        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-        <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-        <Route path="/driver" element={<ProtectedRoute allowedRoles={['driver']}><DriverDashboard /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
-      </Routes>
-    </Layout>
+          {/* Protected Private Routes */}
+          <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+          <Route path="/driver" element={<ProtectedRoute allowedRoles={['driver']}><DriverDashboard /></ProtectedRoute>} />
+          <Route path="/admin" element={<ProtectedRoute adminOnly><AdminDashboard /></ProtectedRoute>} />
+          </Routes>
+        </Suspense>
+      </Layout>
     <LiveChat />
     
     <DesignLab 

@@ -60,8 +60,8 @@ export default function Footer() {
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-rose-500/5 rounded-full blur-[120px] -translate-y-1/2" />
       
       {/* ─── Top Section ─── */}
-      <div className="mx-auto max-w-7xl px-4 py-14 relative z-10">
-        <div className="grid gap-10 lg:grid-cols-4 md:grid-cols-2">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-14 relative z-10">
+        <div className="grid gap-8 sm:gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
 
           {/* Brand Column */}
           <div className="lg:col-span-1 space-y-5 animate-fade-in-up">

@@ -33,23 +33,45 @@ export const ShopProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [products, setProducts] = useState(content.products.items);
 
-  // Fetch live products
+  // Fetch live products with 5-minute localStorage cache
   useEffect(() => {
+    const CACHE_KEY = 'ls_products_cache';
+    const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+    try {
+      const cached = localStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_TTL && data.length > 0) {
+          setProducts(data);
+          return; // Serve from cache, skip fetch
+        }
+      }
+    } catch (_) {}
+
     fetch(`${API}/api/products?limit=1000`)
       .then(res => res.json())
       .then(data => {
-        if (data.products && data.products.length > 0) setProducts(data.products);
+        if (data.products && data.products.length > 0) {
+          setProducts(data.products);
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({
+              data: data.products,
+              timestamp: Date.now()
+            }));
+          } catch (_) {}
+        }
       })
       .catch(err => console.warn("Live DB fetch failed, using static JSON:", err));
   }, []);
 
-  // Real-time Socket.IO Logic
+  // Real-time Socket.IO Logic — connect once, keep alive
   useEffect(() => {
     const socket = io(API);
 
     socket.on('inventory_updated', (data) => {
-      setProducts(prevProducts => 
-        prevProducts.map(p => 
+      setProducts(prevProducts =>
+        prevProducts.map(p =>
           p.id === data.product_id ? { ...p, stock: data.new_stock } : p
         )
       );
@@ -62,7 +84,7 @@ export const ShopProvider = ({ children }) => {
                   <div className="font-bold text-xs">
                     <span className="block text-rose-500 font-black mb-1">🚨 CART ALERT: SOLD OUT</span>
                     Someone just bought the last pair of an item in your cart!
-                  </div>, 
+                  </div>,
                   { autoClose: false }
                 );
             } else if (data.new_stock < itemInCart.quantity) {
@@ -70,7 +92,7 @@ export const ShopProvider = ({ children }) => {
                   <div className="font-bold text-xs">
                     <span className="block text-yellow-600 font-black mb-1">⚠️ CART ALERT: LOW STOCK</span>
                     Only {data.new_stock} left for an item in your cart. Checkout soon!
-                  </div>, 
+                  </div>,
                   { autoClose: 10000 }
                 );
             }
@@ -80,16 +102,15 @@ export const ShopProvider = ({ children }) => {
     });
 
     socket.on('new_purchase', (data) => {
-      // Find the product in our local state to get the image
-      // We look it up by ID if possible, otherwise use the title from data
-      
-      if (user?.full_name !== data.user_name) {
+      // Use a ref-style check to avoid stale closure — read user from localStorage
+      const currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+      if (currentUser?.full_name !== data.user_name) {
         toast.info(
           <div className="flex items-center gap-4">
             <div className="size-12 bg-white rounded-xl p-1 flex-shrink-0 animate-pulse border border-gray-100">
-                <img 
-                  src={data.product_image} 
-                  alt="" 
+                <img
+                  src={data.product_image}
+                  alt=""
                   className="size-full object-contain"
                 />
             </div>
@@ -104,14 +125,14 @@ export const ShopProvider = ({ children }) => {
           {
             position: "bottom-left",
             autoClose: 6000,
-            icon: false // We use our custom icon/image layout
+            icon: false
           }
         );
       }
     });
 
     return () => socket.disconnect();
-  }, [user]);
+  }, []); // ← empty dep array: connect once, never reconnect on user change
 
   // Load user's cart + wishlist from DB whenever user logs in
   useEffect(() => {

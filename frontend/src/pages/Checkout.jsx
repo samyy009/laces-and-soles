@@ -477,41 +477,42 @@ export default function Checkout() {
   return (
     <div className="pb-24 min-h-screen bg-[#F6F9FC]">
       {/* Checkout Navbar Segment */}
-      <section className="bg-white py-8 border-b shadow-sm sticky top-0 z-40">
-        <div className="mx-auto max-w-7xl px-4 flex items-center justify-between">
+      <section className="bg-white py-4 sm:py-8 border-b shadow-sm sticky top-0 z-40">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Link to="/store" className="size-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-all mr-2 group">
-               <Icons.ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+            <Link to="/store" className="size-8 sm:size-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-all mr-1 sm:mr-2 group">
+               <Icons.ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
             </Link>
-            <h1 className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2">
-               <Icons.Lock size={20} className="text-green-500" /> Secure Checkout
+            <h1 className="text-lg sm:text-2xl font-black uppercase tracking-tighter flex items-center gap-2">
+               <Icons.Lock size={16} className="text-green-500" /> Secure Checkout
             </h1>
           </div>
           
-          <div className="hidden md:flex items-center gap-4">
+          {/* Step indicator — dots on mobile, full labels on md+ */}
+          <div className="flex items-center gap-2 sm:gap-4">
             {steps.map((s, index) => (
-              <div key={s.id} className="flex items-center gap-3">
-                <div className={`flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest ${step >= s.id ? 'text-blue-600' : 'text-gray-400'}`}>
-                   <span className={`size-6 rounded-full flex items-center justify-center text-white ${step >= s.id ? 'bg-blue-600 shadow-md' : 'bg-gray-300'}`}>
-                     {step > s.id ? <Icons.Check size={12} strokeWidth={4} /> : s.id}
+              <div key={s.id} className="flex items-center gap-1 sm:gap-3">
+                <div className={`flex items-center justify-center gap-1.5 sm:gap-2 text-[10px] font-black uppercase tracking-widest ${ step >= s.id ? 'text-blue-600' : 'text-gray-400'}`}>
+                   <span className={`size-5 sm:size-6 rounded-full flex items-center justify-center text-white text-[9px] sm:text-xs ${ step >= s.id ? 'bg-blue-600 shadow-md' : 'bg-gray-300'}`}>
+                     {step > s.id ? <Icons.Check size={10} strokeWidth={4} /> : s.id}
                    </span>
-                   {s.name}
+                   <span className="hidden md:inline">{s.name}</span>
                 </div>
-                {index < steps.length - 1 && <div className={`w-8 h-px ${step > s.id ? 'bg-blue-600' : 'bg-gray-300'}`} />}
+                {index < steps.length - 1 && <div className={`w-4 sm:w-8 h-px ${step > s.id ? 'bg-blue-600' : 'bg-gray-300'}`} />}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-10 mx-auto max-w-7xl px-4">
+      <section className="py-6 sm:py-10 mx-auto max-w-7xl px-4 sm:px-6">
         {step !== 4 && cartItems.length > 0 && timeLeft > 0 && (
-           <div className="bg-rose-50 border border-rose-100 rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 animate-in slide-in-from-top-4">
+           <div className="bg-rose-50 border border-rose-100 rounded-2xl p-3 sm:p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-3 animate-in slide-in-from-top-4">
               <div className="flex items-center gap-3">
                  <div className="size-8 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center animate-pulse shrink-0">
                     <Icons.Clock size={16} />
                  </div>
-                 <span className="text-xs font-bold text-rose-800">High Demand! We've reserved your cart. Complete checkout before the timer runs out to guarantee your items.</span>
+                 <span className="text-xs font-bold text-rose-800 text-center sm:text-left">High Demand! We've reserved your cart. Complete checkout before the timer runs out.</span>
               </div>
               <div className="bg-white px-4 py-2 rounded-xl border border-rose-200 shadow-sm shrink-0">
                  <span className="text-sm font-black text-rose-600 tracking-wider flex items-center gap-2">
@@ -591,10 +592,10 @@ export default function Checkout() {
             </div>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
             
             {/* Form Column */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               
               {/* STEP 1: SHIPPING */}
               <div className={`bg-white rounded-[24px] p-6 border shadow-sm transition-all ${step !== 1 && 'opacity-60 grayscale'}`}>
@@ -807,7 +808,7 @@ export default function Checkout() {
             </div>
 
             {/* Sidebar Summary */}
-            <div className="space-y-6 sticky top-[100px]">
+            <div className="space-y-4 sm:space-y-6 lg:sticky lg:top-[100px]">
               {isAfterHours() && (
                 <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex gap-3 animate-pulse">
                     <Icons.Moon size={20} className="text-amber-600 shrink-0" />

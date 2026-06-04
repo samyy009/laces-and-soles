@@ -94,6 +94,8 @@ export default function WomensFootwear() {
                             src={formatImageUrl(product.image)} 
                             alt={product.title} 
                             className="w-full h-full object-contain drop-shadow-xl group-hover:scale-110 transition-transform duration-500"
+                            loading="lazy"
+                            decoding="async"
                         />
                         <div className="absolute left-4 bottom-4 bg-white px-4 py-2 rounded-full shadow-sm">
                             <span className="text-[9px] font-black uppercase tracking-widest text-gray-900">{product.stock || 25} IN STOCK</span>

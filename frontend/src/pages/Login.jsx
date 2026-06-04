@@ -51,8 +51,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row-reverse bg-white  overflow-hidden">
-      {/* Visual Pane */}
+    <div className="min-h-screen flex flex-col lg:flex-row-reverse bg-white overflow-hidden">
+      {/* Visual Pane - only on lg+ */}
       <div className="hidden lg:block lg:flex-[1.2] relative overflow-hidden">
 
         <div className="absolute inset-0 bg-cover bg-center" 
@@ -73,7 +73,19 @@ export default function Login() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-6 lg:p-8 relative overflow-hidden">
+      {/* Mobile top banner */}
+      <div className="lg:hidden relative h-32 sm:h-40 overflow-hidden flex-shrink-0">
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/auth_banner.png')" }} />
+        <div className="absolute inset-0 bg-black/60" />
+        <div className="relative z-10 h-full flex flex-col items-center justify-center">
+          <div className="text-2xl font-black uppercase tracking-tighter text-white font-heading">
+            <span className="text-rose-400">Laces</span>&<span className="text-rose-400">S</span>oles
+          </div>
+          <p className="text-[10px] text-gray-300 font-black uppercase tracking-[0.4em] mt-1">Elite Member Portal</p>
+        </div>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] mesh-gradient opacity-10 blur-[100px] rounded-full" />
         
         <div className="w-full max-w-md space-y-6 relative z-10">
@@ -162,9 +174,8 @@ export default function Login() {
                     });
                   }}
                   onError={() => {
-                    console.log('Login Failed');
+                    toast.error('Google Sign-In failed. Please try again.');
                   }}
-                  useOneTap
                   theme="outline"
                   shape="pill"
                   size="large"

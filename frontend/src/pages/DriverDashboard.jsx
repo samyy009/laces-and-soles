@@ -221,7 +221,7 @@ export default function DriverDashboard() {
                          <span className="text-[10px] font-black text-rose-500 uppercase">{order.distance_km} KM AWAY</span>
                       </div>
                    </div>
-                   <div className="grid grid-cols-2 gap-4">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex items-center gap-3 bg-zinc-900/50 p-3 rounded-xl border border-zinc-800">
                          <div className="p-2 bg-rose-500/10 rounded-lg">
                             <Icons.Phone size={14} className="text-rose-500" />

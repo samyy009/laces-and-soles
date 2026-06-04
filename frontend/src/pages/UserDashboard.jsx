@@ -210,29 +210,53 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="pt-24 pb-12 bg-gray-50/50 min-h-screen mesh-gradient">
-      <div className="bg-white/80 backdrop-blur-md border-b border-gray-100/80 sticky top-[72px] z-30 shadow-sm transition-all duration-300">
-          <div className="max-w-[1400px] mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-6">
+    <div className="pt-20 sm:pt-24 pb-12 bg-gray-50/50 min-h-screen mesh-gradient">
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-100/80 sticky top-[64px] sm:top-[72px] z-30 shadow-sm transition-all duration-300">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 sm:py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-6">
             <div>
-              <h1 className="text-3xl font-black uppercase text-gray-900 tracking-tight font-heading flex items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-black uppercase text-gray-900 tracking-tight font-heading flex items-center gap-3">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-rose-500 to-pink-600">My Dashboard</span>
               </h1>
-              <p className="mt-1.5 text-xs font-black uppercase tracking-wider text-gray-400">Welcome back, {user.full_name}</p>
+              <p className="mt-1 text-xs font-black uppercase tracking-wider text-gray-400">Welcome back, {user.full_name}</p>
             </div>
             <button 
               onClick={handleLogout}
-              className="px-6 py-3 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-rose-500 hover:to-pink-600 hover:border-transparent hover:shadow-[0_4px_15px_rgba(244,63,94,0.3)] transition-all duration-350 flex items-center gap-2 relative z-50 cursor-pointer active:scale-95"
+              className="px-5 py-2.5 sm:px-6 sm:py-3 border border-gray-200 rounded-xl text-[10px] font-black uppercase tracking-widest text-gray-600 hover:text-white hover:bg-gradient-to-r hover:from-rose-500 hover:to-pink-600 hover:border-transparent hover:shadow-[0_4px_15px_rgba(244,63,94,0.3)] transition-all duration-350 flex items-center gap-2 relative z-50 cursor-pointer active:scale-95"
             >
               <Icons.LogOut size={14} className="transition-transform group-hover:translate-x-1" /> Logout
             </button>
           </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-[240px_1fr] gap-8">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="grid lg:grid-cols-[220px_1fr] gap-6 sm:gap-8">
           
-          {/* Sidebar */}
-          <aside className="space-y-2.5">
+          {/* Sidebar — scrollable tabs on mobile, fixed sidebar on lg+ */}
+          <aside>
+            {/* Mobile: Horizontal scroll tabs */}
+            <div className="flex lg:hidden overflow-x-auto gap-2 pb-2 no-scrollbar mb-4">
+             {[
+                { id: 'orders', icon: Icons.Package, label: 'Orders' },
+                { id: 'wishlist', icon: Icons.Heart, label: 'Wishlist', action: () => navigate('/wishlist') },
+                { id: 'settings', icon: Icons.Settings, label: 'Settings' },
+                { id: 'addresses', icon: Icons.MapPin, label: 'Addresses' }
+              ].map(tab => (
+                <button 
+                  key={tab.id}
+                  onClick={tab.action || (() => setActiveTab(tab.id))}
+                  className={`flex items-center gap-2 whitespace-nowrap px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shrink-0 ${
+                    activeTab === tab.id 
+                      ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md' 
+                      : 'text-gray-500 bg-white border border-gray-100'
+                  }`}
+                >
+                  <tab.icon size={14} /> 
+                  <span>{tab.label}</span>
+                </button>
+              ))}
+            </div>
+            {/* Desktop: Vertical sidebar */}
+            <div className="hidden lg:flex flex-col space-y-2.5">
              {[
                 { id: 'orders', icon: Icons.Package, label: 'My Orders' },
                 { id: 'wishlist', icon: Icons.Heart, label: 'Wishlist', action: () => navigate('/wishlist') },
@@ -251,7 +275,8 @@ export default function UserDashboard() {
                   <tab.icon size={16} className={`transition-transform duration-300 ${activeTab === tab.id ? 'scale-110' : 'group-hover:scale-110'}`} /> 
                   <span>{tab.label}</span>
                 </button>
-             ))}
+              ))}
+            </div>
           </aside>
 
           {/* Main Content */}

@@ -28,7 +28,7 @@ export default function CartDrawer() {
       />
 
       {/* Drawer */}
-      <div className="absolute right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl transition-all duration-700 ease-out animate-in slide-in-from-right-full">
+      <div className="absolute right-0 top-0 h-full w-full xs:max-w-sm sm:max-w-md md:max-w-lg bg-white shadow-2xl transition-all duration-700 ease-out animate-in slide-in-from-right-full">
         <div className="flex h-full flex-col relative">
           {/* Subtle Decorative Gradient */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-[80px] pointer-events-none" />

@@ -62,15 +62,15 @@ export default function Store() {
   return (
     <div className="pb-16 bg-white min-h-screen">
       {/* Header Area */}
-      <section className="relative h-[120px] flex items-center bg-gray-50 overflow-hidden border-b border-gray-100">
+      <section className="relative h-[100px] sm:h-[120px] flex items-center bg-gray-50 overflow-hidden border-b border-gray-100">
          <div 
             className="absolute inset-0 bg-cover bg-center opacity-10"
             style={{ backgroundImage: `url('/store_hero.png')` }}
          />
          <div className="absolute inset-0 bg-gradient-to-t from-white via-white/40 to-transparent" />
          
-         <div className="relative z-10 w-full text-center px-6">
-            <h1 className="text-2xl md:text-3xl font-black uppercase text-gray-900 tracking-tighter leading-none mb-2">
+         <div className="relative z-10 w-full text-center px-4 sm:px-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase text-gray-900 tracking-tighter leading-none mb-1 sm:mb-2">
               THE <span className="text-[#ff3366]">STORE</span>
             </h1>
             <nav className="flex justify-center items-center gap-3 text-[9px] font-black uppercase tracking-[0.3em] text-gray-400">
@@ -81,17 +81,17 @@ export default function Store() {
          </div>
       </section>
 
-      <section className="py-2 mx-auto max-w-[1400px] px-6">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-12 py-6 flex flex-col md:flex-row gap-6 lg:gap-10">
+      <section className="py-2 mx-auto max-w-[1400px] px-4 sm:px-6">
+        <div className="max-w-[1400px] mx-auto py-4 sm:py-6 flex flex-col md:flex-row gap-4 sm:gap-6 lg:gap-10">
         
         {/* Mobile Filter Toggle & Quick Brand Bar */}
-        <div className="md:hidden space-y-4 mb-4">
-            <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-2">
+        <div className="md:hidden space-y-3 mb-4">
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
                {brands.map(brand => (
                  <button 
                   key={brand}
                   onClick={() => setActiveFilter(brand)}
-                  className={`whitespace-nowrap px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${activeFilter === brand ? 'bg-rose-500 border-rose-500 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}
+                  className={`whitespace-nowrap px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border ${activeFilter === brand ? 'bg-rose-500 border-rose-500 text-white shadow-lg' : 'bg-white border-gray-100 text-gray-400'}`}
                  >
                    {brand}
                  </button>
@@ -99,10 +99,10 @@ export default function Store() {
             </div>
             <button 
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-              className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
+              className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-all"
             >
               <Icons.SlidersHorizontal size={16} />
-              {mobileSidebarOpen ? "Hide Advanced Filters" : "Show Advanced Filters"}
+              {mobileSidebarOpen ? "Hide Filters" : "Advanced Filters"}
             </button>
         </div>
 
@@ -239,6 +239,8 @@ export default function Store() {
                               src={formatImageUrl(product.image)} 
                               alt={product.title} 
                               className="w-full h-full object-contain md:drop-shadow-2xl group-hover/card:scale-110 group-hover/card:-rotate-6 transition-all duration-700 will-change-transform"
+                              loading="lazy"
+                              decoding="async"
                            />
                            
                            {/* Dynamic Stock Badge */}

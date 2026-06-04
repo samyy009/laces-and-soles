@@ -23,14 +23,14 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* ── Hero Banner ── */}
-      <section className="relative w-full min-h-[400px] md:h-[400px] bg-[#fdfdfd] mt-0 flex items-center overflow-hidden border-b border-gray-100 px-4 sm:px-6">
+      <section className="relative w-full min-h-[420px] md:h-[420px] bg-[#fdfdfd] mt-0 flex items-center overflow-hidden border-b border-gray-100">
         {/* Background Watermark */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center select-none pointer-events-none overflow-hidden opacity-50 md:opacity-100">
-            <span className="text-[30vw] md:text-[20vw] font-black text-gray-50/50 uppercase tracking-tighter leading-none transform translate-y-12">FOOTWEAR</span>
+        <div className="absolute inset-0 z-0 flex items-center justify-center select-none pointer-events-none overflow-hidden">
+            <span className="text-[38vw] sm:text-[30vw] md:text-[20vw] font-black text-gray-50/50 uppercase tracking-tighter leading-none transform translate-y-12">FOOTWEAR</span>
         </div>
 
         {/* Split Image Container */}
-        <div className="absolute right-0 top-0 bottom-0 w-full md:w-3/4 lg:w-[65%] z-0 opacity-40 md:opacity-100 pointer-events-none">
+        <div className="absolute right-0 top-0 bottom-0 w-full md:w-3/4 lg:w-[65%] z-0 opacity-30 sm:opacity-50 md:opacity-100 pointer-events-none">
           <img
             src={content.hero.backgroundImage}
             alt="Hero Background"
@@ -39,20 +39,27 @@ export default function Home() {
         </div>
         
         {/* Text Content */}
-        <div className="relative z-10 py-6 px-4 md:px-6 max-w-xl lg:ml-4 animate-fade-in-up">
-            <h3 className="text-[#ff3366] text-[10px] font-black uppercase tracking-[0.5em] mb-2">LATEST DROP</h3>
-            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-4">
+        <div className="relative z-10 py-10 px-6 sm:px-8 md:px-10 max-w-xl lg:ml-6 animate-fade-in-up">
+            <h3 className="text-[#ff3366] text-[10px] font-black uppercase tracking-[0.5em] mb-3">LATEST DROP</h3>
+            <h1 className="text-4xl sm:text-5xl md:text-5xl font-black uppercase tracking-tighter leading-[0.9] mb-4">
                <span className="text-[#ff3366]">{content.hero.titleLight}</span> <br/>
                <span className="text-gray-900">{content.hero.titleBold}</span>
             </h1>
             <p className="text-gray-500 text-sm font-bold mb-6 leading-relaxed max-w-sm">
                 {content.hero.description}
             </p>
-            <Link to="/store">
-                <button className="bg-gray-900 text-white px-10 py-4 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#ff3366] transition-all shadow-2xl hover:-translate-y-2 active:scale-95">
-                    SHOP NOW
-                </button>
-            </Link>
+            <div className="flex items-center gap-3 flex-wrap">
+              <Link to="/store">
+                  <button className="bg-gray-900 text-white px-8 sm:px-10 py-3.5 sm:py-4 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#ff3366] transition-all shadow-2xl hover:-translate-y-1 active:scale-95">
+                      SHOP NOW
+                  </button>
+              </Link>
+              <Link to="/collections">
+                  <button className="bg-transparent text-gray-900 border-2 border-gray-200 px-6 py-3.5 text-xs font-black uppercase tracking-widest rounded-xl hover:border-[#ff3366] hover:text-[#ff3366] transition-all active:scale-95">
+                      COLLECTIONS
+                  </button>
+              </Link>
+            </div>
         </div>
 
         {/* Scroll Indicator */}
@@ -63,13 +70,16 @@ export default function Home() {
       </section>
 
       {/* ── Featured Collections ── */}
-      <section className="max-w-[1400px] mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+        <div className="mb-4">
+          <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tighter text-gray-900">Shop by Collection</h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
           {(content.collection || []).map((cat, idx) => (
             <Link 
                 to={cat.link} 
                 key={idx}
-                className="group relative h-[220px] rounded-[32px] overflow-hidden bg-gray-100 flex items-end p-6 border border-gray-100 hover:shadow-2xl transition-all"
+                className="group relative h-[200px] sm:h-[220px] rounded-[28px] sm:rounded-[32px] overflow-hidden bg-gray-100 flex items-end p-5 sm:p-6 border border-gray-100 hover:shadow-2xl transition-all"
             >
                 {/* Background Image */}
                 <img 
@@ -169,8 +179,8 @@ export default function Home() {
 
       {/* ── Services ── */}
       <section className="bg-gray-50 border-t border-b border-gray-100 py-6">
-        <div className="max-w-[1400px] mx-auto px-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {(content.service || []).map((s, idx) => {
                     const IconComp = serviceIcons[s.icon];
                     return (
@@ -190,10 +200,10 @@ export default function Home() {
       </section>
 
       {/* ── Bestsellers ── */}
-      <section className="max-w-[1400px] mx-auto px-6 py-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-4">
-             <h2 className="text-2xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter">Bestseller Products</h2>
-             <div className="flex gap-3 mt-4 md:mt-0 overflow-x-auto pb-2 md:pb-0">
+      <section className="max-w-[1400px] mx-auto px-4 sm:px-6 py-6">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-4 gap-3">
+             <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-gray-900 uppercase tracking-tighter">Bestseller Products</h2>
+             <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
                 {['All', 'Nike', 'Adidas', 'Jordan'].map(brand => (
                     <button 
                         key={brand}
@@ -206,40 +216,42 @@ export default function Home() {
              </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
               {filteredProducts.map((product, index) => (
                 <div 
                   key={product.id} 
-                  className="group relative border border-gray-100 rounded-[32px] overflow-hidden hover:shadow-xl transition-shadow duration-300 p-2 bg-white flex flex-col animate-fade-in-up"
+                  className="group relative border border-gray-100 rounded-[24px] sm:rounded-[32px] overflow-hidden hover:shadow-xl transition-shadow duration-300 p-1.5 sm:p-2 bg-white flex flex-col animate-fade-in-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
                     <div className="relative group/card">
                        <button 
                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleWishlist(product.id); }}
-                         className="absolute right-4 top-4 z-20 p-2.5 bg-white md:bg-white/90 md:backdrop-blur-md rounded-xl shadow-sm hover:scale-110 transition-opacity duration-300 opacity-100 lg:opacity-0 lg:group-hover/card:opacity-100 border border-gray-100"
+                         className="absolute right-2 top-2 sm:right-4 sm:top-4 z-20 p-2 sm:p-2.5 bg-white/90 backdrop-blur-md rounded-xl shadow-sm hover:scale-110 transition-all duration-300 border border-gray-100"
                        >
-                         <Icons.Heart size={16} className={isInWishlist(product.id) ? "fill-[#ff3366] text-[#ff3366]" : "text-gray-400 hover:text-gray-900"} />
+                         <Icons.Heart size={14} className={isInWishlist(product.id) ? "fill-[#ff3366] text-[#ff3366]" : "text-gray-400 hover:text-gray-900"} />
                        </button>
                        <div 
-                          className="relative bg-[#f0f0f0] rounded-[24px] aspect-square flex items-center justify-center p-2 overflow-hidden"
+                          className="relative bg-[#f0f0f0] rounded-[18px] sm:rounded-[24px] aspect-square flex items-center justify-center p-2 overflow-hidden"
                        >
                            <img 
                               src={formatImageUrl(product.image)} 
                               alt={product.title} 
-                              className="w-full h-full object-contain md:drop-shadow-xl group-hover:scale-105 transition-transform duration-500 will-change-transform"
+                              className="w-full h-full object-contain drop-shadow-md sm:drop-shadow-xl group-hover:scale-105 transition-transform duration-500 will-change-transform"
+                              loading="lazy"
+                              decoding="async"
                            />
                        </div>
                     </div>
 
-                   <div className="p-6 text-center">
-                       <h3 className="text-sm font-black uppercase tracking-widest text-gray-900 truncate mb-4">{product.title}</h3>
+                   <div className="p-3 sm:p-5 text-center">
+                       <h3 className="text-[10px] sm:text-sm font-black uppercase tracking-widest text-gray-900 truncate mb-2 sm:mb-4">{product.title}</h3>
                        <div className="flex items-center justify-between">
-                          <p className="text-xl font-bold text-gray-900">₹{product.price.toLocaleString()}</p>
+                          <p className="text-base sm:text-xl font-bold text-gray-900">₹{product.price.toLocaleString()}</p>
                           <button 
                             onClick={(e) => { e.stopPropagation(); addToCart(product.id, 1); }}
-                            className="w-10 h-10 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-[#ff3366] transition-colors"
+                            className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gray-900 text-white flex items-center justify-center hover:bg-[#ff3366] transition-colors active:scale-90"
                           >
-                             <Icons.ShoppingCart size={16} />
+                             <Icons.ShoppingCart size={14} />
                           </button>
                        </div>
                    </div>

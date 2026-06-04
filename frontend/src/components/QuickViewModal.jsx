@@ -26,8 +26,8 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
   ];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/40 backdrop-blur-[2px] transition-all duration-500">
-      <div className="relative w-full max-w-5xl overflow-hidden rounded-[32px] bg-white shadow-2xl flex flex-col md:flex-row max-h-[95vh] md:max-h-auto overflow-y-auto md:overflow-hidden animate-fade-in-scale">
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-[2px] transition-all duration-500">
+      <div className="relative w-full max-w-5xl overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-white shadow-2xl flex flex-col md:flex-row max-h-[92vh] overflow-y-auto md:overflow-hidden animate-fade-in-scale">
         
         {/* Close Button */}
         <button 
@@ -39,26 +39,24 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
 
         <div className="flex-1 flex flex-col md:flex-row">
           {/* Image Side */}
-          <div className="w-full md:w-1/2 bg-[#cacaca] p-6 flex flex-col relative items-center justify-center">
+          <div className="w-full md:w-1/2 bg-[#cacaca] p-4 sm:p-6 flex flex-col relative items-center justify-center min-h-[200px] sm:min-h-[280px]">
             
-
-
             <img 
               src={formatImageUrl(activeImage)} 
               alt={product.title} 
-              className="w-full h-auto object-contain drop-shadow-xl my-auto max-h-[250px] md:max-h-[400px]"
+              className="w-full h-auto object-contain drop-shadow-xl my-auto max-h-[180px] sm:max-h-[250px] md:max-h-[400px]"
             />
 
             {/* Thumbnails */}
-            <div className="absolute bottom-4 flex gap-3 bg-white/40 p-2 rounded-2xl backdrop-blur-md">
+            <div className="absolute bottom-3 flex gap-2 bg-white/40 p-1.5 rounded-2xl backdrop-blur-md">
               {galleryAngles.map((angleObj, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImage(angleObj.img)}
-                  className={`size-14 rounded-xl flex flex-col items-center justify-center bg-[#cacaca] overflow-hidden border-2 transition-all relative ${activeImage === angleObj.img ? 'border-gray-800' : 'border-transparent hover:border-gray-400'}`}
+                  className={`size-10 sm:size-14 rounded-xl flex flex-col items-center justify-center bg-[#cacaca] overflow-hidden border-2 transition-all relative ${activeImage === angleObj.img ? 'border-gray-800' : 'border-transparent hover:border-gray-400'}`}
                 >
                   <img src={formatImageUrl(angleObj.img)} alt={`${angleObj.label} view`} className="w-full h-full object-contain p-1" />
-                  <div className="absolute inset-x-0 bottom-0 bg-white/80 py-0.5 text-center">
+                  <div className="absolute inset-x-0 bottom-0 bg-white/80 py-0.5 text-center hidden sm:block">
                       <span className="text-[7px] font-black uppercase tracking-wider text-gray-900">{angleObj.label}</span>
                   </div>
                 </button>
@@ -67,27 +65,27 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
           </div>
 
           {/* Content Side */}
-          <div className="w-full md:w-1/2 p-6 md:p-8 flex flex-col overflow-y-auto">
-            <span className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{product.brand}</span>
-            <h2 className="text-3xl font-black text-gray-900 uppercase mb-4">{product.title}</h2>
+          <div className="w-full md:w-1/2 p-4 sm:p-6 md:p-8 flex flex-col overflow-y-auto">
+            <span className="text-xs sm:text-sm font-bold text-gray-400 uppercase tracking-wider mb-1 sm:mb-2">{product.brand}</span>
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black text-gray-900 uppercase mb-3 sm:mb-4 leading-tight">{product.title}</h2>
             
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-3xl font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
-              {product.oldPrice && <del className="text-gray-400 text-lg">₹{product.oldPrice.toLocaleString()}</del>}
+            <div className="flex items-center gap-4 mb-4 sm:mb-6">
+              <span className="text-2xl sm:text-3xl font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
+              {product.oldPrice && <del className="text-gray-400 text-base sm:text-lg">₹{product.oldPrice.toLocaleString()}</del>}
             </div>
 
-            <p className="text-gray-600 mb-4 leading-relaxed">
+            <p className="text-gray-600 mb-3 sm:mb-4 leading-relaxed text-sm">
               {product.description || "Premium footwear engineered for maximum comfort and style."}
             </p>
 
-            <div className="mb-6">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3 block">Select Size</span>
-              <div className="flex gap-2">
+            <div className="mb-4 sm:mb-6">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 sm:mb-3 block">Select Size</span>
+              <div className="flex gap-2 flex-wrap">
                 {sizes.map(size => (
                   <button 
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`size-10 rounded-lg text-xs font-black transition-all ${selectedSize === size ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                    className={`size-9 sm:size-10 rounded-lg text-xs font-black transition-all ${selectedSize === size ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
                   >
                     {size}
                   </button>
@@ -97,16 +95,16 @@ export default function QuickViewModal({ product, onClose, showFullDetails }) {
 
             <button 
               onClick={() => { addToCart(product.id, 1, selectedSize); onClose(); }}
-              className="w-full mb-4 flex items-center justify-center gap-2 rounded-xl bg-gray-900 py-4 text-sm font-bold uppercase tracking-wider text-white hover:bg-[#ff3366] transition-colors"
+              className="w-full mb-3 sm:mb-4 flex items-center justify-center gap-2 rounded-xl bg-gray-900 py-3.5 sm:py-4 text-sm font-bold uppercase tracking-wider text-white hover:bg-[#ff3366] transition-colors active:scale-95"
             >
-              <ShoppingCart size={20} /> Add to Cart
+              <ShoppingCart size={18} /> Add to Cart
             </button>
 
             {showFullDetails && (
               <Link 
                 to={`/product/${product.id}`}
                 onClick={onClose}
-                className="text-center text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-gray-900 underline underline-offset-4 mt-4 block"
+                className="text-center text-xs font-bold uppercase tracking-widest text-gray-500 hover:text-gray-900 underline underline-offset-4 mt-2 sm:mt-4 block"
               >
                 View Full Details
               </Link>

@@ -8,15 +8,15 @@ export default function Collections() {
 
   // Hardcoding the legacy categories from the snapshot to ensure the 3x3 grid restores perfectly.
   const visualCollections = [
-    { title: "Urban Explorer", subtitle: "Nike - Modern street aesthetics", image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=2070&auto=format&fit=crop", link: "/collection/urban-explorer" },
-    { title: "Performance Pro", subtitle: "Adidas - Built for the track", image: "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=2070&auto=format&fit=crop", link: "/collection/performance-pro" },
-    { title: "Vintage Lux", subtitle: "Jordan - Heritage reimagined", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=2070&auto=format&fit=crop", link: "/collection/vintage-luxe" },
-    { title: "Summer Breeze", subtitle: "Puma - Light & breathable", image: "https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=2070&auto=format&fit=crop", link: "/collection/summer-breeze" },
-    { title: "Winter Shield", subtitle: "Durable elements protection", image: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?q=80&w=2070&auto=format&fit=crop", link: "/collection/winter-shield" },
-    { title: "Junior Series", subtitle: "The next generation", image: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=2070&auto=format&fit=crop", link: "/collection/junior-series" },
-    { title: "Formal Edge", subtitle: "Reebok - Office to street", image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?q=80&w=2070&auto=format&fit=crop", link: "/collection/formal-edge" },
-    { title: "Marathon Elite", subtitle: "Long distance champions", image: "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16?q=80&w=2070&auto=format&fit=crop", link: "/collection/marathon-elite" },
-    { title: "Court Classics", subtitle: "Basketball legends", image: "https://images.unsplash.com/photo-1579338559194-a162d19bf842?q=80&w=2070&auto=format&fit=crop", link: "/collection/court-classics" },
+    { title: "Urban Explorer", subtitle: "Nike - Modern street aesthetics", image: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?q=80&w=600&auto=format&fit=crop", link: "/collection/urban-explorer" },
+    { title: "Performance Pro", subtitle: "Adidas - Built for the track", image: "https://images.unsplash.com/photo-1587563871167-1ee9c731aefb?q=80&w=600&auto=format&fit=crop", link: "/collection/performance-pro" },
+    { title: "Vintage Lux", subtitle: "Jordan - Heritage reimagined", image: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=600&auto=format&fit=crop", link: "/collection/vintage-luxe" },
+    { title: "Summer Breeze", subtitle: "Puma - Light & breathable", image: "https://images.unsplash.com/photo-1539185441755-769473a23570?q=80&w=600&auto=format&fit=crop", link: "/collection/summer-breeze" },
+    { title: "Winter Shield", subtitle: "Durable elements protection", image: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?q=80&w=600&auto=format&fit=crop", link: "/collection/winter-shield" },
+    { title: "Junior Series", subtitle: "The next generation", image: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=600&auto=format&fit=crop", link: "/collection/junior-series" },
+    { title: "Formal Edge", subtitle: "Reebok - Office to street", image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?q=80&w=600&auto=format&fit=crop", link: "/collection/formal-edge" },
+    { title: "Marathon Elite", subtitle: "Long distance champions", image: "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16?q=80&w=600&auto=format&fit=crop", link: "/collection/marathon-elite" },
+    { title: "Court Classics", subtitle: "Basketball legends", image: "https://images.unsplash.com/photo-1579338559194-a162d19bf842?q=80&w=600&auto=format&fit=crop", link: "/collection/court-classics" },
   ];
 
   return (

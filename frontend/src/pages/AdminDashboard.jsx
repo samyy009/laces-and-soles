@@ -480,8 +480,8 @@ export default function AdminDashboard() {
       </section>
 
       <div className="mx-auto max-w-7xl px-8 mt-6 grid grid-cols-1 lg:grid-cols-5 gap-8 relative z-10">
-        <aside className="lg:col-span-1 space-y-4">
-          <div className="sticky top-32 space-y-3">
+        <aside className="lg:col-span-1">
+          <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible lg:sticky lg:top-32 gap-3 pb-3 lg:pb-0 scrollbar-hide">
             {[
               { id: 'overview', label: 'Overview', icon: Icons.BarChart2 }, 
               { id: 'inventory', label: 'Products', icon: Icons.Package }, 
@@ -493,13 +493,13 @@ export default function AdminDashboard() {
               <button 
                 key={tab.id} 
                 onClick={() => setActiveTab(tab.id)} 
-                className={`w-full flex items-center justify-between p-5 rounded-[24px] transition-all group active:scale-95 ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-xl shadow-gray-200/50 border border-gray-100' : 'text-gray-400 hover:text-gray-900 hover:bg-white'}`}
+                className={`flex items-center justify-between p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] transition-all group active:scale-95 shrink-0 whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-lg border border-gray-100' : 'text-gray-400 hover:text-gray-900 hover:bg-white'}`}
               >
                 <div className="flex items-center gap-4">
                   <tab.icon size={20} strokeWidth={activeTab === tab.id ? 2.5 : 2} className={activeTab === tab.id ? 'text-rose-500' : 'text-gray-400 group-hover:text-rose-500'} />
                   <span className="text-[10px] font-black uppercase tracking-[0.2em] font-heading">{tab.label}</span>
                 </div>
-                {activeTab === tab.id && <div className="h-1.5 w-1.5 bg-rose-500 rounded-full" />}
+                {activeTab === tab.id && <div className="h-1.5 w-1.5 bg-rose-500 rounded-full hidden lg:block" />}
               </button>
             ))}
           </div>
@@ -723,8 +723,9 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
-                <table className="w-full text-left">
+              <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[700px]">
                   <thead className="bg-gray-50">
                     <tr><th className="p-8">Details</th><th className="p-8">Stock</th><th className="p-8">Price</th><th className="p-8"></th></tr>
                   </thead>
@@ -760,6 +761,7 @@ export default function AdminDashboard() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}
@@ -811,8 +813,9 @@ export default function AdminDashboard() {
                   </button>
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
-                 <table className="w-full text-left">
+              <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[800px]">
                   <thead className="bg-gray-50">
                     <tr><th className="p-8">Order ID</th><th className="p-8">Customer</th><th className="p-8">Status</th><th className="p-8">Assign</th><th className="p-8"></th></tr>
                   </thead>
@@ -855,6 +858,7 @@ export default function AdminDashboard() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}
@@ -862,8 +866,9 @@ export default function AdminDashboard() {
           {activeTab === 'users' && (
             <div className="space-y-12">
                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Users</h2>
-               <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl">
-                 <table className="w-full text-left border-collapse">
+               <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse min-w-[700px]">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="p-8 rounded-tl-[40px]">Identity</th>
@@ -895,6 +900,7 @@ export default function AdminDashboard() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}
@@ -921,8 +927,9 @@ export default function AdminDashboard() {
                 </div>
               </form>
 
-              <div className="bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-xl">
-                <table className="w-full text-left">
+              <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left min-w-[600px]">
                   <thead className="bg-gray-50 border-b border-gray-100">
                     <tr>
                       <th className="p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Code</th>
@@ -955,6 +962,7 @@ export default function AdminDashboard() {
                     )}
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           )}

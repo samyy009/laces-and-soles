@@ -43,7 +43,7 @@ export default function About() {
           <div className="relative group overflow-hidden rounded-[40px] shadow-2xl border border-gray-100">
             <div className="absolute inset-0 bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 z-10" />
             <img 
-              src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=2070&auto=format&fit=crop" 
+              src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=800&auto=format&fit=crop" 
               alt="About Boutique" 
               className="w-full object-cover aspect-square group-hover:scale-110 transition-transform duration-1000" 
             />

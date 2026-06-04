@@ -207,12 +207,12 @@ export default function ProductDetails() {
           </nav>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-4">
-        <div className="grid lg:grid-cols-2 gap-6">
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-4">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-10">
 
           {/* ── Gallery ── */}
           <div className="space-y-3">
-            <div className="relative aspect-[4/3] md:aspect-square md:max-h-[400px] bg-[#f5f5f5] rounded-[24px] flex items-center justify-center p-6 overflow-hidden border border-gray-100 shadow-sm">
+            <div className="relative aspect-square max-h-[360px] sm:max-h-[420px] md:max-h-[500px] bg-[#f5f5f5] rounded-[20px] sm:rounded-[28px] flex items-center justify-center p-4 sm:p-6 overflow-hidden border border-gray-100 shadow-sm">
               {activeAngle && (
                 <img
                   src={formatImageUrl(activeAngle.img)}
@@ -223,12 +223,12 @@ export default function ProductDetails() {
               )}
             </div>
 
-            <div className="flex justify-center gap-4 mt-6">
+            <div className="flex justify-center gap-2 sm:gap-4 mt-4 sm:mt-6">
               {galleryAngles.map((angleObj, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveAngle(angleObj)}
-                  className={`w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white border-4 flex flex-col items-center justify-between p-2 relative overflow-hidden transition-all duration-300 ${activeAngle?.label === angleObj.label ? 'border-[#ff3366] shadow-[0_8px_20px_rgba(255,51,102,0.2)] scale-105' : 'border-[#1a202c] hover:border-gray-400 hover:scale-105'}`}
+                  className={`w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl bg-white border-4 flex flex-col items-center justify-between p-1.5 sm:p-2 relative overflow-hidden transition-all duration-300 ${activeAngle?.label === angleObj.label ? 'border-[#ff3366] shadow-[0_8px_20px_rgba(255,51,102,0.2)] scale-105' : 'border-[#1a202c] hover:border-gray-400 hover:scale-105'}`}
                 >
                   <div className="flex-1 w-full flex items-center justify-center p-1">
                      <img
@@ -238,8 +238,8 @@ export default function ProductDetails() {
                        style={{ transform: angleObj.transform }}
                      />
                   </div>
-                  <div className="w-full text-center pb-1">
-                      <span className="text-[10px] md:text-xs font-black uppercase tracking-widest text-[#1a202c]">{angleObj.label}</span>
+                  <div className="w-full text-center pb-0.5">
+                      <span className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-[#1a202c]">{angleObj.label}</span>
                   </div>
                 </button>
               ))}
@@ -292,7 +292,7 @@ export default function ProductDetails() {
                       Size Guide
                     </button>
                   </div>
-                  <div className="grid grid-cols-6 gap-2">
+                  <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
                     {['6', '7', '8', '9', '10', '11'].map(size => (
                       <button
                         key={size}
@@ -354,7 +354,7 @@ export default function ProductDetails() {
 
         {/* ── Reviews Section ── */}
         <div className="mt-10 border-t border-gray-100 pt-8">
-           <div className="max-w-3xl mx-auto">
+           <div className="max-w-3xl mx-auto px-0">
               <h3 className="text-xl font-black uppercase tracking-tighter mb-6 flex items-center gap-2">
                  <Icons.MessageSquare size={20} className="text-[#ff3366]" />
                  CUSTOMER REVIEWS
@@ -451,12 +451,12 @@ export default function ProductDetails() {
 
          {/* ── Related Products ── */}
          {relatedProducts.length > 0 && (
-           <div className="mt-16 pt-10 border-t border-gray-100 max-w-[1400px] mx-auto px-6">
-              <h3 className="text-xl font-black uppercase tracking-tighter mb-8 text-center flex items-center justify-center gap-2">
+           <div className="mt-10 sm:mt-16 pt-8 sm:pt-10 border-t border-gray-100">
+              <h3 className="text-lg sm:text-xl font-black uppercase tracking-tighter mb-6 sm:mb-8 text-center flex items-center justify-center gap-2">
                  <Icons.Sparkles size={20} className="text-[#ff3366]" />
                  YOU MAY ALSO LIKE
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
                  {relatedProducts.map(rp => (
                    <Link key={rp.id} to={`/product/${rp.id}`} className="group bg-white rounded-2xl p-4 border border-gray-100 hover:shadow-xl hover:border-gray-200 transition-all block">
                      <div className="aspect-square bg-gray-50 rounded-xl mb-4 overflow-hidden relative">

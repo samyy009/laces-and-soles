@@ -36,7 +36,7 @@ export default function Blog() {
       <section className="relative w-full h-[28vh] bg-gray-900 mt-0 flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=1600&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1552346154-21d32810aba3?q=80&w=800&auto=format&fit=crop"
             alt="Sneaker Culture Blog"
             className="w-full h-full object-cover opacity-60"
           />
