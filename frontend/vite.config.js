@@ -14,5 +14,23 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    sourcemap: false,          // Smaller production bundle
+    cssCodeSplit: true,        // CSS only loads for the page being viewed
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React — cached across all pages
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // UI libraries — only download once, reused everywhere
+          'vendor-ui': ['lucide-react', 'react-toastify', 'framer-motion'],
+          // Auth & OAuth — only loaded on login/register
+          'vendor-auth': ['@react-oauth/google', 'js-cookie'],
+          // Socket & Axios — loaded once, shared
+          'vendor-net': ['axios', 'socket.io-client'],
+        }
+      }
+    }
   }
 });

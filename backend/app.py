@@ -76,6 +76,11 @@ def create_app():
     def home():
         return "<h1>Laces & Soles API Running</h1>", 200
 
+    @app.route('/api/ping')
+    def ping():
+        """Keepalive endpoint — ping every 14 min to prevent Render cold start."""
+        return jsonify({'status': 'ok', 'message': 'Server is awake'}), 200
+
     return app
 
 app = create_app()
