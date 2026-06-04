@@ -73,8 +73,8 @@ export default function App() {
 
     const timer = setTimeout(() => {
       setFadeOut(true);
-      setTimeout(() => setShowSplash(false), 800);
-    }, 2200);
+      setTimeout(() => setShowSplash(false), 1000);
+    }, 3000);
 
     return () => {
       clearTimeout(timer);
