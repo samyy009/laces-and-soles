@@ -30,6 +30,13 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [activeOrderSubTab, setActiveOrderSubTab] = useState('active');
   const [selectedPeriod, setSelectedPeriod] = useState('7d');
+
+  // ── Email Logs state ──
+  const [emailLogs, setEmailLogs] = useState([]);
+  const [emailStats, setEmailStats] = useState({ total_sent: 0, total_failed: 0, by_type: {} });
+  const [emailLogFilter, setEmailLogFilter] = useState({ type: '', status: '' });
+  const [isLive, setIsLive] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
   
   const [isAdding, setIsAdding] = useState(false);
   const [isBulkAdding, setIsBulkAdding] = useState(false);
@@ -49,52 +56,65 @@ export default function AdminDashboard() {
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
 
+  const authHeaders = () => ({ 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` });
+
   const fetchMetrics = () => {
-    const token = localStorage.getItem('token') || '';
-    const headers = { 'Authorization': `Bearer ${token}` };
-    fetch(`${API}/api/admin/metrics?period=${selectedPeriod}`, { headers })
+    fetch(`${API}/api/admin/metrics?period=${selectedPeriod}`, { headers: authHeaders() })
+      .then(res => res.json()).then(setMetrics).catch(() => {});
+  };
+
+  const fetchEmailLogs = (filters = emailLogFilter) => {
+    let url = `${API}/api/admin/email-logs?per_page=100`;
+    if (filters.type) url += `&type=${filters.type}`;
+    if (filters.status) url += `&status=${filters.status}`;
+    fetch(url, { headers: authHeaders() })
       .then(res => res.json())
-      .then(setMetrics);
+      .then(data => setEmailLogs(data.logs || []))
+      .catch(() => {});
+    fetch(`${API}/api/admin/email-stats`, { headers: authHeaders() })
+      .then(res => res.json())
+      .then(data => setEmailStats(data))
+      .catch(() => {});
+  };
+
+  const fetchAllData = () => {
+    const h = authHeaders();
+    fetchMetrics();
+    fetch(`${API}/api/admin/orders`, { headers: h }).then(r => r.json()).then(d => setOrders(d.orders || [])).catch(() => {});
+    fetch(`${API}/api/admin/users`, { headers: h }).then(r => r.json()).then(d => setUsers(d.users || [])).catch(() => {});
+    fetch(`${API}/api/admin/subscribers`, { headers: h }).then(r => r.json()).then(d => setSubscribers(d.subscribers || [])).catch(() => {});
+    fetchEmailLogs();
+    setLastRefresh(new Date());
   };
 
   useEffect(() => {
     if (user?.role === 'admin') {
-      const token = localStorage.getItem('token') || '';
-      const headers = { 'Authorization': `Bearer ${token}` };
+      const h = authHeaders();
 
       fetchMetrics();
+      fetch(`${API}/api/admin/users`, { headers: h }).then(r => r.json()).then(d => setUsers(d.users || []));
+      fetch(`${API}/api/admin/orders`, { headers: h }).then(r => r.json()).then(d => setOrders(d.orders || []));
+      fetch(`${API}/api/admin/drivers`, { headers: h }).then(r => r.json()).then(d => setDrivers(d.drivers || []));
+      fetch(`${API}/api/admin/coupons`, { headers: h }).then(r => r.json()).then(d => setCoupons(d.coupons || []));
+      fetch(`${API}/api/admin/subscribers`, { headers: h }).then(r => r.json()).then(d => setSubscribers(d.subscribers || []));
+      fetchEmailLogs();
+      setLastRefresh(new Date());
 
-      fetch(`${API}/api/admin/users`, { headers })
-        .then(res => res.json())
-        .then(data => setUsers(data.users || []));
+      // ── Realtime: poll every 30 seconds ──
+      const pollInterval = setInterval(() => {
+        setIsLive(true);
+        fetchAllData();
+        setTimeout(() => setIsLive(false), 1500);
+      }, 30000);
 
-      fetch(`${API}/api/admin/orders`, { headers })
-        .then(res => res.json())
-        .then(data => setOrders(data.orders || []));
-
-      fetch(`${API}/api/admin/drivers`, { headers })
-        .then(res => res.json())
-        .then(data => setDrivers(data.drivers || []));
-
-      fetch(`${API}/api/admin/coupons`, { headers })
-        .then(res => res.json())
-        .then(data => setCoupons(data.coupons || []));
-
-      fetch(`${API}/api/admin/subscribers`, { headers })
-        .then(res => res.json())
-        .then(data => setSubscribers(data.subscribers || []));
-
+      // ── Socket.io for instant order events ──
       const socket = io(API);
-      socket.on('order_placed', (data) => {
-        setMetrics(prev => ({
-          ...prev,
-          total_orders: prev.total_orders + 1,
-          total_revenue: prev.total_revenue + data.total_amount
-        }));
-        fetchMetrics();
+      socket.on('order_placed', () => { fetchAllData(); });
+      socket.on('status_updated', () => {
+        fetch(`${API}/api/admin/orders`, { headers: h }).then(r => r.json()).then(d => setOrders(d.orders || []));
       });
 
-      return () => socket.disconnect();
+      return () => { socket.disconnect(); clearInterval(pollInterval); };
     }
   }, [user, selectedPeriod]);
 
@@ -454,45 +474,58 @@ export default function AdminDashboard() {
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-rose-500/5 blur-[120px] rounded-full" />
       </div>
 
-      <section className="relative pt-0 pb-6 border-b border-gray-200 bg-white z-10">
-        <div className="mx-auto max-w-7xl px-8 flex flex-col md:flex-row md:items-center justify-between gap-8">
+      <section className="relative pt-6 pb-4 sm:pb-6 border-b border-gray-200 bg-white z-10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-8">
           <div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-rose-50 rounded-2xl">
-                <Icons.LayoutDashboard size={24} className="text-rose-500" />
+            <div className="flex items-center gap-3 mb-3 sm:mb-4">
+              <div className="p-2 sm:p-3 bg-rose-50 rounded-2xl">
+                <Icons.LayoutDashboard size={20} className="text-rose-500 sm:w-6 sm:h-6" />
               </div>
-              <span className="text-[10px] font-black text-rose-500 uppercase tracking-[0.5em] font-heading">System Overview</span>
+              <span className="text-[9px] sm:text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] sm:tracking-[0.5em] font-heading">System Overview</span>
+              {/* ── Live indicator ── */}
+              <div className="flex items-center gap-1.5 ml-2">
+                <span className={`h-2 w-2 rounded-full ${isLive ? 'bg-emerald-500 animate-ping' : 'bg-emerald-400'}`} />
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600">Live</span>
+              </div>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black uppercase tracking-tighter font-heading leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black uppercase tracking-tighter font-heading leading-tight">
               ADMIN <span className="text-gray-300">DASHBOARD</span>
             </h1>
+            {lastRefresh && (
+              <p className="text-[9px] text-gray-400 font-bold mt-1">Last updated: {lastRefresh.toLocaleTimeString()}</p>
+            )}
           </div>
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3 sm:gap-6 shrink-0">
+            <button onClick={() => { setIsLive(true); fetchAllData(); setTimeout(() => setIsLive(false), 1500); }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-2xl transition-all border border-emerald-200">
+              <Icons.RefreshCw size={14} className={isLive ? 'animate-spin' : ''} /> Refresh
+            </button>
             <div className="text-right hidden sm:block">
                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">Session Active</p>
                <p className="text-sm font-bold text-gray-950">{user.full_name}</p>
             </div>
-            <button onClick={() => { logout(); navigate('/admin-login'); }} className="flex items-center gap-4 px-10 py-5 bg-gray-900 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-[20px] transition-all hover:-translate-y-1 active:scale-95 font-heading">
+            <button onClick={() => { logout(); navigate('/admin-login'); }} className="flex items-center gap-2 sm:gap-4 px-5 sm:px-8 py-3 sm:py-4 bg-gray-900 hover:bg-rose-500 text-white text-[10px] font-black uppercase tracking-[0.3em] rounded-[20px] transition-all hover:-translate-y-1 active:scale-95 font-heading shrink-0 whitespace-nowrap">
               <Icons.LogOut size={16} /> Logout
             </button>
           </div>
         </div>
       </section>
 
-      <div className="mx-auto max-w-7xl px-8 mt-6 grid grid-cols-1 lg:grid-cols-5 gap-8 relative z-10">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6 grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-8 relative z-10">
         <aside className="lg:col-span-1">
-          <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-visible lg:sticky lg:top-32 gap-3 pb-3 lg:pb-0 scrollbar-hide">
+          <div className="flex flex-row lg:flex-col overflow-x-auto lg:overflow-y-auto lg:sticky lg:top-6 gap-3 pb-3 lg:pb-0 scrollbar-hide lg:max-h-[calc(100vh-100px)]">
             {[
               { id: 'overview', label: 'Overview', icon: Icons.BarChart2 }, 
               { id: 'inventory', label: 'Products', icon: Icons.Package }, 
               { id: 'orders', label: 'Orders', icon: Icons.ShoppingCart },
               { id: 'users', label: 'Users', icon: Icons.Users },
               { id: 'coupons', label: 'Coupons', icon: Icons.Ticket },
-              { id: 'newsletter', label: 'Newsletter', icon: Icons.Mail }
+              { id: 'newsletter', label: 'Newsletter', icon: Icons.Mail },
+              { id: 'email-logs', label: 'Email Logs', icon: Icons.Send }
             ].map(tab => (
               <button 
                 key={tab.id} 
-                onClick={() => setActiveTab(tab.id)} 
+                onClick={() => { setActiveTab(tab.id); if (tab.id === 'email-logs') fetchEmailLogs(); }} 
                 className={`flex items-center justify-between p-4 lg:p-5 rounded-[20px] lg:rounded-[24px] transition-all group active:scale-95 shrink-0 whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-gray-900 shadow-lg border border-gray-100' : 'text-gray-400 hover:text-gray-900 hover:bg-white'}`}
               >
                 <div className="flex items-center gap-4">
@@ -505,26 +538,26 @@ export default function AdminDashboard() {
           </div>
         </aside>
 
-        <main className="lg:col-span-4 space-y-10">
+        <main className="lg:col-span-4 space-y-6 sm:space-y-10">
           {activeTab === 'overview' && (
-            <div className="space-y-10">
+            <div className="space-y-6 sm:space-y-10">
               {/* Stat Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
                 {[
                   { label: 'Revenue', value: `₹${(metrics.total_revenue || 0).toLocaleString()}`, icon: Icons.IndianRupee, color: 'rose' },
                   { label: 'Orders', value: metrics.total_orders || 0, icon: Icons.ShoppingBag, color: 'blue' },
                   { label: 'Users', value: metrics.total_users || 0, icon: Icons.Users, color: 'emerald' },
                   { label: 'Products', value: metrics.total_products || 0, icon: Icons.Package, color: 'violet' }
                 ].map(({ label, value, icon: Icon, color }) => (
-                  <div key={label} className="bg-white border border-gray-100 rounded-[32px] p-6 shadow-xl hover:-translate-y-1 transition-transform">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className={`p-3 rounded-2xl bg-${color}-50 text-${color}-500`}>
-                        <Icon size={20} />
+                  <div key={label} className="bg-white border border-gray-100 rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 shadow-xl hover:-translate-y-1 transition-transform">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <div className={`p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-${color}-50 text-${color}-500`}>
+                        <Icon size={16} className="sm:w-5 sm:h-5" />
                       </div>
-                      <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-lg">+12%</span>
+                      <span className="text-[9px] sm:text-[10px] font-black text-emerald-500 bg-emerald-50 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg">+12%</span>
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</p>
-                    <p className="text-2xl font-black text-gray-950">{value}</p>
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</p>
+                    <p className="text-lg sm:text-2xl font-black text-gray-950">{value}</p>
                   </div>
                 ))}
               </div>
@@ -637,22 +670,24 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'inventory' && (
-            <div className="space-y-8">
-              <div className="flex flex-col md:flex-row items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl gap-4">
-                  <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Inventory</h2>
-                  <div className="flex-1 max-w-md w-full relative">
-                      <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <div className="space-y-6 sm:space-y-8">
+              <div className="flex flex-col gap-4 bg-white p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border border-gray-100 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Inventory</h2>
+                    <div className="flex gap-3">
+                        <button onClick={() => { setIsBulkAdding(!isBulkAdding); setIsAdding(false); }} className="bg-rose-50 text-rose-500 px-5 sm:px-8 py-3 sm:py-4 rounded-[18px] sm:rounded-[22px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Bulk Import</button>
+                        <button onClick={() => { setIsAdding(!isAdding); setIsBulkAdding(false); }} className="bg-gray-950 text-white px-5 sm:px-8 py-3 sm:py-4 rounded-[18px] sm:rounded-[22px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Add Product</button>
+                    </div>
+                  </div>
+                  <div className="relative">
+                      <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                       <input 
                         type="text" 
                         placeholder="Search products by title or brand..." 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-rose-500/20 transition-all"
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-rose-500/20 transition-all"
                       />
-                  </div>
-                  <div className="flex gap-4">
-                      <button onClick={() => { setIsBulkAdding(!isBulkAdding); setIsAdding(false); }} className="bg-rose-50 text-rose-500 px-8 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Bulk Import</button>
-                      <button onClick={() => { setIsAdding(!isAdding); setIsBulkAdding(false); }} className="bg-gray-950 text-white px-8 py-4 rounded-[22px] text-[10px] font-black uppercase tracking-widest whitespace-nowrap">Add Product</button>
                   </div>
               </div>
 
@@ -723,11 +758,11 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded-[24px] sm:rounded-[40px] shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left min-w-[700px]">
+                  <table className="w-full text-left min-w-[600px]">
                   <thead className="bg-gray-50">
-                    <tr><th className="p-8">Details</th><th className="p-8">Stock</th><th className="p-8">Price</th><th className="p-8"></th></tr>
+                    <tr><th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Details</th><th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Stock</th><th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Price</th><th className="p-4 sm:p-6 lg:p-8"></th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {products.filter(p => 
@@ -737,24 +772,28 @@ export default function AdminDashboard() {
                       const isNew = p.created_at && new Date(p.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-emerald-50/30' : ''}`}>
-                        <td className="p-8 flex items-center gap-6">
-                           <div className="relative">
-                              <img src={formatImageUrl(p.image)} className="w-16 h-16 object-contain" />
+                        <td className="p-4 sm:p-6 lg:p-8">
+                          <div className="flex items-center gap-3 sm:gap-6">
+                           <div className="relative shrink-0">
+                              <img src={formatImageUrl(p.image)} className="w-12 h-12 sm:w-16 sm:h-16 object-contain" />
                               {isNew && <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black">NEW</span>}
                            </div>
-                          <div>
-                            <p className="text-sm font-black uppercase">{p.title}</p>
+                          <div className="min-w-0">
+                            <p className="text-xs sm:text-sm font-black uppercase truncate max-w-[120px] sm:max-w-[200px]">{p.title}</p>
                             <p className="text-[10px] text-gray-400 font-black uppercase">{p.brand}</p>
                           </div>
+                          </div>
                         </td>
-                        <td className="p-8"><span className="text-[10px] font-black uppercase">{p.stock} Units</span></td>
-                        <td className="p-8 font-black">₹{p.price.toLocaleString()}</td>
-                        <td className="p-8 text-right flex gap-3 justify-end items-center h-full">
+                        <td className="p-4 sm:p-6 lg:p-8"><span className="text-[10px] font-black uppercase">{p.stock} Units</span></td>
+                        <td className="p-4 sm:p-6 lg:p-8 font-black text-sm">₹{p.price.toLocaleString()}</td>
+                        <td className="p-4 sm:p-6 lg:p-8">
+                          <div className="flex gap-3 justify-end items-center">
                           <button onClick={() => {
                              setEditingProduct(p);
                              setEditProductForm({ title: p.title, brand: p.brand, price: p.price, image: null });
-                          }} className="text-gray-400 hover:text-blue-500 transition-colors"><Icons.Edit2 size={20} /></button>
-                          <button onClick={() => handleDeleteProduct(p.id)} className="text-gray-400 hover:text-rose-500 transition-colors"><Icons.Trash2 size={20} /></button>
+                          }} className="text-gray-400 hover:text-blue-500 transition-colors"><Icons.Edit2 size={18} /></button>
+                          <button onClick={() => handleDeleteProduct(p.id)} className="text-gray-400 hover:text-rose-500 transition-colors"><Icons.Trash2 size={18} /></button>
+                          </div>
                         </td>
                       </tr>
                       );
@@ -767,35 +806,36 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'orders' && (
-            <div className="space-y-12">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl gap-6">
-                  <div className="flex-1">
-                    <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Orders</h2>
-                    <div className="flex gap-4 mt-4">
-                      <button 
-                        onClick={() => setActiveOrderSubTab('active')} 
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeOrderSubTab === 'active' ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
-                      >
-                        Active Shipments
-                      </button>
-                      <button 
-                        onClick={() => setActiveOrderSubTab('history')} 
-                        className={`px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeOrderSubTab === 'history' ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
-                      >
-                        Orders History
-                      </button>
+            <div className="space-y-6 sm:space-y-12">
+              <div className="flex flex-col gap-4 bg-white p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border border-gray-100 shadow-xl">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Orders</h2>
+                      <div className="flex gap-2 sm:gap-4 mt-3 sm:mt-4 flex-wrap">
+                        <button 
+                          onClick={() => setActiveOrderSubTab('active')} 
+                          className={`px-4 sm:px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeOrderSubTab === 'active' ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                        >
+                          Active Shipments
+                        </button>
+                        <button 
+                          onClick={() => setActiveOrderSubTab('history')} 
+                          className={`px-4 sm:px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeOrderSubTab === 'history' ? 'bg-rose-500 text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
+                        >
+                          Orders History
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex-1 max-w-md w-full relative">
-                      <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                      <input 
-                        type="text" 
-                        placeholder="Search by Customer or Tracking ID..." 
-                        value={orderSearchTerm}
-                        onChange={(e) => setOrderSearchTerm(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
-                      />
+                    <div className="relative w-full sm:max-w-sm">
+                        <Icons.Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        <input 
+                          type="text" 
+                          placeholder="Search by Customer or Tracking ID..." 
+                          value={orderSearchTerm}
+                          onChange={(e) => setOrderSearchTerm(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl py-3 pl-11 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                        />
+                    </div>
                   </div>
 
                   <button 
@@ -813,11 +853,11 @@ export default function AdminDashboard() {
                   </button>
               </div>
 
-              <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded-[24px] sm:rounded-[40px] shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left min-w-[800px]">
+                  <table className="w-full text-left min-w-[700px]">
                   <thead className="bg-gray-50">
-                    <tr><th className="p-8">Order ID</th><th className="p-8">Customer</th><th className="p-8">Status</th><th className="p-8">Assign</th><th className="p-8"></th></tr>
+                    <tr><th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Order ID</th><th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Customer</th><th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th><th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Assign</th><th className="p-4 sm:p-6 lg:p-8"></th></tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {orders
@@ -830,28 +870,32 @@ export default function AdminDashboard() {
                       const isNew = o.created_at && new Date(o.created_at) > new Date(Date.now() - 10 * 60 * 1000);
                       return (
                       <tr key={o.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-rose-50/30' : ''}`}>
-                        <td className="p-8 font-black flex items-center gap-2">
+                        <td className="p-4 sm:p-6 lg:p-8">
+                          <div className="flex items-center gap-2 font-black text-xs sm:text-sm">
                            #{o.tracking_id}
                            {isNew && <span className="bg-rose-500 text-white text-[8px] px-1.5 py-0.5 rounded-full animate-pulse">NEW</span>}
+                          </div>
                         </td>
-                        <td className="p-8"><p className="text-sm font-bold">{o.customer_name}</p></td>
-                        <td className="p-8">
-                           <span className="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full bg-blue-50 text-blue-500 border border-blue-100">{o.status}</span>
+                        <td className="p-4 sm:p-6 lg:p-8"><p className="text-xs sm:text-sm font-bold">{o.customer_name}</p></td>
+                        <td className="p-4 sm:p-6 lg:p-8">
+                           <span className="px-2 sm:px-4 py-1 sm:py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full bg-blue-50 text-blue-500 border border-blue-100 whitespace-nowrap">{o.status}</span>
                         </td>
-                        <td className="p-8">
-                          <select value={o.driver_id || ''} onChange={(e) => handleAssignDriver(o.id, e.target.value)} className="bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-[10px] font-black">
+                        <td className="p-4 sm:p-6 lg:p-8">
+                          <select value={o.driver_id || ''} onChange={(e) => handleAssignDriver(o.id, e.target.value)} className="bg-gray-50 border border-gray-100 rounded-xl px-2 sm:px-4 py-2 text-[10px] font-black">
                             <option value="">Unassigned</option>
                             {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
                           </select>
                         </td>
-                        <td className="p-8 text-right flex gap-2">
+                        <td className="p-4 sm:p-6 lg:p-8">
+                          <div className="flex gap-2 justify-end">
                            {o.status === 'Return Requested' && (
-                             <button onClick={() => handleApproveReturn(o.id)} className="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-xs font-bold hover:bg-orange-200 transition-colors" title="Approve Return & Restock">
+                             <button onClick={() => handleApproveReturn(o.id)} className="bg-orange-100 text-orange-600 px-2 sm:px-3 py-1 rounded-lg text-xs font-bold hover:bg-orange-200 transition-colors" title="Approve Return & Restock">
                                Approve
                              </button>
                            )}
-                           <button onClick={() => handleDownloadInvoice(o)} className="text-gray-400 hover:text-blue-500"><Icons.FileText size={18} /></button>
-                           <button onClick={() => handleDeleteOrder(o.id)} className="text-gray-400 hover:text-rose-500"><Icons.Trash2 size={18} /></button>
+                           <button onClick={() => handleDownloadInvoice(o)} className="text-gray-400 hover:text-blue-500"><Icons.FileText size={16} /></button>
+                           <button onClick={() => handleDeleteOrder(o.id)} className="text-gray-400 hover:text-rose-500"><Icons.Trash2 size={16} /></button>
+                          </div>
                         </td>
                       </tr>
                       );
@@ -864,16 +908,16 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'users' && (
-            <div className="space-y-12">
-               <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Users</h2>
-               <div className="bg-white border border-gray-100 rounded-[40px] shadow-xl overflow-hidden">
+            <div className="space-y-6 sm:space-y-12">
+               <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Users</h2>
+               <div className="bg-white border border-gray-100 rounded-[24px] sm:rounded-[40px] shadow-xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse min-w-[700px]">
+                  <table className="w-full text-left border-collapse min-w-[600px]">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="p-8 rounded-tl-[40px]">Identity</th>
-                      <th className="p-8">Role</th>
-                      <th className="p-8 rounded-tr-[40px]">Zones</th>
+                      <th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Identity</th>
+                      <th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Role</th>
+                      <th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Zones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -882,15 +926,15 @@ export default function AdminDashboard() {
                       const isLast = idx === users.length - 1;
                       return (
                       <tr key={u.id} className={`hover:bg-gray-50 transition-colors ${isNew ? 'bg-blue-50/30' : ''}`}>
-                        <td className={`p-8 ${isLast ? 'rounded-bl-[40px]' : ''}`}>
-                           <div className="flex items-center gap-3">
-                              <p className="text-sm font-black uppercase">{u.full_name}</p>
+                        <td className={`p-4 sm:p-6 lg:p-8 ${isLast ? 'rounded-bl-[40px]' : ''}`}>
+                           <div className="flex items-center gap-2 sm:gap-3">
+                              <p className="text-xs sm:text-sm font-black uppercase">{u.full_name}</p>
                               {isNew && <span className="bg-blue-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black">NEW USER</span>}
                            </div>
-                           <p className="text-[10px] text-gray-400 font-black uppercase">{u.email}</p>
+                           <p className="text-[10px] text-gray-400 font-black">{u.email}</p>
                         </td>
-                        <td className="p-8"><span className="px-6 py-2 text-[9px] font-black uppercase rounded-full bg-gray-50 border border-gray-100">{u.role}</span></td>
-                        <td className={`p-8 ${isLast ? 'rounded-br-[40px]' : ''}`}>
+                        <td className="p-4 sm:p-6 lg:p-8"><span className="px-3 sm:px-6 py-1.5 sm:py-2 text-[9px] font-black uppercase rounded-full bg-gray-50 border border-gray-100">{u.role}</span></td>
+                        <td className={`p-4 sm:p-6 lg:p-8 ${isLast ? 'rounded-br-[40px]' : ''}`}>
                           {u.role === 'driver' ? (
                             <ZoneSelector currentZones={u.delivery_zones} onUpdate={(newZones) => handleUpdateUserZone(u.id, newZones)} />
                           ) : <span className="text-[10px] text-gray-300 italic">N/A</span>}
@@ -906,9 +950,9 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'coupons' && (
-            <div className="space-y-8">
-              <div className="flex items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl">
-                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Promo Codes</h2>
+            <div className="space-y-6 sm:space-y-8">
+              <div className="flex items-center justify-between bg-white p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border border-gray-100 shadow-xl">
+                <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Promo Codes</h2>
               </div>
               
               <form onSubmit={handleAddCoupon} className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white p-8 rounded-[40px] border border-gray-100 shadow-xl">
@@ -968,9 +1012,9 @@ export default function AdminDashboard() {
           )}
 
           {activeTab === 'newsletter' && (
-            <div className="space-y-8">
-              <div className="flex items-center justify-between bg-white p-6 rounded-[32px] border border-gray-100 shadow-xl">
-                <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Newsletter</h2>
+            <div className="space-y-6 sm:space-y-8">
+              <div className="flex items-center justify-between bg-white p-4 sm:p-6 rounded-[24px] sm:rounded-[32px] border border-gray-100 shadow-xl">
+                <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight font-heading">Newsletter</h2>
               </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1018,6 +1062,108 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Email Logs Tab ── */}
+          {activeTab === 'email-logs' && (
+            <div className="space-y-6">
+              {/* Stats Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[
+                  { label: 'Total Sent', value: emailStats.total_sent || 0, icon: Icons.CheckCircle, color: 'emerald' },
+                  { label: 'Failed', value: emailStats.total_failed || 0, icon: Icons.XCircle, color: 'rose' },
+                  { label: 'OTP Emails', value: (emailStats.by_type?.otp?.sent || 0), icon: Icons.KeyRound, color: 'blue' },
+                  { label: 'Orders', value: (emailStats.by_type?.order?.sent || 0), icon: Icons.ShoppingBag, color: 'violet' },
+                ].map(({ label, value, icon: Icon, color }) => (
+                  <div key={label} className="bg-white border border-gray-100 rounded-[24px] p-5 shadow-sm hover:-translate-y-1 transition-transform">
+                    <div className={`p-2 rounded-xl bg-${color}-50 text-${color}-500 w-fit mb-3`}><Icon size={16} /></div>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1">{label}</p>
+                    <p className="text-2xl font-black text-gray-900">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Filter Bar */}
+              <div className="bg-white border border-gray-100 rounded-[28px] p-5 shadow-sm flex flex-wrap gap-3 items-center">
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400">Filter:</span>
+                {['', 'otp', 'order', 'delivery_otp', 'newsletter'].map(t => (
+                  <button key={t || 'all'}
+                    onClick={() => { const f = {...emailLogFilter, type: t}; setEmailLogFilter(f); fetchEmailLogs(f); }}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                      emailLogFilter.type === t ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    {t || 'All Types'}
+                  </button>
+                ))}
+                <div className="w-px h-5 bg-gray-200 mx-1" />
+                {['', 'sent', 'failed'].map(s => (
+                  <button key={s || 'all-status'}
+                    onClick={() => { const f = {...emailLogFilter, status: s}; setEmailLogFilter(f); fetchEmailLogs(f); }}
+                    className={`px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all ${
+                      emailLogFilter.status === s
+                        ? s === 'failed' ? 'bg-rose-500 text-white' : 'bg-emerald-500 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    {s || 'All Status'}
+                  </button>
+                ))}
+                <button onClick={() => fetchEmailLogs(emailLogFilter)}
+                  className="ml-auto flex items-center gap-2 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">
+                  <Icons.RefreshCw size={12} /> Refresh
+                </button>
+              </div>
+
+              {/* Logs Table */}
+              <div className="bg-white border border-gray-100 rounded-[32px] overflow-hidden shadow-xl">
+                <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+                  <h3 className="text-[11px] font-black uppercase tracking-[0.3em] text-gray-400">Email Send History</h3>
+                  <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-black">{emailLogs.length} Records</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-100">
+                        {['#', 'Type', 'Recipient', 'Subject', 'Status', 'Time'].map(h => (
+                          <th key={h} className="px-5 py-3 text-left text-[9px] font-black uppercase tracking-[0.2em] text-gray-400">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {emailLogs.map((log, i) => (
+                        <tr key={log.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-5 py-3 text-xs text-gray-400 font-bold">{i + 1}</td>
+                          <td className="px-5 py-3">
+                            <span className={`px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
+                              log.email_type === 'order' ? 'bg-violet-100 text-violet-700' :
+                              log.email_type === 'otp' ? 'bg-blue-100 text-blue-700' :
+                              log.email_type === 'delivery_otp' ? 'bg-orange-100 text-orange-700' :
+                              'bg-pink-100 text-pink-700'}`}>
+                              {log.email_type}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3 text-xs font-bold text-gray-700 max-w-[160px] truncate">{log.recipient}</td>
+                          <td className="px-5 py-3 text-xs text-gray-500 max-w-[200px] truncate" title={log.subject}>{log.subject}</td>
+                          <td className="px-5 py-3">
+                            <span className={`flex items-center gap-1.5 w-fit px-2 py-1 rounded-lg text-[9px] font-black uppercase ${
+                              log.status === 'sent' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                              {log.status === 'sent' ? <Icons.CheckCircle size={10} /> : <Icons.XCircle size={10} />}
+                              {log.status}
+                            </span>
+                            {log.error_msg && <p className="text-[9px] text-rose-400 mt-0.5 max-w-[120px] truncate" title={log.error_msg}>{log.error_msg}</p>}
+                          </td>
+                          <td className="px-5 py-3 text-[10px] text-gray-400 font-bold whitespace-nowrap">
+                            {new Date(log.created_at).toLocaleString('en-IN', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}
+                          </td>
+                        </tr>
+                      ))}
+                      {emailLogs.length === 0 && (
+                        <tr><td colSpan={6} className="px-5 py-16 text-center text-gray-400 font-bold text-sm">
+                          No email logs yet. Logs appear here after OTPs, order confirmations, or newsletters are sent.
+                        </td></tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

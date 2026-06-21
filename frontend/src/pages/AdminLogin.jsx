@@ -31,7 +31,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center bg-black  px-4">
+    <div className="min-h-screen flex items-center justify-center bg-black px-4 py-8 overflow-y-auto">
       <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
         {/* Subtle red glow */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-rose-500/10 blur-[100px] pointer-events-none" />
