@@ -127,26 +127,56 @@ def flash_approve_orders():
     driver_index = 0
     num_drivers = len(available_drivers)
     
+    # Pre-load Hubli locations to resolve area names to pincodes
+    locations_path = os.path.join(os.path.dirname(__file__), '../../frontend/src/hubli_locations.json')
+    try:
+        with open(locations_path, 'r') as f:
+            hubli_locations = json.load(f)
+        area_to_pincode = {loc['location'].lower(): loc['pincode'] for loc in hubli_locations}
+    except Exception:
+        area_to_pincode = {}
+    
     for order in pending_orders:
         order.status = 'Out for Delivery'
         assigned_driver = None
-        if order.pincode:
-            locations_path = os.path.join(os.path.dirname(__file__), '../../frontend/src/hubli_locations.json')
-            try:
-                with open(locations_path, 'r') as f:
-                    hubli_locations = json.load(f)
-                area_to_pincode = {loc['location']: loc['pincode'] for loc in hubli_locations}
-            except Exception:
-                area_to_pincode = {}
-
-            for d in available_drivers:
+        
+        # Determine distance bracket: short (<2.0), mid (2.0-5.0), long (>=5.0)
+        dist = order.distance_km or 1.0  # default fallback distance
+        if dist < 2.0:
+            target_range = 'short'
+        elif dist < 5.0:
+            target_range = 'mid'
+        else:
+            target_range = 'long'
+            
+        # 1. Filter drivers by their range
+        range_drivers = [d for d in available_drivers if d.driver_range == target_range]
+        
+        if range_drivers and order.pincode:
+            # 2. Try to find a driver in range whose pincodes/zones cover the order
+            for d in range_drivers:
                 if d.delivery_zones:
-                    driver_areas = [z.strip() for z in d.delivery_zones.split(',')]
-                    driver_pincodes = [area_to_pincode.get(area) for area in driver_areas]
-                    if order.pincode in driver_pincodes or order.pincode in driver_areas:
+                    driver_zones = [z.strip().lower() for z in d.delivery_zones.split(',')]
+                    resolved_pincodes = [area_to_pincode.get(z) for z in driver_zones if area_to_pincode.get(z)]
+                    if order.pincode in driver_zones or order.pincode in resolved_pincodes:
                         assigned_driver = d
                         break
-        
+            if not assigned_driver:
+                # Fallback: assign to first driver in range
+                assigned_driver = range_drivers[driver_index % len(range_drivers)]
+                driver_index += 1
+                
+        # 3. Fallback: match by pincode across all drivers if no driver matched in bracket
+        if not assigned_driver and order.pincode:
+            for d in available_drivers:
+                if d.delivery_zones:
+                    driver_zones = [z.strip().lower() for z in d.delivery_zones.split(',')]
+                    resolved_pincodes = [area_to_pincode.get(z) for z in driver_zones if area_to_pincode.get(z)]
+                    if order.pincode in driver_zones or order.pincode in resolved_pincodes:
+                        assigned_driver = d
+                        break
+                        
+        # 4. Final Fallback: Round robin across all available drivers
         if not assigned_driver:
             assigned_driver = available_drivers[driver_index % num_drivers]
             driver_index += 1
