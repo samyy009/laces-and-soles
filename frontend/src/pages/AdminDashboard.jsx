@@ -911,10 +911,14 @@ export default function AdminDashboard() {
                            <span className="px-2 sm:px-4 py-1 sm:py-1.5 text-[9px] font-black uppercase tracking-widest rounded-full bg-blue-50 text-blue-500 border border-blue-100 whitespace-nowrap">{o.status}</span>
                         </td>
                         <td className="p-4 sm:p-6 lg:p-8">
-                          <select value={o.driver_id || ''} onChange={(e) => handleAssignDriver(o.id, e.target.value)} className="bg-gray-50 border border-gray-100 rounded-xl px-2 sm:px-4 py-2 text-[10px] font-black">
-                            <option value="">Unassigned</option>
-                            {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
-                          </select>
+                          {['Delivered', 'Cancelled', 'Returned', 'Cancelled - Refund Initiated'].includes(o.status) ? (
+                            <span className="text-[10px] font-black uppercase text-gray-700">{o.driver_name || 'Unassigned'}</span>
+                          ) : (
+                            <select value={o.driver_id || ''} onChange={(e) => handleAssignDriver(o.id, e.target.value)} className="bg-gray-50 border border-gray-100 rounded-xl px-2 sm:px-4 py-2 text-[10px] font-black">
+                              <option value="">Unassigned</option>
+                              {drivers.map(d => <option key={d.id} value={d.id}>{d.full_name}</option>)}
+                            </select>
+                          )}
                         </td>
                         <td className="p-4 sm:p-6 lg:p-8">
                           <div className="flex gap-2 justify-end">

@@ -291,7 +291,7 @@ def get_all_users():
     user = db.session.get(User, int(get_jwt_identity()))
     if not user or user.role != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
-    users = User.query.all()
+    users = User.query.filter(~User.role.in_(['deleted_user', 'deleted_driver'])).all()
     return jsonify({'users': [u.to_dict() for u in users]}), 200
 
 @admin_bp.route('/api/admin/users/<int:user_id>', methods=['PATCH'])
@@ -327,18 +327,29 @@ def delete_user(user_id):
         # Delete reviews
         Review.query.filter_by(user_id=user_id).delete()
         
-        # Delete order items and orders where this user is the customer
-        orders = Order.query.filter_by(user_id=user_id).all()
-        for order in orders:
-            OrderItem.query.filter_by(order_id=order.id).delete()
-            db.session.delete(order)
-            
-        # Unassign orders assigned to this user if they were a driver
-        Order.query.filter_by(driver_id=user_id).update({"driver_id": None})
+        # Check if the user has any order history (as a customer or as a driver)
+        has_assigned_orders = Order.query.filter((Order.user_id == user_id) | (Order.driver_id == user_id)).first() is not None
         
-        db.session.delete(target_user)
-        db.session.commit()
-        return jsonify({'message': 'User deleted successfully'}), 200
+        if has_assigned_orders:
+            # Soft delete to preserve order history references
+            if target_user.role == 'driver':
+                target_user.role = 'deleted_driver'
+            else:
+                target_user.role = 'deleted_user'
+                
+            # For active/non-delivered orders assigned to this driver, unassign them
+            Order.query.filter(
+                Order.driver_id == user_id, 
+                ~Order.status.in_(['Delivered', 'Returned', 'Cancelled', 'Cancelled - Refund Initiated'])
+            ).update({"driver_id": None}, synchronize_session=False)
+            
+            db.session.commit()
+            return jsonify({'message': 'User soft-deleted successfully to preserve order history'}), 200
+        else:
+            # Hard delete if no order associations exist
+            db.session.delete(target_user)
+            db.session.commit()
+            return jsonify({'message': 'User deleted successfully'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
