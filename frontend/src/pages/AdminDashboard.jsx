@@ -458,11 +458,13 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteDriver = (id) => {
+  const handleDeleteUser = (id, role) => {
     setConfirmModal({
       isOpen: true,
-      title: "Delete Driver",
-      message: "Are you sure you want to permanently delete this driver?",
+      title: role === 'driver' ? "Delete Driver" : "Delete User",
+      message: role === 'driver'
+        ? "Are you sure you want to permanently delete this driver?"
+        : "Are you sure you want to permanently delete this user? This will also delete their order history, cart, wishlist, and reviews.",
       onConfirm: async () => {
         try {
           const res = await fetch(`${API}/api/admin/users/${id}`, {
@@ -470,15 +472,17 @@ export default function AdminDashboard() {
             headers: authHeaders()
           });
           if (res.ok) {
-            toast.success("Driver deleted successfully");
+            toast.success(`${role === 'driver' ? 'Driver' : 'User'} deleted successfully`);
             setUsers(users.filter(u => u.id !== id));
-            setDrivers(drivers.filter(d => d.id !== id));
+            if (role === 'driver') {
+              setDrivers(drivers.filter(d => d.id !== id));
+            }
           } else {
             const data = await res.json();
-            toast.error(data.error || "Failed to delete driver");
+            toast.error(data.error || "Failed to delete user");
           }
         } catch (err) {
-          toast.error("Error deleting driver");
+          toast.error("Error deleting user");
         }
       }
     });
@@ -967,11 +971,11 @@ export default function AdminDashboard() {
                           ) : <span className="text-[10px] text-gray-300 italic">N/A</span>}
                         </td>
                         <td className={`p-4 sm:p-6 lg:p-8 text-right ${isLast ? 'rounded-br-[40px]' : ''}`}>
-                          {u.role === 'driver' ? (
-                            <button onClick={() => handleDeleteDriver(u.id)} className="p-3 hover:bg-rose-50 hover:text-rose-500 rounded-xl text-gray-400 transition-colors" title="Delete Driver">
+                          {u.id !== user.id ? (
+                            <button onClick={() => handleDeleteUser(u.id, u.role)} className="p-3 hover:bg-rose-50 hover:text-rose-500 rounded-xl text-gray-400 transition-colors" title="Delete User">
                               <Icons.Trash2 size={18} />
                             </button>
-                          ) : <span className="text-[10px] text-gray-300 italic">N/A</span>}
+                          ) : <span className="text-[10px] text-gray-300 italic">Current User</span>}
                         </td>
                       </tr>
                       );

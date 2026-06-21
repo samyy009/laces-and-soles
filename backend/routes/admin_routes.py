@@ -316,14 +316,29 @@ def delete_user(user_id):
         return jsonify({'error': 'Unauthorized'}), 403
     target_user = db.session.get(User, user_id)
     if not target_user: return jsonify({'error': 'User not found'}), 404
-    if target_user.role != 'driver':
-        return jsonify({'error': 'Only drivers can be deleted from here'}), 400
+    if target_user.id == user.id:
+        return jsonify({'error': 'You cannot delete your own admin account'}), 400
     try:
-        # Unassign orders assigned to this driver
+        from models import CartItem, WishlistItem, Review
+        # Delete cart items
+        CartItem.query.filter_by(user_id=user_id).delete()
+        # Delete wishlist items
+        WishlistItem.query.filter_by(user_id=user_id).delete()
+        # Delete reviews
+        Review.query.filter_by(user_id=user_id).delete()
+        
+        # Delete order items and orders where this user is the customer
+        orders = Order.query.filter_by(user_id=user_id).all()
+        for order in orders:
+            OrderItem.query.filter_by(order_id=order.id).delete()
+            db.session.delete(order)
+            
+        # Unassign orders assigned to this user if they were a driver
         Order.query.filter_by(driver_id=user_id).update({"driver_id": None})
+        
         db.session.delete(target_user)
         db.session.commit()
-        return jsonify({'message': 'Driver deleted successfully'}), 200
+        return jsonify({'message': 'User deleted successfully'}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
