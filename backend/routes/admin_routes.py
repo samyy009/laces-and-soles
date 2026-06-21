@@ -115,9 +115,12 @@ def flash_approve_orders():
     if not user or user.role != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
     
-    pending_orders = Order.query.filter(Order.status.in_(['Pending', 'Processing'])).all()
+    pending_orders = Order.query.filter(
+        Order.status.in_(['Pending', 'Processing', 'Packed', 'Out for Delivery']),
+        Order.driver_id.is_(None)
+    ).all()
     if not pending_orders:
-        return jsonify({'message': 'No pending orders to approve.'}), 200
+        return jsonify({'message': 'No unassigned orders to approve.'}), 200
     
     available_drivers = User.query.filter_by(role='driver').all()
     if not available_drivers:
@@ -137,7 +140,8 @@ def flash_approve_orders():
         area_to_pincode = {}
     
     for order in pending_orders:
-        order.status = 'Out for Delivery'
+        if order.status in ['Pending', 'Processing', 'Packed']:
+            order.status = 'Out for Delivery'
         assigned_driver = None
         
         # Determine distance bracket: short (<2.0), mid (2.0-5.0), long (>=5.0)
@@ -152,13 +156,15 @@ def flash_approve_orders():
         # 1. Filter drivers by their range
         range_drivers = [d for d in available_drivers if d.driver_range == target_range]
         
-        if range_drivers and order.pincode:
+        order_pincode = order.pincode.strip().lower() if order.pincode else ""
+        
+        if range_drivers and order_pincode:
             # 2. Try to find a driver in range whose pincodes/zones cover the order
             for d in range_drivers:
                 if d.delivery_zones:
                     driver_zones = [z.strip().lower() for z in d.delivery_zones.split(',')]
                     resolved_pincodes = [area_to_pincode.get(z) for z in driver_zones if area_to_pincode.get(z)]
-                    if order.pincode in driver_zones or order.pincode in resolved_pincodes:
+                    if order_pincode in driver_zones or order_pincode in resolved_pincodes:
                         assigned_driver = d
                         break
             if not assigned_driver:
@@ -167,12 +173,12 @@ def flash_approve_orders():
                 driver_index += 1
                 
         # 3. Fallback: match by pincode across all drivers if no driver matched in bracket
-        if not assigned_driver and order.pincode:
+        if not assigned_driver and order_pincode:
             for d in available_drivers:
                 if d.delivery_zones:
                     driver_zones = [z.strip().lower() for z in d.delivery_zones.split(',')]
                     resolved_pincodes = [area_to_pincode.get(z) for z in driver_zones if area_to_pincode.get(z)]
-                    if order.pincode in driver_zones or order.pincode in resolved_pincodes:
+                    if order_pincode in driver_zones or order_pincode in resolved_pincodes:
                         assigned_driver = d
                         break
                         
@@ -183,7 +189,7 @@ def flash_approve_orders():
             
         order.driver_id = assigned_driver.id
         count += 1
-        socketio.emit('status_updated', {'order_id': order.id, 'status': 'Out for Delivery', 'tracking_id': order.tracking_id})
+        socketio.emit('status_updated', {'order_id': order.id, 'status': order.status, 'tracking_id': order.tracking_id})
 
     db.session.commit()
     return jsonify({'message': f'Flash Speed Success! {count} orders distributed.'}), 200
