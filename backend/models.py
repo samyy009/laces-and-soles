@@ -248,3 +248,26 @@ class NewsletterSubscriber(db.Model):
             'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None
         }
 
+
+class EmailLog(db.Model):
+    """Tracks every email sent through Brevo — OTP, order confirmation, delivery OTP, newsletter."""
+    __tablename__ = 'email_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    recipient = db.Column(db.String(200), nullable=False)
+    subject = db.Column(db.String(500), nullable=False)
+    email_type = db.Column(db.String(50), nullable=False)  # 'otp' | 'order' | 'delivery_otp' | 'newsletter'
+    status = db.Column(db.String(20), nullable=False, default='sent')  # 'sent' | 'failed'
+    error_msg = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'recipient': self.recipient,
+            'subject': self.subject,
+            'email_type': self.email_type,
+            'status': self.status,
+            'error_msg': self.error_msg,
+            'created_at': self.created_at.isoformat() + 'Z' if self.created_at else None
+        }

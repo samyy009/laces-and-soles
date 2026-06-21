@@ -495,3 +495,62 @@ def send_newsletter_blast():
             count += 1
             
     return jsonify({'message': f'Newsletter blast sent to {count} subscribers.'}), 200
+
+
+# ── Email Logs ──────────────────────────────────────────────────────────────
+from models import EmailLog
+
+@admin_bp.route('/api/admin/email-logs', methods=['GET'])
+@jwt_required()
+def get_email_logs():
+    """Returns paginated email send history — newest first."""
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    page     = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    email_type = request.args.get('type')   # optional filter: otp|order|delivery_otp|newsletter
+    status     = request.args.get('status') # optional filter: sent|failed
+
+    q = EmailLog.query.order_by(EmailLog.created_at.desc())
+    if email_type:
+        q = q.filter_by(email_type=email_type)
+    if status:
+        q = q.filter_by(status=status)
+
+    total = q.count()
+    logs  = q.offset((page - 1) * per_page).limit(per_page).all()
+
+    return jsonify({
+        'logs': [l.to_dict() for l in logs],
+        'total': total,
+        'page': page,
+        'per_page': per_page,
+        'pages': (total + per_page - 1) // per_page
+    }), 200
+
+
+@admin_bp.route('/api/admin/email-stats', methods=['GET'])
+@jwt_required()
+def get_email_stats():
+    """Returns aggregate counts for email dashboard cards."""
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    total_sent   = EmailLog.query.filter_by(status='sent').count()
+    total_failed = EmailLog.query.filter_by(status='failed').count()
+
+    by_type = {}
+    for t in ['otp', 'order', 'delivery_otp', 'newsletter']:
+        by_type[t] = {
+            'sent':   EmailLog.query.filter_by(email_type=t, status='sent').count(),
+            'failed': EmailLog.query.filter_by(email_type=t, status='failed').count(),
+        }
+
+    return jsonify({
+        'total_sent': total_sent,
+        'total_failed': total_failed,
+        'by_type': by_type
+    }), 200

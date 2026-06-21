@@ -81,6 +81,33 @@ def create_app():
         """Keepalive endpoint — ping every 14 min to prevent Render cold start."""
         return jsonify({'status': 'ok', 'message': 'Server is awake'}), 200
 
+    @app.route('/api/health')
+    def health_check():
+        """Health check — verifies DB connection and Brevo API key validity."""
+        import requests as req
+        status = {'db': 'unknown', 'brevo': 'unknown', 'timestamp': __import__('datetime').datetime.utcnow().isoformat() + 'Z'}
+        # DB check
+        try:
+            db.session.execute(db.text('SELECT 1'))
+            status['db'] = 'ok'
+        except Exception as e:
+            status['db'] = f'error: {str(e)[:80]}'
+        # Brevo check (lightweight account info call)
+        try:
+            api_key = os.environ.get('BREVO_API_KEY', '')
+            r = req.get('https://api.brevo.com/v3/account',
+                        headers={'api-key': api_key}, timeout=5)
+            status['brevo'] = 'ok' if r.status_code == 200 else f'error: HTTP {r.status_code}'
+        except Exception as e:
+            status['brevo'] = f'error: {str(e)[:80]}'
+
+        http_code = 200 if status['db'] == 'ok' else 503
+        return jsonify(status), http_code
+
+    # Auto-create any new tables (e.g., email_logs) on startup
+    with app.app_context():
+        db.create_all()
+
     return app
 
 app = create_app()

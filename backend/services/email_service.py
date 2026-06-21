@@ -5,18 +5,40 @@ from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+# ── Internal helper to write an EmailLog record ─────────────────────────────
+def _log_email(recipient, subject, email_type, status, error_msg=None):
+    """Saves an EmailLog row. Silently swallows any DB error so email code never breaks."""
+    try:
+        from extensions import db
+        from models import EmailLog
+        log = EmailLog(  # type: ignore[call-arg]
+            recipient=recipient,
+            subject=subject,
+            email_type=email_type,
+            status=status,
+            error_msg=error_msg
+        )
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        logger.warning(f"EmailLog write failed (non-critical): {e}")
+
+
+# ── OTP / Password Reset ─────────────────────────────────────────────────────
 def send_otp_email(receiver_email, otp):
     """Sends a beautiful OTP email via Brevo HTTP API."""
     sender_email = os.environ.get('BREVO_SENDER')
     api_key = os.environ.get('BREVO_API_KEY')
+    subject = f"{otp} is your Laces & Soles verification code"
 
     if not all([sender_email, api_key]):
         logger.warning("Missing Brevo credentials in .env — skipping OTP email.")
+        _log_email(receiver_email, subject, 'otp', 'failed', 'Missing Brevo credentials')
         return False
 
     html = f"""
     <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #eee; border-radius: 20px;">
-        <h2 style="color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 20px;">Laces & Soles</h2>
+        <h2 style="color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 20px;">Laces &amp; Soles</h2>
         <p style="color: #666; font-size: 16px; line-height: 1.5;">You requested a password reset. Use the following code to verify your account. This code is valid for 10 minutes.</p>
         <div style="background: #f9f9f9; padding: 30px; text-align: center; border-radius: 12px; margin: 30px 0;">
             <span style="font-size: 42px; font-weight: 900; color: #f43f5e; letter-spacing: 10px;">{otp}</span>
@@ -36,38 +58,45 @@ def send_otp_email(receiver_email, otp):
     payload = {
         "sender": {"name": "Laces & Soles", "email": sender_email},
         "to": [{"email": receiver_email}],
-        "subject": f"{otp} is your Laces & Soles verification code",
+        "subject": subject,
         "htmlContent": html
     }
 
     try:
-        logger.info(f"API: Sending OTP to {receiver_email} via Brevo HTTP...")
-        response = requests.post(url, json=payload, headers=headers)
+        logger.info(f"Sending OTP to {receiver_email} via Brevo...")
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
         if response.status_code in [201, 202]:
-            logger.info("API: Email sent successfully!")
+            logger.info("OTP email sent successfully!")
+            _log_email(receiver_email, subject, 'otp', 'sent')
             return True
         else:
-            logger.error(f"API Error: Status {response.status_code} - {response.text}")
+            err = f"HTTP {response.status_code}: {response.text[:200]}"
+            logger.error(f"Brevo OTP Error: {err}")
+            _log_email(receiver_email, subject, 'otp', 'failed', err)
             return False
     except Exception as e:
-        logger.error(f"API Connection Error: {e}")
+        logger.error(f"Brevo OTP connection error: {e}")
+        _log_email(receiver_email, subject, 'otp', 'failed', str(e))
         return False
 
 
+# ── Order Confirmation ───────────────────────────────────────────────────────
 def send_order_confirmation_email(receiver_email, customer_name, order):
     """Sends a rich HTML order confirmation email via Brevo after successful payment."""
     sender_email = os.environ.get('BREVO_SENDER')
     api_key = os.environ.get('BREVO_API_KEY')
-
-    if not all([sender_email, api_key]):
-        logger.warning("Missing Brevo credentials — skipping order confirmation email.")
-        return False
 
     order_data   = order.to_dict()
     tracking_id  = order_data['tracking_id']
     invoice_no   = f"INV-{datetime.utcnow().year}-{str(order.id).zfill(5)}"
     order_date   = order.created_at.strftime('%d %b %Y') if order.created_at else 'Today'
     total_amount = order_data['total_amount']
+    subject      = f"✅ Order Confirmed — {tracking_id} | Laces & Soles"
+
+    if not all([sender_email, api_key]):
+        logger.warning("Missing Brevo credentials — skipping order confirmation email.")
+        _log_email(receiver_email, subject, 'order', 'failed', 'Missing Brevo credentials')
+        return False
 
     items_rows_html = ""
     for item in order_data.get('items', []):
@@ -135,28 +164,36 @@ def send_order_confirmation_email(receiver_email, customer_name, order):
     payload = {
         "sender": {"name": "Laces & Soles", "email": sender_email},
         "to": [{"email": receiver_email, "name": customer_name}],
-        "subject": f"✅ Order Confirmed — {tracking_id} | Laces & Soles",
+        "subject": subject,
         "htmlContent": html
     }
     try:
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
         if response.status_code in [201, 202]:
             logger.info(f"Order confirmation email sent to {receiver_email}")
+            _log_email(receiver_email, subject, 'order', 'sent')
             return True
         else:
-            logger.error(f"Brevo Error: {response.status_code} - {response.text}")
+            err = f"HTTP {response.status_code}: {response.text[:200]}"
+            logger.error(f"Brevo order email error: {err}")
+            _log_email(receiver_email, subject, 'order', 'failed', err)
             return False
     except Exception as e:
         logger.error(f"Order email failed: {e}")
+        _log_email(receiver_email, subject, 'order', 'failed', str(e))
         return False
 
+
+# ── Delivery OTP ─────────────────────────────────────────────────────────────
 def send_delivery_otp_email(receiver_email, customer_name, tracking_id, otp):
     """Sends a professional HTML email for delivery verification."""
     sender_email = os.environ.get('BREVO_SENDER')
     api_key = os.environ.get('BREVO_API_KEY')
+    subject = f"OTP for Order #{tracking_id}"
 
     if not all([sender_email, api_key]):
         logger.warning("Missing Brevo credentials — skipping delivery OTP email.")
+        _log_email(receiver_email, subject, 'delivery_otp', 'failed', 'Missing Brevo credentials')
         return False
 
     html = f"""
@@ -169,7 +206,7 @@ def send_delivery_otp_email(receiver_email, customer_name, tracking_id, otp):
         </div>
         <p style="font-size: 12px; color: #888;">If you did not request this delivery, please ignore this email.</p>
         <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-        <p style="text-align: center; font-size: 14px; color: #ff3366; font-weight: bold;">Laces & Soles Boutique</p>
+        <p style="text-align: center; font-size: 14px; color: #ff3366; font-weight: bold;">Laces &amp; Soles Boutique</p>
     </div>
     """
 
@@ -178,17 +215,23 @@ def send_delivery_otp_email(receiver_email, customer_name, tracking_id, otp):
     payload = {
         "sender": {"name": "Laces & Soles", "email": sender_email},
         "to": [{"email": receiver_email}],
-        "subject": f"OTP for Order #{tracking_id}",
+        "subject": subject,
         "htmlContent": html
     }
 
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        return response.status_code in [201, 202]
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        ok = response.status_code in [201, 202]
+        _log_email(receiver_email, subject, 'delivery_otp', 'sent' if ok else 'failed',
+                   None if ok else f"HTTP {response.status_code}")
+        return ok
     except Exception as e:
         logger.error(f"Delivery OTP email failed: {e}")
+        _log_email(receiver_email, subject, 'delivery_otp', 'failed', str(e))
         return False
 
+
+# ── Newsletter / Marketing ───────────────────────────────────────────────────
 def send_marketing_email(receiver_email, subject, body_text):
     """Sends a marketing newsletter email."""
     sender_email = os.environ.get('BREVO_SENDER')
@@ -196,7 +239,7 @@ def send_marketing_email(receiver_email, subject, body_text):
 
     html = f"""
     <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: auto; padding: 40px; border: 1px solid #eee; border-radius: 20px;">
-        <h2 style="color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 20px;">Laces & Soles Newsletter</h2>
+        <h2 style="color: #000; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; margin-bottom: 20px;">Laces &amp; Soles Newsletter</h2>
         <p style="color: #666; font-size: 16px; line-height: 1.5;">{body_text}</p>
         <p style="color: #999; font-size: 12px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">
             You are receiving this because you subscribed to our newsletter.
@@ -206,7 +249,7 @@ def send_marketing_email(receiver_email, subject, body_text):
 
     if not all([sender_email, api_key]):
         logger.warning(f"Mock Marketing Email Sent to {receiver_email}. Subject: {subject}")
-        # Save mock email to logs
+        _log_email(receiver_email, subject, 'newsletter', 'failed', 'Missing Brevo credentials')
         os.makedirs('logs/emails', exist_ok=True)
         with open(f'logs/emails/marketing_{int(datetime.utcnow().timestamp())}.html', 'w') as f:
             f.write(html)
@@ -222,8 +265,12 @@ def send_marketing_email(receiver_email, subject, body_text):
     }
 
     try:
-        response = requests.post(url, json=payload, headers=headers)
-        return response.status_code in [201, 202]
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        ok = response.status_code in [201, 202]
+        _log_email(receiver_email, subject, 'newsletter', 'sent' if ok else 'failed',
+                   None if ok else f"HTTP {response.status_code}: {response.text[:100]}")
+        return ok
     except Exception as e:
         logger.error(f"Marketing email failed: {e}")
+        _log_email(receiver_email, subject, 'newsletter', 'failed', str(e))
         return False
