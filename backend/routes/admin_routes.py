@@ -308,6 +308,26 @@ def update_user_details(user_id):
     db.session.commit()
     return jsonify({'message': 'User updated', 'user': target_user.to_dict()}), 200
 
+@admin_bp.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+@jwt_required()
+def delete_user(user_id):
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+    target_user = db.session.get(User, user_id)
+    if not target_user: return jsonify({'error': 'User not found'}), 404
+    if target_user.role != 'driver':
+        return jsonify({'error': 'Only drivers can be deleted from here'}), 400
+    try:
+        # Unassign orders assigned to this driver
+        Order.query.filter_by(driver_id=user_id).update({"driver_id": None})
+        db.session.delete(target_user)
+        db.session.commit()
+        return jsonify({'message': 'Driver deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 
 @admin_bp.route('/api/admin/orders/<int:order_id>/assign', methods=['POST'])
 @jwt_required()

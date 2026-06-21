@@ -458,6 +458,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleDeleteDriver = (id) => {
+    setConfirmModal({
+      isOpen: true,
+      title: "Delete Driver",
+      message: "Are you sure you want to permanently delete this driver?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(`${API}/api/admin/users/${id}`, {
+            method: 'DELETE',
+            headers: authHeaders()
+          });
+          if (res.ok) {
+            toast.success("Driver deleted successfully");
+            setUsers(users.filter(u => u.id !== id));
+            setDrivers(drivers.filter(d => d.id !== id));
+          } else {
+            const data = await res.json();
+            toast.error(data.error || "Failed to delete driver");
+          }
+        } catch (err) {
+          toast.error("Error deleting driver");
+        }
+      }
+    });
+  };
+
   const chartData = metrics.chart_data || [
     { name: 'Mon', revenue: 0 },
     { name: 'Tue', revenue: 0 },
@@ -918,6 +944,7 @@ export default function AdminDashboard() {
                       <th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Identity</th>
                       <th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Role</th>
                       <th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400">Zones</th>
+                      <th className="p-4 sm:p-6 lg:p-8 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -934,9 +961,16 @@ export default function AdminDashboard() {
                            <p className="text-[10px] text-gray-400 font-black">{u.email}</p>
                         </td>
                         <td className="p-4 sm:p-6 lg:p-8"><span className="px-3 sm:px-6 py-1.5 sm:py-2 text-[9px] font-black uppercase rounded-full bg-gray-50 border border-gray-100">{u.role}</span></td>
-                        <td className={`p-4 sm:p-6 lg:p-8 ${isLast ? 'rounded-br-[40px]' : ''}`}>
+                        <td className="p-4 sm:p-6 lg:p-8">
                           {u.role === 'driver' ? (
                             <ZoneSelector currentZones={u.delivery_zones} onUpdate={(newZones) => handleUpdateUserZone(u.id, newZones)} />
+                          ) : <span className="text-[10px] text-gray-300 italic">N/A</span>}
+                        </td>
+                        <td className={`p-4 sm:p-6 lg:p-8 text-right ${isLast ? 'rounded-br-[40px]' : ''}`}>
+                          {u.role === 'driver' ? (
+                            <button onClick={() => handleDeleteDriver(u.id)} className="p-3 hover:bg-rose-50 hover:text-rose-500 rounded-xl text-gray-400 transition-colors" title="Delete Driver">
+                              <Icons.Trash2 size={18} />
+                            </button>
                           ) : <span className="text-[10px] text-gray-300 italic">N/A</span>}
                         </td>
                       </tr>
