@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin } from '@react-oauth/google';
 import { toast } from 'react-toastify';
-import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
 
 export default function Register() {
   const [fullName, setFullName] = useState('');
@@ -14,48 +13,65 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { register, loginWithGoogle, loginWithFacebook } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const { register, loginWithFacebook, loginWithGoogleToken } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setIsLoading(true);
-
     const result = await register(fullName, email, password, phone);
-    
     if (result.success) {
       navigate('/login', { state: { message: 'Account created successfully! Please login.' } });
     } else {
       setError(result.error);
     }
-    
     setIsLoading(false);
   };
 
+  // Google OAuth popup
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsGoogleLoading(true);
+      try {
+        const result = await loginWithGoogleToken(tokenResponse.access_token);
+        if (result.success) navigate('/dashboard', { replace: true });
+      } catch {
+        toast.error('Google Sign-Up failed. Please try again.');
+      } finally {
+        setIsGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      setIsGoogleLoading(false);
+      toast.error('Google Sign-Up was cancelled or failed.');
+    },
+    prompt: 'select_account',
+  });
+
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-white overflow-hidden">
+    <div className="h-[calc(100vh-56px)] flex flex-col lg:flex-row bg-white overflow-hidden">
       {/* Visual Pane - only on lg+ */}
       <div className="hidden lg:block lg:flex-[1.2] relative overflow-hidden">
-
-        <div className="absolute inset-0 bg-cover bg-center" 
+        <div className="absolute inset-0 bg-cover bg-center"
              style={{ backgroundImage: "url('/auth_banner.png')" }} />
         <div className="absolute inset-0 bg-black/40" />
         <div className="relative h-full w-full flex flex-col justify-end p-12 z-10">
           <div className="max-w-xl">
-             <span className="text-[10px] font-black uppercase tracking-[1em] text-rose-500 mb-6 block drop-shadow-md">Join the Collective</span>
-             <h2 className="text-7xl font-black text-white uppercase tracking-tighter leading-none font-heading drop-shadow-xl">
-                STEP INTO <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">STYLE</span>
-             </h2>
-             <p className="mt-4 text-lg text-gray-200 max-w-md font-medium italic leading-relaxed drop-shadow-md">
-                Unlock exclusive drops, early access, and a curated shopping experience tailored for the modern collector.
-             </p>
+            <span className="text-[10px] font-black uppercase tracking-[1em] text-rose-500 mb-6 block drop-shadow-md">Join the Collective</span>
+            <h2 className="text-7xl font-black text-white uppercase tracking-tighter leading-none font-heading drop-shadow-xl">
+              STEP INTO <br /> <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">STYLE</span>
+            </h2>
+            <p className="mt-4 text-lg text-gray-200 max-w-md font-medium italic leading-relaxed drop-shadow-md">
+              Unlock exclusive drops, early access, and a curated shopping experience tailored for the modern collector.
+            </p>
           </div>
         </div>
       </div>
 
       {/* Mobile top banner */}
-      <div className="lg:hidden relative h-32 sm:h-40 overflow-hidden flex-shrink-0">
+      <div className="lg:hidden relative h-24 sm:h-32 overflow-hidden flex-shrink-0">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/auth_banner.png')" }} />
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 h-full flex flex-col items-center justify-center">
@@ -66,167 +82,163 @@ export default function Register() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-5 lg:p-6 relative overflow-y-auto">
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] mesh-gradient opacity-10 blur-[100px] rounded-full" />
-        
-        <div className="w-full max-w-md space-y-6 relative z-10 animate-fade-in-up">
+
+        <div className="w-full max-w-md space-y-4 relative z-10 py-2 animate-fade-in-up">
           <div className="text-center lg:text-left">
-            <h1 className="text-4xl font-black text-gray-900  uppercase tracking-tighter font-heading">Secure Access</h1>
-            <div className="mt-3 h-1.5 w-16 bg-rose-500 rounded-full mx-auto lg:mx-0 shadow-[0_0_20px_rgba(244,63,94,0.3)]" />
-            <p className="mt-4 text-[10px] text-gray-400  font-black uppercase tracking-[0.3em] font-heading">New Boutique Membership</p>
+            <h1 className="text-3xl lg:text-4xl font-black text-gray-900 uppercase tracking-tighter font-heading">Join Us</h1>
+            <div className="mt-2 h-1.5 w-16 bg-rose-500 rounded-full mx-auto lg:mx-0 shadow-[0_0_20px_rgba(244,63,94,0.3)]" />
+            <p className="mt-2 text-[10px] text-gray-400 font-black uppercase tracking-[0.3em] font-heading">New Boutique Membership</p>
           </div>
 
           {error && (
-            <div className="p-6 bg-rose-50 text-rose-500 text-xs font-black uppercase tracking-widest border border-rose-100 rounded-[24px] flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-              <Icons.AlertCircle size={20} strokeWidth={3} />
+            <div className="p-4 bg-rose-50 text-rose-500 text-xs font-black uppercase tracking-widest border border-rose-100 rounded-[20px] flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+              <Icons.AlertCircle size={18} strokeWidth={3} />
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400  font-heading ml-2">Display Name</label>
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {/* Full Name */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 font-heading ml-2">Display Name</label>
               <div className="group relative">
-                <Icons.User className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={20} />
-                <input 
-                  type="text" 
+                <Icons.User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={17} />
+                <input
+                  type="text"
                   required
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className="w-full bg-gray-50  border-none rounded-[32px] py-4 pl-16 pr-8 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  className="w-full bg-gray-50 border-none rounded-[28px] py-3 pl-13 pr-5 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  style={{ paddingLeft: '3rem' }}
                   placeholder="John Doe"
                 />
               </div>
             </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400  font-heading ml-2">Member Email</label>
+            {/* Email */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 font-heading ml-2">Member Email</label>
               <div className="group relative">
-                <Icons.Mail className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={20} />
-                <input 
-                  type="email" 
+                <Icons.Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={17} />
+                <input
+                  type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-gray-50  border-none rounded-[32px] py-4 pl-16 pr-8 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  className="w-full bg-gray-50 border-none rounded-[28px] py-3 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  style={{ paddingLeft: '3rem', paddingRight: '1.25rem' }}
                   placeholder="john@example.com"
                 />
               </div>
             </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400  font-heading ml-2">Mobile Number</label>
+            {/* Phone */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 font-heading ml-2">Mobile Number</label>
               <div className="group relative">
-                <Icons.Smartphone className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={20} />
-                <input 
-                  type="tel" 
+                <Icons.Smartphone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={17} />
+                <input
+                  type="tel"
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-gray-50  border-none rounded-[32px] py-4 pl-16 pr-8 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  className="w-full bg-gray-50 border-none rounded-[28px] py-3 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  style={{ paddingLeft: '3rem', paddingRight: '1.25rem' }}
                   placeholder="9876543210"
                 />
               </div>
             </div>
-            <div className="space-y-3">
-              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400  font-heading ml-2">Security Key</label>
+            {/* Password */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 font-heading ml-2">Security Key</label>
               <div className="group relative">
-                <Icons.Lock className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={20} />
-                <input 
-                  type={showPassword ? "text" : "password"} 
+                <Icons.Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-rose-500 transition-colors" size={17} />
+                <input
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-gray-50  border-none rounded-[32px] py-4 pl-16 pr-14 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  className="w-full bg-gray-50 border-none rounded-[28px] py-3 text-sm font-bold focus:ring-2 focus:ring-rose-500/10 focus:bg-white transition-all outline-none shadow-inner"
+                  style={{ paddingLeft: '3rem', paddingRight: '3rem' }}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-300 hover:text-rose-500 transition-colors p-1"
+                  className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-rose-500 transition-colors p-1"
                 >
-                  {showPassword ? <Icons.EyeOff size={20} /> : <Icons.Eye size={20} />}
+                  {showPassword ? <Icons.EyeOff size={17} /> : <Icons.Eye size={17} />}
                 </button>
               </div>
             </div>
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               disabled={isLoading}
-              className="w-full bg-gray-900 text-white py-4 rounded-[32px] text-[11px] font-black uppercase tracking-[0.4em] shadow-2xl hover:bg-rose-500 hover:-translate-y-2 active:scale-95 transition-all disabled:opacity-50 font-heading"
+              className="w-full bg-gray-900 text-white py-3 rounded-[28px] text-[11px] font-black uppercase tracking-[0.4em] shadow-2xl hover:bg-rose-500 hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 font-heading"
             >
               {isLoading ? 'Creating Membership...' : 'Join the Boutique'}
             </button>
           </form>
 
           {/* Social Logins */}
-          <div className="space-y-8">
+          <div className="space-y-3">
             <div className="relative">
               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-100"></div></div>
-              <div className="relative flex justify-center text-[10px] uppercase font-black font-heading"><span className="bg-white  px-6 text-gray-300 tracking-[0.3em]">Or External Link</span></div>
+              <div className="relative flex justify-center text-[10px] uppercase font-black font-heading"><span className="bg-white px-6 text-gray-300 tracking-[0.3em]">Or External Link</span></div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-center">
-              <div className="flex justify-center sm:justify-start">
-                <GoogleLogin
-                  onSuccess={credentialResponse => {
-                    loginWithGoogle(credentialResponse.credential).then(res => {
-                      if (res.success) navigate('/dashboard');
-                    });
-                  }}
-                  onError={() => {
-                    toast.error('Google Sign-Up failed. Please try again.');
-                  }}
-                  theme="outline"
-                  shape="pill"
-                  size="large"
-                  text="signup_with"
-                  width="100%"
-                />
-              </div>
-
-              {/* Using react-facebook-login for consistent frontend auth handling */}
-              <FacebookLogin
-                appId={import.meta.env.VITE_FACEBOOK_APP_ID || "placeholder_id"}
-                autoLoad={false}
-                fields="name,email,picture"
-                callback={(response) => {
-                  const token = response.accessToken || (import.meta.env.VITE_FACEBOOK_APP_ID === "placeholder_id" ? "mock_token" : null);
-                  
-                  if (token) {
-                    // For registration, we hit the same Auth provider handler
-                    loginWithFacebook(token).then(res => {
-                       if (res.success) navigate('/dashboard');
-                    });
-                  } else {
-                    console.log('Facebook Login Cancelled or Failed');
-                  }
-                }}
-                render={renderProps => (
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      if (import.meta.env.VITE_FACEBOOK_APP_ID === "placeholder_id" || !import.meta.env.VITE_FACEBOOK_APP_ID) {
-                        setTimeout(() => {
-                           loginWithFacebook("mock_token").then(res => {
-                             if (res.success) navigate('/dashboard');
-                           });
-                        }, 1000);
-                      } else {
-                        renderProps.onClick();
-                      }
-                    }}
-                    className="flex items-center justify-center gap-4 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[44px] w-full"
-                  >
-                    <Icons.Facebook size={18} fill="currentColor" />
-                    Facebook
-                  </button>
+            <div className="grid grid-cols-2 gap-3">
+              {/* Google Sign-Up Button */}
+              <button
+                type="button"
+                disabled={isGoogleLoading}
+                onClick={() => handleGoogleLogin()}
+                className="flex items-center justify-center gap-2 bg-white border border-gray-200 hover:border-gray-300 hover:shadow-xl py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-gray-700 transition-all font-heading active:scale-95 h-[40px] w-full disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isGoogleLoading ? (
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-rose-500 rounded-full animate-spin" />
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
                 )}
-              />
+                {isGoogleLoading ? 'Wait...' : 'Google'}
+              </button>
+
+              {/* Facebook Sign-Up Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (typeof window.FB === 'undefined') {
+                    toast.error("Connecting to Facebook... Please try again.");
+                    return;
+                  }
+                  window.FB.login((loginResponse) => {
+                    if (loginResponse.authResponse) {
+                      loginWithFacebook(loginResponse.authResponse.accessToken).then(res => {
+                        if (res.success) navigate('/dashboard', { replace: true });
+                        else toast.error(`Login Error: ${res.error}`);
+                      });
+                    } else {
+                      toast.error("Facebook Login was cancelled.");
+                    }
+                  }, { scope: 'public_profile,email' });
+                }}
+                className="flex items-center justify-center gap-2 bg-gray-50 border border-transparent py-2.5 rounded-[28px] text-[10px] font-black uppercase tracking-widest text-[#1877F2] hover:bg-white hover:border-blue-100 hover:shadow-xl transition-all font-heading active:scale-95 h-[40px] w-full"
+              >
+                <Icons.Facebook size={16} fill="currentColor" />
+                Facebook
+              </button>
             </div>
           </div>
 
-          <p className="text-center text-[11px] font-black text-gray-400  group uppercase tracking-[0.2em] font-heading">
+          <p className="text-center text-[11px] font-black text-gray-400 group uppercase tracking-[0.2em] font-heading">
             Already have an account?{' '}
-            <Link to="/login" className="text-gray-900  group-hover:text-rose-500 transition-all border-b-2 border-transparent hover:border-rose-500 pb-1 ml-4 shadow-rose-200">
+            <Link to="/login" className="text-gray-900 group-hover:text-rose-500 transition-all border-b-2 border-transparent hover:border-rose-500 pb-1 ml-3">
               Sign In
             </Link>
           </p>

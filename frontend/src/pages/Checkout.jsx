@@ -535,16 +535,16 @@ export default function Checkout() {
               </div>
             </div>
 
-            <h2 className="text-5xl font-black uppercase tracking-tighter text-gray-900 mb-4">Order Confirmed!</h2>
+            <h2 className="text-2xl sm:text-5xl font-black uppercase tracking-tighter text-gray-900 mb-4 px-4">Order Confirmed!</h2>
             <p className="text-gray-500 max-w-lg mx-auto text-sm font-medium leading-relaxed mb-6">
               Your payment has been successfully processed via the Laces & Soles secure gateway. Thank you for your purchase!
             </p>
 
             {/* Tracking ID Box - Compact */}
-            <div className="bg-[#F8FAFC] border border-gray-200 p-4 rounded-3xl inline-block mb-6 shadow-inner">
+            <div className="bg-[#F8FAFC] border border-gray-200 p-4 rounded-3xl inline-block mb-6 shadow-inner max-w-[90vw]">
                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-2">Tracking ID</p>
-               <div className="flex items-center gap-3 bg-white px-6 py-3 rounded-xl border border-gray-100 shadow-sm">
-                 <p className="text-2xl font-black text-blue-600 tracking-wider select-all">{confirmedOrderId}</p>
+               <div className="flex items-center gap-2 sm:gap-3 bg-white px-4 sm:px-6 py-3 rounded-xl border border-gray-100 shadow-sm">
+                 <p className="text-lg sm:text-2xl font-black text-blue-600 tracking-wider select-all break-all">{confirmedOrderId}</p>
                  <button 
                   onClick={() => {
                     navigator.clipboard.writeText(confirmedOrderId);

@@ -161,19 +161,19 @@ export default function DriverDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-6 font-['Inter']">
+    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 sm:p-6 font-['Inter']">
       <div className="max-w-4xl mx-auto">
-        <header className="flex justify-between items-center mb-12">
+        <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8 sm:mb-12">
           <div>
-            <h1 className="text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-400">
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-rose-500 to-orange-400">
               DRIVER DASHBOARD
             </h1>
             <p className="text-gray-500 text-sm font-medium mt-1">Logged in as {user?.full_name}</p>
           </div>
-          <div className="flex items-center gap-4">
-             <div className="px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-full flex items-center gap-2">
+          <div className="flex items-center gap-3 sm:gap-4">
+             <div className="px-3 sm:px-4 py-2 bg-zinc-900/50 border border-zinc-800 rounded-full flex items-center gap-2">
                 <div className={`size-2 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-zinc-700'}`}></div>
-                <span className="text-xs font-bold uppercase tracking-widest">{isTracking ? 'Live Tracking Active' : 'Offline'}</span>
+                <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest">{isTracking ? 'Live' : 'Offline'}</span>
              </div>
              <button 
                onClick={() => {
@@ -181,9 +181,9 @@ export default function DriverDashboard() {
                  localStorage.removeItem('user');
                  window.location.href = '/login';
                }}
-               className="p-3 bg-zinc-900 border border-zinc-800 rounded-2xl hover:bg-rose-500 hover:border-rose-500 transition-all text-zinc-400 hover:text-white"
+               className="p-2.5 sm:p-3 bg-zinc-900 border border-zinc-800 rounded-2xl hover:bg-rose-500 hover:border-rose-500 transition-all text-zinc-400 hover:text-white"
              >
-               <Icons.LogOut size={20} />
+               <Icons.LogOut size={18} />
              </button>
           </div>
         </header>

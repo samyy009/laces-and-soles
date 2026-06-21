@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import * as Icons from 'lucide-react';
 import content from '../content.json';
@@ -18,21 +18,34 @@ export default function Navbar() {
 
   // Easter egg: 7 clicks on logo to open admin login
   const [clickCount, setClickCount] = useState(0);
+  const clickTimerRef = useRef(null);
+  
   const handleLogoClick = (e) => {
     e.preventDefault();
     const newCount = clickCount + 1;
-    setClickCount(newCount);
     
-    if (newCount === 7) {
+    // Clear previous reset timer
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+    
+    if (newCount >= 7) {
+      // 7th click: go to admin login
       navigate('/admin-login');
       setClickCount(0);
-    } else {
-      // Navigate to home immediately if not the 7th click
+      clickTimerRef.current = null;
+    } else if (newCount === 1) {
+      // First click: navigate home, start counting
       navigate('/');
-      
-      // Reset counter if they stop clicking
-      setTimeout(() => {
+      setClickCount(newCount);
+      clickTimerRef.current = setTimeout(() => {
         setClickCount(0);
+        clickTimerRef.current = null;
+      }, 3000);
+    } else {
+      // Clicks 2-6: silently count, don't navigate
+      setClickCount(newCount);
+      clickTimerRef.current = setTimeout(() => {
+        setClickCount(0);
+        clickTimerRef.current = null;
       }, 3000);
     }
   };

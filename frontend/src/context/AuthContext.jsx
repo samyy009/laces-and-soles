@@ -97,6 +97,26 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     }
   };
 
+  const loginWithGoogleToken = async (access_token) => {
+    try {
+      const res = await axios.post(`${API}/api/google-login-token`, { access_token });
+      const { user: userData, token: jwtToken, message } = res.data;
+      
+      setUser(userData);
+      setToken(jwtToken);
+      Cookies.set('token', jwtToken, { expires: 7 });
+      localStorage.setItem('token', jwtToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      axios.defaults.headers.common['Authorization'] = `Bearer ${jwtToken}`;
+      toast.success(message);
+      return { success: true };
+    } catch (err) {
+      const msg = err.response?.data?.error || 'Google Login failed';
+      toast.error(msg);
+      return { success: false, error: msg };
+    }
+  };
+
   const loginWithFacebook = async (accessToken) => {
     try {
       const res = await axios.post(`${API}/api/facebook-login`, { accessToken });
@@ -123,7 +143,7 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading, loginWithGoogle, loginWithFacebook, updateUser }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, loginWithGoogle, loginWithGoogleToken, loginWithFacebook, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
