@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 # Add parent dir to path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from models import User, Product, Coupon, NewsletterSubscriber
+from models import User, Product, Coupon, NewsletterSubscriber, Order, OrderItem, Review, EmailLog
 
 load_dotenv()
 
@@ -152,7 +152,134 @@ for ls in local_subscribers:
         ps.created_at = ls.created_at
         neon_session.add(ps)
 
-# 6. Commit Transactions
+# 6. Sync Orders
+print("\n--- Syncing Orders ---")
+local_orders = local_session.query(Order).all()
+print(f"Found {len(local_orders)} orders locally.")
+
+for lo in local_orders:
+    po = neon_session.query(Order).filter_by(id=lo.id).first()
+    if not po:
+        print(f"Creating order in production: ID {lo.id} for User {lo.user_id}")
+        po = Order()
+        po.id = lo.id
+        po.user_id = lo.user_id
+        po.total_amount = lo.total_amount
+        po.status = lo.status
+        po.driver_id = lo.driver_id
+        po.driver_lat = lo.driver_lat
+        po.driver_lng = lo.driver_lng
+        po.shipping_address = lo.shipping_address
+        po.pincode = lo.pincode
+        po.tracking_id = lo.tracking_id
+        po.payment_method = lo.payment_method
+        po.distance_km = lo.distance_km
+        po.delivery_otp = lo.delivery_otp
+        po.is_otp_verified = lo.is_otp_verified
+        po.failure_reason = lo.failure_reason
+        po.return_reason = lo.return_reason
+        po.cancellation_reason = lo.cancellation_reason
+        po.created_at = lo.created_at
+        neon_session.add(po)
+    else:
+        print(f"Updating order in production: ID {lo.id}")
+        po.user_id = lo.user_id
+        po.total_amount = lo.total_amount
+        po.status = lo.status
+        po.driver_id = lo.driver_id
+        po.driver_lat = lo.driver_lat
+        po.driver_lng = lo.driver_lng
+        po.shipping_address = lo.shipping_address
+        po.pincode = lo.pincode
+        po.tracking_id = lo.tracking_id
+        po.payment_method = lo.payment_method
+        po.distance_km = lo.distance_km
+        po.delivery_otp = lo.delivery_otp
+        po.is_otp_verified = lo.is_otp_verified
+        po.failure_reason = lo.failure_reason
+        po.return_reason = lo.return_reason
+        po.cancellation_reason = lo.cancellation_reason
+        po.created_at = lo.created_at
+
+# 7. Sync Order Items
+print("\n--- Syncing Order Items ---")
+local_items = local_session.query(OrderItem).all()
+print(f"Found {len(local_items)} order items locally.")
+
+for li in local_items:
+    pi = neon_session.query(OrderItem).filter_by(id=li.id).first()
+    if not pi:
+        print(f"Creating order item in production: ID {li.id} for Order {li.order_id}")
+        pi = OrderItem()
+        pi.id = li.id
+        pi.order_id = li.order_id
+        pi.product_id = li.product_id
+        pi.quantity = li.quantity
+        pi.price = li.price
+        neon_session.add(pi)
+    else:
+        print(f"Updating order item in production: ID {li.id}")
+        pi.order_id = li.order_id
+        pi.product_id = li.product_id
+        pi.quantity = li.quantity
+        pi.price = li.price
+
+# 8. Sync Reviews
+print("\n--- Syncing Reviews ---")
+local_reviews = local_session.query(Review).all()
+print(f"Found {len(local_reviews)} reviews locally.")
+
+for lr in local_reviews:
+    pr = neon_session.query(Review).filter_by(id=lr.id).first()
+    if not pr:
+        print(f"Creating review in production: ID {lr.id} by User {lr.user_id}")
+        pr = Review()
+        pr.id = lr.id
+        pr.user_id = lr.user_id
+        pr.product_id = lr.product_id
+        pr.rating = lr.rating
+        pr.comment = lr.comment
+        pr.created_at = lr.created_at
+        neon_session.add(pr)
+    else:
+        print(f"Updating review in production: ID {lr.id}")
+        pr.user_id = lr.user_id
+        pr.product_id = lr.product_id
+        pr.rating = lr.rating
+        pr.comment = lr.comment
+        pr.created_at = lr.created_at
+
+# 9. Sync Email Logs
+print("\n--- Syncing Email Logs ---")
+try:
+    local_logs = local_session.query(EmailLog).all()
+    print(f"Found {len(local_logs)} email logs locally.")
+
+    for ll in local_logs:
+        pl = neon_session.query(EmailLog).filter_by(id=ll.id).first()
+        if not pl:
+            print(f"Creating email log in production: ID {ll.id}")
+            pl = EmailLog()
+            pl.id = ll.id
+            pl.recipient = ll.recipient
+            pl.subject = ll.subject
+            pl.email_type = ll.email_type
+            pl.status = ll.status
+            pl.error_msg = ll.error_msg
+            pl.created_at = ll.created_at
+            neon_session.add(pl)
+        else:
+            print(f"Updating email log in production: ID {ll.id}")
+            pl.recipient = ll.recipient
+            pl.subject = ll.subject
+            pl.email_type = ll.email_type
+            pl.status = ll.status
+            pl.error_msg = ll.error_msg
+            pl.created_at = ll.created_at
+except Exception as e:
+    print(f"Skipping email logs sync (table might not exist locally): {e}")
+
+# 10. Commit Transactions
 try:
     print("\nSaving changes to Neon production database...")
     neon_session.commit()

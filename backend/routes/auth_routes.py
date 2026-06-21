@@ -88,6 +88,50 @@ def google_login():
     except Exception as e:
         return jsonify({'error': f'Authentication Error: {str(e)}'}), 500
 
+@auth_bp.route('/api/google-login-token', methods=['POST'])
+@limiter.limit("10 per minute")
+def google_login_token():
+    """Accepts a Google OAuth2 access_token (from useGoogleLogin hook) and fetches user info."""
+    try:
+        data = request.get_json()
+        access_token = data.get('access_token')
+        
+        if not access_token:
+            return jsonify({'error': 'Access token is required'}), 400
+
+        # Fetch user info from Google's userinfo endpoint
+        userinfo_res = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10
+        )
+        
+        if userinfo_res.status_code != 200:
+            return jsonify({'error': 'Invalid Google access token'}), 401
+        
+        userinfo = userinfo_res.json()
+        email = userinfo.get('email')
+        full_name = userinfo.get('name', 'Google User')
+        
+        if not email:
+            return jsonify({'error': 'Could not retrieve email from Google'}), 400
+        
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            user = User(
+                full_name=full_name,  # type: ignore[call-arg]
+                email=email,  # type: ignore[call-arg]
+                password_hash=generate_password_hash(os.urandom(24).hex()),  # type: ignore[call-arg]
+                role='user'  # type: ignore[call-arg]
+            )
+            db.session.add(user)
+            db.session.commit()
+        
+        jwt_token = create_access_token(identity=str(user.id))
+        return jsonify({'message': 'Google Login successful!', 'token': jwt_token, 'user': user.to_dict()}), 200
+    except Exception as e:
+        return jsonify({'error': f'Authentication Error: {str(e)}'}), 500
+
 @auth_bp.route('/api/facebook-login', methods=['POST'])
 @limiter.limit("10 per minute")
 def facebook_login():
