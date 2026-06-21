@@ -87,7 +87,7 @@ export default function Navbar() {
         </div>
 
         {/* ─── Desktop navigation menu */}
-        <nav className="hidden xl:flex items-center gap-4 2xl:gap-7 flex-1 justify-center min-w-0 px-2">
+        <nav className="hidden lg:flex items-center gap-2 lg:gap-4 2xl:gap-7 flex-1 justify-center min-w-0 px-2">
           {content.header.menu.map((item) => (
             <NavLink
               key={item.label}
@@ -134,7 +134,7 @@ export default function Navbar() {
         </nav>
 
         {/* ─── Action icons & Mobile Menu ─── */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 xl:gap-4 2xl:gap-5 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-4 2xl:gap-5 shrink-0">
 
           <button 
             onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
@@ -183,7 +183,7 @@ export default function Navbar() {
 
           {/* ─── Mobile menu toggle button */}
           <button
-            className="xl:hidden rounded-xl bg-gray-900 p-1.5 sm:p-2.5 text-white shadow-xl transition-all hover:bg-rose-500 active:scale-90"
+            className="lg:hidden rounded-xl bg-gray-900 p-1.5 sm:p-2.5 text-white shadow-xl transition-all hover:bg-rose-500 active:scale-90"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
           >
