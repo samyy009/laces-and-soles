@@ -9,6 +9,7 @@ from extensions import db, socketio, razorpay_client
 from models import Order, OrderItem, CartItem, Product, User, WishlistItem, Coupon
 from services.email_service import send_order_confirmation_email
 from services.payment_service import verify_razorpay_signature
+from sqlalchemy.orm import joinedload, subqueryload
 
 logger = logging.getLogger(__name__)
 order_bp = Blueprint('orders', __name__)
@@ -40,6 +41,32 @@ def handle_cart():
             CartItem.query.filter_by(user_id=user_id).delete()
         db.session.commit()
         return jsonify({'message': 'Cart updated'}), 200
+
+@order_bp.route('/api/cart/bulk', methods=['POST'])
+@jwt_required()
+def bulk_sync_cart():
+    user_id = int(get_jwt_identity())
+    data = request.get_json() or {}
+    items = data.get('items', [])
+    if not isinstance(items, list):
+        return jsonify({'error': 'Items must be a list'}), 400
+        
+    for item in items:
+        product_id = item.get('product_id')
+        quantity = item.get('quantity', 1)
+        if not product_id:
+            continue
+        existing = CartItem.query.filter_by(user_id=user_id, product_id=product_id).first()
+        if existing:
+            existing.quantity += quantity
+        else:
+            db.session.add(CartItem(user_id=user_id, product_id=product_id, quantity=quantity))  # type: ignore[call-arg]
+            
+    db.session.commit()
+    
+    # Return updated cart
+    cart_items = CartItem.query.filter_by(user_id=user_id).all()
+    return jsonify({'message': 'Cart synced successfully', 'cart': [item.to_dict() for item in cart_items]}), 200
 
 @order_bp.route('/api/wishlist', methods=['GET', 'POST', 'DELETE'])
 @jwt_required()
@@ -178,7 +205,11 @@ def handle_orders():
     user_id = int(get_jwt_identity())
     user = db.session.get(User, user_id)
     if request.method == 'GET':
-        orders = Order.query.filter_by(user_id=user_id).order_by(Order.created_at.desc()).all()
+        orders = Order.query.filter_by(user_id=user_id).options(
+            joinedload(Order.customer),
+            joinedload(Order.driver),
+            subqueryload(Order.items).joinedload(OrderItem.product)
+        ).order_by(Order.created_at.desc()).all()
         return jsonify({'orders': [o.to_dict() for o in orders]}), 200
     elif request.method == 'POST':
         cart_items = CartItem.query.filter_by(user_id=user_id).all()
@@ -360,7 +391,11 @@ def track_order(tracking_id):
     if not tracking_id.startswith('L&S'):
         return jsonify({'error': 'Invalid Tracking ID format.'}), 400
     
-    order = Order.query.filter_by(tracking_id=tracking_id).first()
+    order = Order.query.filter_by(tracking_id=tracking_id).options(
+        joinedload(Order.customer),
+        joinedload(Order.driver),
+        subqueryload(Order.items).joinedload(OrderItem.product)
+    ).first()
     if not order: 
         return jsonify({'error': 'Tracking ID not found.'}), 404
     

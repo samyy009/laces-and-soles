@@ -11,6 +11,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 from extensions import db, socketio
 from models import User, Product, Order, OrderItem, Coupon
+from sqlalchemy.orm import joinedload, subqueryload
 
 logger = logging.getLogger(__name__)
 admin_bp = Blueprint('admin', __name__)
@@ -45,19 +46,47 @@ def get_metrics():
     daily_stats = []
     now = datetime.now()
     if period == '7d':
+        start_date = (now - timedelta(days=6)).date()
+        results = db.session.query(
+            db.func.date(Order.created_at).label('order_date'),
+            db.func.sum(Order.total_amount).label('rev')
+        ).filter(db.func.date(Order.created_at) >= start_date).group_by(db.func.date(Order.created_at)).all()
+        
+        rev_map_str = {}
+        for r in results:
+            if r.order_date is not None:
+                k = r.order_date.strftime('%Y-%m-%d') if not isinstance(r.order_date, str) else r.order_date
+                rev_map_str[k] = r.rev
+                
         for i in range(6, -1, -1):
             day = now - timedelta(days=i)
             day_str = day.strftime('%a')
-            rev = db.session.query(db.func.sum(Order.total_amount)).filter(db.func.date(Order.created_at) == day.date()).scalar() or 0.0
+            day_key = day.strftime('%Y-%m-%d')
+            rev = rev_map_str.get(day_key, 0.0) or 0.0
             daily_stats.append({'name': day_str, 'revenue': float(rev)})
     elif period == '6m':
+        start_date = (now.replace(day=1) - timedelta(days=5*30)).replace(day=1).date()
+        results = db.session.query(
+            db.func.extract('month', Order.created_at).label('m'),
+            db.func.extract('year', Order.created_at).label('y'),
+            db.func.sum(Order.total_amount).label('rev')
+        ).filter(db.func.date(Order.created_at) >= start_date).group_by(
+            db.func.extract('year', Order.created_at),
+            db.func.extract('month', Order.created_at)
+        ).all()
+        
+        rev_map = {(int(r.y), int(r.m)): r.rev for r in results if r.y is not None and r.m is not None}
         for i in range(5, -1, -1):
-            target_date = (now.replace(day=1) - timedelta(days=i*30)).replace(day=1)
-            month_str = target_date.strftime('%b')
-            rev = db.session.query(db.func.sum(Order.total_amount))\
-                .filter(db.func.extract('month', Order.created_at) == target_date.month)\
-                .filter(db.func.extract('year', Order.created_at) == target_date.year)\
-                .scalar() or 0.0
+            m_idx = now.month - i
+            y_offset = 0
+            while m_idx <= 0:
+                m_idx += 12
+                y_offset += 1
+            target_year = now.year - y_offset
+            target_month = m_idx
+            target_dt = datetime(target_year, target_month, 1)
+            month_str = target_dt.strftime('%b')
+            rev = rev_map.get((target_year, target_month), 0.0) or 0.0
             daily_stats.append({'name': month_str, 'revenue': float(rev)})
 
     # 2. Top Selling Products
@@ -79,7 +108,7 @@ def get_metrics():
     category_data = [{'name': cat.capitalize(), 'value': count} for cat, count in categories]
 
     # 4. Recent Activity Feed
-    recent_orders = Order.query.order_by(Order.created_at.desc()).limit(5).all()
+    recent_orders = Order.query.options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(5).all()
     activity_feed = [{
         'id': o.id,
         'customer': o.customer.full_name if o.customer else 'Guest',
@@ -105,7 +134,11 @@ def get_admin_orders():
     user = db.session.get(User, int(get_jwt_identity()))
     if not user or user.role != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
-    orders = Order.query.order_by(Order.created_at.desc()).all()
+    orders = Order.query.options(
+        joinedload(Order.customer),
+        joinedload(Order.driver),
+        subqueryload(Order.items).joinedload(OrderItem.product)
+    ).order_by(Order.created_at.desc()).all()
     return jsonify({'orders': [o.to_dict() for o in orders]}), 200
 
 @admin_bp.route('/api/admin/orders/flash-approve', methods=['POST'])
@@ -621,18 +654,188 @@ def get_email_stats():
     if not user or user.role != 'admin':
         return jsonify({'error': 'Unauthorized'}), 403
 
-    total_sent   = EmailLog.query.filter_by(status='sent').count()
-    total_failed = EmailLog.query.filter_by(status='failed').count()
+    results = db.session.query(
+        EmailLog.email_type,
+        EmailLog.status,
+        db.func.count(EmailLog.id)
+    ).group_by(EmailLog.email_type, EmailLog.status).all()
 
-    by_type = {}
-    for t in ['otp', 'order', 'delivery_otp', 'newsletter']:
-        by_type[t] = {
-            'sent':   EmailLog.query.filter_by(email_type=t, status='sent').count(),
-            'failed': EmailLog.query.filter_by(email_type=t, status='failed').count(),
-        }
+    by_type = {t: {'sent': 0, 'failed': 0} for t in ['otp', 'order', 'delivery_otp', 'newsletter']}
+    total_sent = 0
+    total_failed = 0
+    for etype, estatus, count in results:
+        if estatus == 'sent':
+            total_sent += count
+        elif estatus == 'failed':
+            total_failed += count
+        if etype in by_type and estatus in ['sent', 'failed']:
+            by_type[etype][estatus] = count
 
     return jsonify({
         'total_sent': total_sent,
         'total_failed': total_failed,
         'by_type': by_type
+    }), 200
+
+
+@admin_bp.route('/api/admin/dashboard-all', methods=['GET'])
+@jwt_required()
+def get_dashboard_all():
+    user = db.session.get(User, int(get_jwt_identity()))
+    if not user or user.role != 'admin':
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    period = request.args.get('period', '7d')
+    
+    # 1. Metrics (optimized chart queries)
+    total_users = User.query.count()
+    total_products = Product.query.count()
+    total_orders = Order.query.count()
+    total_revenue = db.session.query(db.func.sum(Order.total_amount)).scalar() or 0.0
+    
+    # Chart Data
+    daily_stats = []
+    now = datetime.now()
+    if period == '7d':
+        start_date = (now - timedelta(days=6)).date()
+        results = db.session.query(
+            db.func.date(Order.created_at).label('order_date'),
+            db.func.sum(Order.total_amount).label('rev')
+        ).filter(db.func.date(Order.created_at) >= start_date).group_by(db.func.date(Order.created_at)).all()
+        
+        rev_map_str = {}
+        for r in results:
+            if r.order_date is not None:
+                k = r.order_date.strftime('%Y-%m-%d') if not isinstance(r.order_date, str) else r.order_date
+                rev_map_str[k] = r.rev
+                
+        for i in range(6, -1, -1):
+            day = now - timedelta(days=i)
+            day_str = day.strftime('%a')
+            day_key = day.strftime('%Y-%m-%d')
+            rev = rev_map_str.get(day_key, 0.0) or 0.0
+            daily_stats.append({'name': day_str, 'revenue': float(rev)})
+    else: # 6m
+        start_date = (now.replace(day=1) - timedelta(days=5*30)).replace(day=1).date()
+        results = db.session.query(
+            db.func.extract('month', Order.created_at).label('m'),
+            db.func.extract('year', Order.created_at).label('y'),
+            db.func.sum(Order.total_amount).label('rev')
+        ).filter(db.func.date(Order.created_at) >= start_date).group_by(
+            db.func.extract('year', Order.created_at),
+            db.func.extract('month', Order.created_at)
+        ).all()
+        
+        rev_map = {(int(r.y), int(r.m)): r.rev for r in results if r.y is not None and r.m is not None}
+        for i in range(5, -1, -1):
+            m_idx = now.month - i
+            y_offset = 0
+            while m_idx <= 0:
+                m_idx += 12
+                y_offset += 1
+            target_year = now.year - y_offset
+            target_month = m_idx
+            target_dt = datetime(target_year, target_month, 1)
+            month_str = target_dt.strftime('%b')
+            rev = rev_map.get((target_year, target_month), 0.0) or 0.0
+            daily_stats.append({'name': month_str, 'revenue': float(rev)})
+            
+    # Top products
+    top_products = db.session.query(
+        Product.title, 
+        db.func.sum(OrderItem.quantity).label('total_sold')
+    ).join(OrderItem).group_by(Product.id).order_by(db.text('total_sold DESC')).limit(5).all()
+    top_selling_data = [{'name': p.title, 'value': int(p.total_sold)} for p in top_products]
+
+    # Category distribution
+    categories = db.session.query(
+        Product.category, 
+        db.func.count(Order.id)
+    ).join(OrderItem, Product.id == OrderItem.product_id)\
+     .join(Order, OrderItem.order_id == Order.id)\
+     .group_by(Product.category).all()
+    category_data = [{'name': cat.capitalize(), 'value': count} for cat, count in categories]
+
+    # Recent activity
+    recent_orders = Order.query.options(joinedload(Order.customer)).order_by(Order.created_at.desc()).limit(5).all()
+    activity_feed = [{
+        'id': o.id,
+        'customer': o.customer.full_name if o.customer else 'Guest',
+        'amount': o.total_amount,
+        'status': o.status,
+        'time': o.created_at.strftime('%I:%M %p')
+    } for o in recent_orders]
+    
+    metrics = {
+        'total_users': total_users,
+        'total_products': total_products,
+        'total_orders': total_orders,
+        'total_revenue': float(total_revenue),
+        'chart_data': daily_stats,
+        'top_selling': top_selling_data,
+        'category_distribution': category_data,
+        'recent_activity': activity_feed
+    }
+    
+    # 2. Users (filter out deleted ones)
+    users = User.query.filter(~User.role.in_(['deleted_user', 'deleted_driver'])).all()
+    users_list = [u.to_dict() for u in users]
+    
+    # 3. Orders (eager load!)
+    orders = Order.query.options(
+        joinedload(Order.customer),
+        joinedload(Order.driver),
+        subqueryload(Order.items).joinedload(OrderItem.product)
+    ).order_by(Order.created_at.desc()).all()
+    orders_list = [o.to_dict() for o in orders]
+    
+    # 4. Drivers
+    drivers = User.query.filter_by(role='driver').all()
+    drivers_list = [d.to_dict() for d in drivers]
+    
+    # 5. Coupons
+    coupons = Coupon.query.order_by(Coupon.id.desc()).all()
+    coupons_list = [c.to_dict() for c in coupons]
+    
+    # 6. Subscribers
+    subs = NewsletterSubscriber.query.order_by(NewsletterSubscriber.created_at.desc()).all()
+    subscribers_list = [s.to_dict() for s in subs]
+    
+    # 7. Email Logs (first 100)
+    email_logs_q = EmailLog.query.order_by(EmailLog.created_at.desc()).limit(100).all()
+    email_logs_list = [l.to_dict() for l in email_logs_q]
+    
+    # 8. Email Stats
+    email_stats_results = db.session.query(
+        EmailLog.email_type,
+        EmailLog.status,
+        db.func.count(EmailLog.id)
+    ).group_by(EmailLog.email_type, EmailLog.status).all()
+    
+    by_type = {t: {'sent': 0, 'failed': 0} for t in ['otp', 'order', 'delivery_otp', 'newsletter']}
+    email_total_sent = 0
+    email_total_failed = 0
+    for etype, estatus, ecount in email_stats_results:
+        if estatus == 'sent':
+            email_total_sent += ecount
+        elif estatus == 'failed':
+            email_total_failed += ecount
+        if etype in by_type and estatus in ['sent', 'failed']:
+            by_type[etype][estatus] = ecount
+            
+    email_stats = {
+        'total_sent': email_total_sent,
+        'total_failed': email_total_failed,
+        'by_type': by_type
+    }
+    
+    return jsonify({
+        'metrics': metrics,
+        'users': users_list,
+        'orders': orders_list,
+        'drivers': drivers_list,
+        'coupons': coupons_list,
+        'subscribers': subscribers_list,
+        'email_logs': email_logs_list,
+        'email_stats': email_stats
     }), 200

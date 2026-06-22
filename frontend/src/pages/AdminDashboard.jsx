@@ -79,26 +79,25 @@ export default function AdminDashboard() {
 
   const fetchAllData = () => {
     const h = authHeaders();
-    fetchMetrics();
-    fetch(`${API}/api/admin/orders`, { headers: h }).then(r => r.json()).then(d => setOrders(d.orders || [])).catch(() => {});
-    fetch(`${API}/api/admin/users`, { headers: h }).then(r => r.json()).then(d => setUsers(d.users || [])).catch(() => {});
-    fetch(`${API}/api/admin/subscribers`, { headers: h }).then(r => r.json()).then(d => setSubscribers(d.subscribers || [])).catch(() => {});
-    fetchEmailLogs();
-    setLastRefresh(new Date());
+    fetch(`${API}/api/admin/dashboard-all?period=${selectedPeriod}`, { headers: h })
+      .then(res => res.json())
+      .then(data => {
+        if (data.metrics) setMetrics(data.metrics);
+        if (data.users) setUsers(data.users);
+        if (data.orders) setOrders(data.orders);
+        if (data.drivers) setDrivers(data.drivers);
+        if (data.coupons) setCoupons(data.coupons);
+        if (data.subscribers) setSubscribers(data.subscribers);
+        if (data.email_logs) setEmailLogs(data.email_logs);
+        if (data.email_stats) setEmailStats(data.email_stats);
+        setLastRefresh(new Date());
+      })
+      .catch((err) => console.error("Failed to load dashboard all data:", err));
   };
 
   useEffect(() => {
     if (user?.role === 'admin') {
-      const h = authHeaders();
-
-      fetchMetrics();
-      fetch(`${API}/api/admin/users`, { headers: h }).then(r => r.json()).then(d => setUsers(d.users || []));
-      fetch(`${API}/api/admin/orders`, { headers: h }).then(r => r.json()).then(d => setOrders(d.orders || []));
-      fetch(`${API}/api/admin/drivers`, { headers: h }).then(r => r.json()).then(d => setDrivers(d.drivers || []));
-      fetch(`${API}/api/admin/coupons`, { headers: h }).then(r => r.json()).then(d => setCoupons(d.coupons || []));
-      fetch(`${API}/api/admin/subscribers`, { headers: h }).then(r => r.json()).then(d => setSubscribers(d.subscribers || []));
-      fetchEmailLogs();
-      setLastRefresh(new Date());
+      fetchAllData();
 
       // ── Realtime: poll every 30 seconds ──
       const pollInterval = setInterval(() => {
@@ -110,9 +109,7 @@ export default function AdminDashboard() {
       // ── Socket.io for instant order events ──
       const socket = io(API);
       socket.on('order_placed', () => { fetchAllData(); });
-      socket.on('status_updated', () => {
-        fetch(`${API}/api/admin/orders`, { headers: h }).then(r => r.json()).then(d => setOrders(d.orders || []));
-      });
+      socket.on('status_updated', () => { fetchAllData(); });
 
       return () => { socket.disconnect(); clearInterval(pollInterval); };
     }

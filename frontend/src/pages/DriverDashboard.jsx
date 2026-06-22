@@ -16,6 +16,7 @@ export default function DriverDashboard() {
   const [activeOrderId, setActiveOrderId] = useState(null);
   const socketRef = useRef(null);
   const watchIdRef = useRef(null);
+  const lastWriteTimeRef = useRef(0);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', showInput: false, placeholder: '', defaultValue: '', onConfirm: null });
 
   useEffect(() => {
@@ -83,23 +84,29 @@ export default function DriverDashboard() {
     setActiveOrderId(orderId);
     setIsTracking(true);
     updateStatus(orderId, 'Out for Delivery');
+    lastWriteTimeRef.current = 0; // reset for instant first update
 
     watchIdRef.current = navigator.geolocation.watchPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        // Legacy Socket.IO emit
+        // Broadcast in real-time via Socket.IO (no DB lag)
         socketRef.current.emit('update_driver_location', {
           order_id: orderId,
           lat: latitude,
           lng: longitude
         });
-        // Persist to backend + broadcast via server-side Socket.IO
-        try {
-          await axios.post(`${API}/api/driver/location`, { lat: latitude, lng: longitude }, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-          });
-        } catch (err) {
-          console.warn("Location POST failed:", err.message);
+        
+        // Throttled persistence write to database (every 10 seconds)
+        const now = Date.now();
+        if (now - lastWriteTimeRef.current > 10000) {
+          lastWriteTimeRef.current = now;
+          try {
+            await axios.post(`${API}/api/driver/location`, { lat: latitude, lng: longitude }, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+            });
+          } catch (err) {
+            console.warn("Location POST failed:", err.message);
+          }
         }
       },
       (err) => {
@@ -133,21 +140,28 @@ export default function DriverDashboard() {
 
     toast.info("Simulated GPS Tracking Started!");
     
+    let lastSimWrite = 0;
     const simIntervalId = setInterval(async () => {
       currentLat += 0.0005;
       currentLng += 0.0005;
       
+      // Broadcast real-time Socket.IO immediately
       socketRef.current.emit('update_driver_location', {
         order_id: orderId,
         lat: currentLat,
         lng: currentLng
       });
       
-      try {
-        await axios.post(`${API}/api/driver/location`, { lat: currentLat, lng: currentLng }, {
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-        });
-      } catch (err) {}
+      // Throttled REST DB write (every 10 seconds)
+      const now = Date.now();
+      if (now - lastSimWrite > 10000) {
+        lastSimWrite = now;
+        try {
+          await axios.post(`${API}/api/driver/location`, { lat: currentLat, lng: currentLng }, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+          });
+        } catch (err) {}
+      }
     }, 2000);
     
     // Assign a large number so we can identify it as an interval ID

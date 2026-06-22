@@ -4,9 +4,10 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from extensions import db, socketio
-from models import User, Order
+from models import User, Order, OrderItem
 from services.email_service import send_delivery_otp_email
 from services.sms_service import send_sms_otp
+from sqlalchemy.orm import joinedload, subqueryload
 
 logger = logging.getLogger(__name__)
 driver_bp = Blueprint('driver', __name__)
@@ -19,7 +20,11 @@ def get_driver_orders():
     user = db.session.get(User, driver_id)
     if not user or user.role != 'driver':
         return jsonify({'error': 'Unauthorized'}), 403
-    orders = Order.query.filter_by(driver_id=driver_id).order_by(Order.created_at.desc()).all()
+    orders = Order.query.filter_by(driver_id=driver_id).options(
+        joinedload(Order.customer),
+        joinedload(Order.driver),
+        subqueryload(Order.items).joinedload(OrderItem.product)
+    ).order_by(Order.created_at.desc()).all()
     return jsonify({'orders': [o.to_dict() for o in orders]}), 200
 
 

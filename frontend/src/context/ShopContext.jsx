@@ -144,22 +144,29 @@ export const ShopProvider = ({ children }) => {
       const config = getAuthHeaders();
       
       const syncAndFetchCart = async () => {
-        // 1. If we have local items, sync them to the DB first
-        // We do this BEFORE fetching to ensure we merge
+        // 1. If we have local items, sync them to the DB in a single bulk request
         if (cartItems.length > 0) {
           try {
-            for (const item of cartItems) {
-              await axios.post(`${API}/api/cart`, { 
-                product_id: parseInt(item.id), 
-                quantity: item.quantity 
-              }, config);
+            const itemsToSync = cartItems.map(item => ({
+              product_id: parseInt(item.id),
+              quantity: item.quantity
+            }));
+            const res = await axios.post(`${API}/api/cart/bulk`, { items: itemsToSync }, config);
+            if (res.data.cart) {
+              const formatted = res.data.cart.map(c => ({ 
+                id: c.product.id.toString(), 
+                quantity: c.quantity, 
+                size: '10' 
+              }));
+              setCartItems(formatted);
+              return; // Merged and fetched successfully
             }
           } catch (err) {
-            console.warn("Pre-login cart sync failed:", err);
+            console.warn("Bulk cart sync failed, falling back to fetch:", err);
           }
         }
 
-        // 2. Fetch the final consolidated cart from DB
+        // 2. Fetch the final consolidated cart from DB (fallback or when cart is empty)
         try {
           const res = await axios.get(`${API}/api/cart`, config);
           if (res.data.cart) {
