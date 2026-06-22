@@ -355,6 +355,8 @@ def cancel_order_v2(order_id):
 
 @order_bp.route('/api/track/<string:tracking_id>', methods=['GET'])
 def track_order(tracking_id):
+    # Strip any leading '#' and whitespace
+    tracking_id = tracking_id.lstrip('#').strip()
     if not tracking_id.startswith('L&S'):
         return jsonify({'error': 'Invalid Tracking ID format.'}), 400
     

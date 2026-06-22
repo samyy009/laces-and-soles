@@ -70,7 +70,7 @@ function RecenterMap({ coords }) {
 }
 
 export default function TrackOrder() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { formatImageUrl } = useShop();
@@ -84,6 +84,24 @@ export default function TrackOrder() {
   const [locationPermission, setLocationPermission] = useState('prompt'); // 'prompt', 'granted', 'denied'
   const socketRef = useRef(null);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+  // Extract and normalize the tracking ID from searchParams or URL hash
+  const idParam = searchParams.get('id');
+  const hash = window.location.hash;
+  const hashTrackingId = (hash && hash.toUpperCase().startsWith('#L&S-')) ? hash.slice(1) : '';
+  const cleanIdParam = (idParam ? idParam.trim().replace(/^#/, '') : hashTrackingId).trim();
+
+  // Create references to avoid stale closures in socket events
+  const orderInfoRef = useRef(orderInfo);
+  const cleanIdParamRef = useRef(cleanIdParam);
+
+  useEffect(() => {
+    orderInfoRef.current = orderInfo;
+  }, [orderInfo]);
+
+  useEffect(() => {
+    cleanIdParamRef.current = cleanIdParam;
+  }, [cleanIdParam]);
 
   useEffect(() => {
     if (orderInfo?.shipping_address) {
@@ -109,11 +127,15 @@ export default function TrackOrder() {
       });
     }
 
-    const id = searchParams.get('id');
-    if (id) {
-      setTrackingId(id);
-      fetchOrder(id);
+    if (!cleanIdParam) {
+      setTrackingId('');
+      setOrderInfo(null);
+      setError(null);
+      return;
     }
+
+    setTrackingId(cleanIdParam);
+    fetchOrder(cleanIdParam);
 
     socketRef.current = io(API, {
       transports: ['polling', 'websocket'],
@@ -130,7 +152,6 @@ export default function TrackOrder() {
        setDriverLocations(prev => ({ ...prev, [data.order_id]: [data.lat, data.lng] }));
     });
 
-    // Also handle backend-side driver_location_update (from REST POST)
     socketRef.current.on('driver_location_update', (data) => {
        console.log("Location received (server REST):", data);
        setDriverLocations(prev => ({ ...prev, [data.order_id]: [data.lat, data.lng] }));
@@ -138,15 +159,16 @@ export default function TrackOrder() {
 
     socketRef.current.on('status_updated', (data) => {
        toast.info(`Order status updated to: ${data.status}`);
-       if (orderInfo && orderInfo.items.some(i => i.order_id === data.order_id)) {
-         fetchOrder(trackingId);
+       const latestOrderInfo = orderInfoRef.current;
+       if (latestOrderInfo && latestOrderInfo.items.some(i => i.order_id === data.order_id)) {
+         fetchOrder(cleanIdParamRef.current);
        }
     });
 
     return () => {
       if (socketRef.current) socketRef.current.disconnect();
     };
-  }, [searchParams]);
+  }, [cleanIdParam]);
 
   const requestLocation = () => {
     if (navigator.geolocation) {
@@ -166,11 +188,14 @@ export default function TrackOrder() {
   };
 
   const fetchOrder = async (tid) => {
+    const cleanTid = tid.trim().replace(/^#/, '');
+    if (!cleanTid) return;
+
     setLoading(true);
     setError(null);
     
     try {
-      const res = await axios.get(`${API}/api/track/${tid.toUpperCase()}`);
+      const res = await axios.get(`${API}/api/track/${cleanTid.toUpperCase()}`);
       setOrderInfo(res.data);
       
       if (socketRef.current && res.data.items) {
@@ -200,7 +225,8 @@ export default function TrackOrder() {
   const handleTrack = async (e) => {
     e.preventDefault();
     if (!trackingId.trim()) return;
-    fetchOrder(trackingId);
+    const cleanId = trackingId.trim().replace(/^#/, '');
+    setSearchParams({ id: cleanId });
   };
 
   const statuses = [
