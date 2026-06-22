@@ -207,6 +207,9 @@ export default function Footer() {
             {footer.copyright.textEnd}
           </p>
           <div className="flex items-center gap-6">
+            <Link to="/admin-login" className="text-xs text-gray-600 hover:text-rose-500 transition-colors flex items-center gap-1">
+              <Icons.Shield size={12} /> Admin
+            </Link>
             <Link to="/privacy" className="text-xs text-gray-600 hover:text-white transition-colors">
               Privacy Policy
             </Link>
