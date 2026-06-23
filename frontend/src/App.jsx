@@ -44,7 +44,7 @@ function PageLoader() {
   );
 }
 
-import { useShop } from './context/ShopContext';
+import { useShop, API } from './context/ShopContext';
 
 
 function ScrollToTop() {
@@ -66,6 +66,8 @@ export default function App() {
     document.documentElement.classList.remove('dark');
     localStorage.removeItem('theme');
 
+    // Background pre-warm call to wake up Render + Neon DB immediately
+    fetch(`${API}/api/ping`).catch(() => {});
 
     const handleOpenDesignLab = () => setIsDesignLabOpen(true);
 

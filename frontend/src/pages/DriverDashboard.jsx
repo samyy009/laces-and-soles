@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { io } from 'socket.io-client';
 import * as Icons from 'lucide-react';
@@ -8,10 +9,11 @@ import { useShop, API } from '../context/ShopContext';
 import ConfirmModal from '../components/ConfirmModal';
 
 export default function DriverDashboard() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { formatImageUrl } = useShop();
+  const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [isTracking, setIsTracking] = useState(false);
   const [activeOrderId, setActiveOrderId] = useState(null);
   const socketRef = useRef(null);
@@ -19,32 +21,45 @@ export default function DriverDashboard() {
   const lastWriteTimeRef = useRef(0);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', showInput: false, placeholder: '', defaultValue: '', onConfirm: null });
 
+  // Redirect guest or non-driver users
   useEffect(() => {
-    fetchOrders();
-    // Connect to socket
-    socketRef.current = io(API);
-    
-    socketRef.current.on('connect', () => {
-      console.log("Connected to server socket");
-    });
+    if (!authLoading) {
+      if (!user) {
+        navigate('/login', { replace: true });
+      } else if (user.role !== 'driver') {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [user, authLoading, navigate]);
 
-    socketRef.current.on('connect_error', (err) => {
-      console.error("Socket connection error:", err);
-      toast.error("Real-time connection failed. Live tracking may be disabled.");
-    });
+  useEffect(() => {
+    if (user?.role === 'driver') {
+      fetchOrders(true); // Show spinner only on initial load
+      
+      // Connect to socket
+      socketRef.current = io(API);
+      
+      socketRef.current.on('connect', () => {
+        console.log("Connected to server socket");
+      });
 
-    const interval = setInterval(fetchOrders, 30000); // Auto-refresh every 30s
-    fetchOrders();
+      socketRef.current.on('connect_error', (err) => {
+        console.error("Socket connection error:", err);
+        toast.error("Real-time connection failed. Live tracking may be disabled.");
+      });
 
-    return () => {
-      clearInterval(interval);
-      if (socketRef.current) socketRef.current.disconnect();
-      if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
-    };
-  }, []);
+      const interval = setInterval(() => fetchOrders(false), 30000); // Silent background refresh
 
-  const fetchOrders = async () => {
-    setLoading(true);
+      return () => {
+        clearInterval(interval);
+        if (socketRef.current) socketRef.current.disconnect();
+        if (watchIdRef.current) navigator.geolocation.clearWatch(watchIdRef.current);
+      };
+    }
+  }, [user]);
+
+  const fetchOrders = async (showSpinner = false) => {
+    if (showSpinner) setOrdersLoading(true);
     try {
       const res = await axios.get(`${API}/api/driver/orders`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
@@ -52,8 +67,14 @@ export default function DriverDashboard() {
       setOrders(res.data.orders);
     } catch (err) {
       console.error("Failed to load assigned orders:", err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+         toast.error("Session expired. Please log in again.");
+         localStorage.removeItem('token');
+         localStorage.removeItem('user');
+         window.location.href = '/login';
+      }
     } finally {
-      setLoading(false);
+      if (showSpinner) setOrdersLoading(false);
     }
   };
 
@@ -168,11 +189,15 @@ export default function DriverDashboard() {
     watchIdRef.current = simIntervalId + 10000;
   };
 
-  if (loading) return (
+  if (authLoading) return (
     <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
       <Icons.Loader2 className="animate-spin text-rose-500" size={48} />
     </div>
   );
+
+  if (!user || user.role !== 'driver') {
+    return null; // Prevent layout flashing while redirecting
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white p-4 sm:p-6 font-['Inter']">
@@ -203,7 +228,12 @@ export default function DriverDashboard() {
         </header>
 
         <div className="grid gap-6">
-          {orders.length === 0 ? (
+          {ordersLoading ? (
+            <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-20 text-center flex flex-col items-center justify-center">
+              <Icons.Loader2 className="animate-spin text-rose-500 mb-4" size={48} />
+              <p className="text-zinc-400 font-bold uppercase tracking-wider text-xs">Loading Assigned Deliveries...</p>
+            </div>
+          ) : orders.length === 0 ? (
             <div className="bg-zinc-900/30 border border-zinc-800 rounded-3xl p-20 text-center">
               <Icons.PackageOpen size={64} className="mx-auto text-zinc-700 mb-4" />
               <h2 className="text-xl font-bold text-zinc-400">No active deliveries assigned</h2>

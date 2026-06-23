@@ -16,6 +16,7 @@ export default function UserDashboard() {
   
   const [orders, setOrders] = useState([]);
   const [activeTab, setActiveTab] = useState('orders');
+  const [ordersLoading, setOrdersLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', showInput: false, placeholder: '', defaultValue: '', onConfirm: null });
 
   // Address Form States
@@ -56,13 +57,15 @@ export default function UserDashboard() {
 
   useEffect(() => {
     if (user && activeTab === 'orders') {
+      setOrdersLoading(true);
       axios.get(`${API}/api/orders`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       })
       .then(res => {
         setOrders(res.data.orders || []);
       })
-      .catch(err => console.error("Failed to fetch orders:", err));
+      .catch(err => console.error("Failed to fetch orders:", err))
+      .finally(() => setOrdersLoading(false));
     }
   }, [user, activeTab]);
 
@@ -285,7 +288,12 @@ export default function UserDashboard() {
                 <div>
                    <h2 className="text-base font-black text-gray-900 uppercase tracking-tighter mb-3">Active Shipments</h2>
                    
-                   {orders.filter(o => o.status !== 'Delivered' && !o.status?.includes('Cancelled')).length === 0 ? (
+                   {ordersLoading ? (
+                      <div className="flex flex-col items-center justify-center py-12">
+                         <Icons.Loader2 className="animate-spin text-rose-500 mb-2" size={32} />
+                         <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Loading active shipments...</p>
+                      </div>
+                   ) : orders.filter(o => o.status !== 'Delivered' && !o.status?.includes('Cancelled')).length === 0 ? (
                       <div className="text-center py-4 bg-gray-50 rounded-xl mb-4 border border-dashed border-gray-200">
                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">No active shipments</h3>
                       </div>
@@ -354,7 +362,12 @@ export default function UserDashboard() {
                    )}
 
                    <h2 className="text-base font-black text-gray-900 uppercase tracking-tighter mb-3 mt-5">Past Orders</h2>
-                   {orders.filter(o => ['Delivered', 'Return Requested', 'Returned'].includes(o.status) || o.status?.includes('Cancelled')).length === 0 ? (
+                   {ordersLoading ? (
+                      <div className="flex flex-col items-center justify-center py-12">
+                         <Icons.Loader2 className="animate-spin text-rose-500 mb-2" size={32} />
+                         <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Loading past orders...</p>
+                      </div>
+                   ) : orders.filter(o => ['Delivered', 'Return Requested', 'Returned'].includes(o.status) || o.status?.includes('Cancelled')).length === 0 ? (
                       <div className="text-center py-4 bg-gray-50 rounded-xl border border-dashed border-gray-200">
                          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">No past orders yet</h3>
                       </div>

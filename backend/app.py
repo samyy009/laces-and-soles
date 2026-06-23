@@ -79,7 +79,12 @@ def create_app():
     @app.route('/api/ping')
     def ping():
         """Keepalive endpoint — ping every 14 min to prevent Render cold start."""
-        return jsonify({'status': 'ok', 'message': 'Server is awake'}), 200
+        # Warm up DB connection pool as well
+        try:
+            db.session.execute(db.text('SELECT 1'))
+        except Exception:
+            pass
+        return jsonify({'status': 'ok', 'message': 'Server and Database are awake'}), 200
 
     @app.route('/api/health')
     def health_check():
