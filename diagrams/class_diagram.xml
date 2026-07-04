@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" version="21.6.8" type="device">
+  <diagram id="class-diagram" name="Class Diagram">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="&lt;b&gt;User&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;+ id: Integer [PK]&lt;br/&gt;+ full_name: String&lt;br/&gt;+ email: String&lt;br/&gt;+ role: String&lt;br/&gt;+ phone_number: String&lt;br/&gt;&lt;hr size=&quot;1&quot;/&gt;+ to_dict(): dict&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=8;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="&lt;b&gt;Order&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;+ id: Integer [PK]&lt;br/&gt;+ user_id: Integer [FK]&lt;br/&gt;+ total_amount: Float&lt;br/&gt;+ status: String&lt;br/&gt;+ tracking_id: String&lt;br/&gt;&lt;hr size=&quot;1&quot;/&gt;+ to_dict(): dict&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=8;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="50" width="200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="&lt;b&gt;OrderItem&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;+ id: Integer [PK]&lt;br/&gt;+ order_id: Integer [FK]&lt;br/&gt;+ product_id: Integer [FK]&lt;br/&gt;+ quantity: Integer&lt;br/&gt;+ price: Float&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=8;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="50" width="200" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="&lt;b&gt;Product&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;+ id: Integer [PK]&lt;br/&gt;+ title: String&lt;br/&gt;+ price: Float&lt;br/&gt;+ brand: String&lt;br/&gt;+ stock: Integer&lt;br/&gt;&lt;hr size=&quot;1&quot;/&gt;+ to_dict(): dict&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=8;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="250" width="200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="&lt;b&gt;Review&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;+ id: Integer [PK]&lt;br/&gt;+ user_id: Integer [FK]&lt;br/&gt;+ product_id: Integer [FK]&lt;br/&gt;+ rating: Integer&lt;br/&gt;+ comment: Text&lt;br/&gt;&lt;hr size=&quot;1&quot;/&gt;+ to_dict(): dict&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=8;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="250" width="200" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="101" value="places" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endSize=8;startArrow=none;strokeColor=#4A5568;" edge="1" parent="1" source="2" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="102" value="contains" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endSize=8;startArrow=none;strokeColor=#4A5568;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="103" value="refers to" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endSize=8;startArrow=none;strokeColor=#4A5568;" edge="1" parent="1" source="3" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="104" value="writes" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endSize=8;startArrow=none;strokeColor=#4A5568;" edge="1" parent="1" source="2" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="105" value="appraises" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=open;endSize=8;startArrow=none;strokeColor=#4A5568;" edge="1" parent="1" source="3" target="8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" version="21.6.8" type="device">
+  <diagram id="sequence-diagram" name="Sequence Diagram">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="customer" value="Customer" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#EBF8FF;strokeColor=#2B6CB0;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;strokeWidth=1.5;participant=umlActor;" vertex="1" parent="1">
+          <mxGeometry x="50" y="40" width="100" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend" value="Frontend UI" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#EBF8FF;strokeColor=#2B6CB0;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="240" y="40" width="100" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="backend" value="Backend API" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#EBF8FF;strokeColor=#2B6CB0;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="430" y="40" width="100" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="database" value="Database" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;outlineConnect=0;fillColor=#EBF8FF;strokeColor=#2B6CB0;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;strokeWidth=1.5;" vertex="1" parent="1">
+          <mxGeometry x="620" y="40" width="100" height="360" as="geometry" />
+        </mxCell>
+        <mxCell id="act_frontend" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#EDF2F7;strokeColor=#4A5568;strokeWidth=1.5;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="285" y="110" width="10" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="act_backend" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#EDF2F7;strokeColor=#4A5568;strokeWidth=1.5;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="475" y="140" width="10" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="act_database" value="" style="html=1;points=[];perimeter=orthogonalPerimeter;fillColor=#EDF2F7;strokeColor=#4A5568;strokeWidth=1.5;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="665" y="170" width="10" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="m1" value="1. Click &#x27;Checkout&#x27;" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;" edge="1" parent="1" source="customer" target="act_frontend">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="125" as="sourcePoint" />
+            <mxPoint x="0" y="125" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m2" value="2. POST /api/orders" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;" edge="1" parent="1" source="act_frontend" target="act_backend">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="155" as="sourcePoint" />
+            <mxPoint x="0" y="155" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m3" value="3. Save Order Record" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;" edge="1" parent="1" source="act_backend" target="act_database">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="185" as="sourcePoint" />
+            <mxPoint x="0" y="185" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m4" value="4. Order Saved (Success)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;dashed=1;" edge="1" parent="1" source="act_database" target="act_backend">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="235" as="sourcePoint" />
+            <mxPoint x="0" y="235" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m5" value="5. Order Response (Status/Tracking)" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;dashed=1;" edge="1" parent="1" source="act_backend" target="act_frontend">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="265" as="sourcePoint" />
+            <mxPoint x="0" y="265" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="m6" value="6. Show Order Confirmed" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;dashed=1;" edge="1" parent="1" source="act_frontend" target="customer">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="0" y="295" as="sourcePoint" />
+            <mxPoint x="0" y="295" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

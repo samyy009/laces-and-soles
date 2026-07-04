@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" version="21.6.8" type="device">
+  <diagram id="er-diagram" name="ER Diagram">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="860" pageHeight="460" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="user" value="&lt;table border=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; cellpadding=&quot;5&quot; cellspacing=&quot;0&quot; style=&quot;font-family:Helvetica;font-size:12px;border-collapse:collapse;&quot;&gt;
+  &lt;tr style=&quot;background-color:#2B6CB0;color:#FFFFFF;font-weight:bold;font-size:13px;text-align:center;&quot;&gt;
+    &lt;td colspan=&quot;3&quot; style=&quot;border-bottom:2px solid #1A365D;&quot;&gt;users&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#2B6CB0;width:24px;&quot;&gt;PK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td colspan=&quot;2&quot;&gt;full_name&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(100)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#E53E3E;width:24px;&quot;&gt;UQ&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;email&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(120)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td colspan=&quot;2&quot;&gt;password_hash&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(255)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td colspan=&quot;2&quot;&gt;role&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(20)&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=4;strokeColor=#1A365D;fillColor=#FFFFFF;strokeWidth=1.5;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="order" value="&lt;table border=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; cellpadding=&quot;5&quot; cellspacing=&quot;0&quot; style=&quot;font-family:Helvetica;font-size:12px;border-collapse:collapse;&quot;&gt;
+  &lt;tr style=&quot;background-color:#2B6CB0;color:#FFFFFF;font-weight:bold;font-size:13px;text-align:center;&quot;&gt;
+    &lt;td colspan=&quot;3&quot; style=&quot;border-bottom:2px solid #1A365D;&quot;&gt;orders&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#2B6CB0;width:24px;&quot;&gt;PK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td style=&quot;font-weight:bold;color:#319795;width:24px;&quot;&gt;FK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;user_id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td colspan=&quot;2&quot;&gt;total_amount&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;DECIMAL(10,2)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td colspan=&quot;2&quot;&gt;status&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(50)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#E53E3E;width:24px;&quot;&gt;UQ&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;tracking_id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(50)&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=4;strokeColor=#1A365D;fillColor=#FFFFFF;strokeWidth=1.5;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="50" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="order_item" value="&lt;table border=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; cellpadding=&quot;5&quot; cellspacing=&quot;0&quot; style=&quot;font-family:Helvetica;font-size:12px;border-collapse:collapse;&quot;&gt;
+  &lt;tr style=&quot;background-color:#2B6CB0;color:#FFFFFF;font-weight:bold;font-size:13px;text-align:center;&quot;&gt;
+    &lt;td colspan=&quot;3&quot; style=&quot;border-bottom:2px solid #1A365D;&quot;&gt;order_items&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#2B6CB0;width:24px;&quot;&gt;PK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td style=&quot;font-weight:bold;color:#319795;width:24px;&quot;&gt;FK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;order_id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#319795;width:24px;&quot;&gt;FK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;product_id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td colspan=&quot;2&quot;&gt;quantity&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td colspan=&quot;2&quot;&gt;price&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;DECIMAL(10,2)&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=4;strokeColor=#1A365D;fillColor=#FFFFFF;strokeWidth=1.5;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="50" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="product" value="&lt;table border=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; cellpadding=&quot;5&quot; cellspacing=&quot;0&quot; style=&quot;font-family:Helvetica;font-size:12px;border-collapse:collapse;&quot;&gt;
+  &lt;tr style=&quot;background-color:#2B6CB0;color:#FFFFFF;font-weight:bold;font-size:13px;text-align:center;&quot;&gt;
+    &lt;td colspan=&quot;3&quot; style=&quot;border-bottom:2px solid #1A365D;&quot;&gt;products&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#2B6CB0;width:24px;&quot;&gt;PK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td colspan=&quot;2&quot;&gt;title&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(255)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td colspan=&quot;2&quot;&gt;price&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;DECIMAL(10,2)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td colspan=&quot;2&quot;&gt;brand&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;VARCHAR(100)&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td colspan=&quot;2&quot;&gt;stock&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=4;strokeColor=#1A365D;fillColor=#FFFFFF;strokeWidth=1.5;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="590" y="260" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="review" value="&lt;table border=&quot;0&quot; width=&quot;100%&quot; height=&quot;100%&quot; cellpadding=&quot;5&quot; cellspacing=&quot;0&quot; style=&quot;font-family:Helvetica;font-size:12px;border-collapse:collapse;&quot;&gt;
+  &lt;tr style=&quot;background-color:#2B6CB0;color:#FFFFFF;font-weight:bold;font-size:13px;text-align:center;&quot;&gt;
+    &lt;td colspan=&quot;3&quot; style=&quot;border-bottom:2px solid #1A365D;&quot;&gt;reviews&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#2B6CB0;width:24px;&quot;&gt;PK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td style=&quot;font-weight:bold;color:#319795;width:24px;&quot;&gt;FK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;user_id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td style=&quot;font-weight:bold;color:#319795;width:24px;&quot;&gt;FK&lt;/td&gt;
+    &lt;td style=&quot;font-weight:bold;&quot;&gt;product_id&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr style=&quot;background-color:#F7FAFC;&quot;&gt;
+    &lt;td colspan=&quot;2&quot;&gt;rating&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;INT&lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+    &lt;td colspan=&quot;2&quot;&gt;comment&lt;/td&gt;
+    &lt;td style=&quot;color:#718096;text-align:right;&quot;&gt;TEXT&lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/table&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=1;arcSize=4;strokeColor=#1A365D;fillColor=#FFFFFF;strokeWidth=1.5;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="260" width="220" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="r1" value="places" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;html=1;strokeColor=#4A5568;strokeWidth=1.5;startArrow=ERone;endArrow=ERmany;startSize=10;endSize=10;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;fontColor=#2D3748;fontFamily=Helvetica;" edge="1" parent="1" source="user" target="order">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r2" value="contains" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;html=1;strokeColor=#4A5568;strokeWidth=1.5;startArrow=ERone;endArrow=ERmany;startSize=10;endSize=10;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;fontColor=#2D3748;fontFamily=Helvetica;" edge="1" parent="1" source="order" target="order_item">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r3" value="referred" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;html=1;strokeColor=#4A5568;strokeWidth=1.5;startArrow=ERone;endArrow=ERmany;startSize=10;endSize=10;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;fontColor=#2D3748;fontFamily=Helvetica;" edge="1" parent="1" source="product" target="order_item">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r4" value="writes" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;html=1;strokeColor=#4A5568;strokeWidth=1.5;startArrow=ERone;endArrow=ERmany;startSize=10;endSize=10;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;fontColor=#2D3748;fontFamily=Helvetica;" edge="1" parent="1" source="user" target="review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="r5" value="reviewed" style="edgeStyle=orthogonalEdgeStyle;fontSize=11;html=1;strokeColor=#4A5568;strokeWidth=1.5;startArrow=ERone;endArrow=ERmany;startSize=10;endSize=10;sourcePerimeterSpacing=4;targetPerimeterSpacing=4;fontColor=#2D3748;fontFamily=Helvetica;" edge="1" parent="1" source="product" target="review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

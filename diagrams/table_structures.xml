@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" version="21.6.8" type="device">
+  <diagram id="table-structures" name="Table Structures">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="t_users" value="&lt;b&gt;Table: users&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt; id : INT [PK, NOT NULL]&lt;br/&gt; full_name : VARCHAR(100) [NN]&lt;br/&gt; email : VARCHAR(120) [UQ, NN]&lt;br/&gt; password_hash : VARCHAR(255) [NN]&lt;br/&gt; role : VARCHAR(20) [DFT &#x27;user&#x27;]&lt;br/&gt; phone_number : VARCHAR(20)&lt;br/&gt; address : TEXT&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=0;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="50" y="50" width="220" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="t_orders" value="&lt;b&gt;Table: orders&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt; id : INT [PK, NOT NULL]&lt;br/&gt; user_id : INT [FK -&gt; users.id]&lt;br/&gt; total_amount : DOUBLE [NN]&lt;br/&gt; status : VARCHAR(50) [DFT &#x27;Pnd&#x27;]&lt;br/&gt; tracking_id : VARCHAR(50) [UQ]&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=0;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="50" width="220" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="t_order_items" value="&lt;b&gt;Table: order_items&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt; id : INT [PK, NOT NULL]&lt;br/&gt; order_id : INT [FK -&gt; orders.id]&lt;br/&gt; product_id : INT [FK -&gt; prod.id]&lt;br/&gt; quantity : INT [DFT 1]&lt;br/&gt; price : DOUBLE [NN]&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=0;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="50" width="220" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="t_products" value="&lt;b&gt;Table: products&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt; id : INT [PK, NOT NULL]&lt;br/&gt; title : VARCHAR(255) [NN]&lt;br/&gt; price : DOUBLE [NN]&lt;br/&gt; brand : VARCHAR(100) [NN]&lt;br/&gt; stock : INT [DFT 10]&lt;br/&gt; category : VARCHAR(50) [NN]&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=0;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="550" y="260" width="220" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="t_reviews" value="&lt;b&gt;Table: reviews&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt; id : INT [PK, NOT NULL]&lt;br/&gt; user_id : INT [FK -&gt; users.id]&lt;br/&gt; product_id : INT [FK -&gt; prod.id]&lt;br/&gt; rating : INT [NN]&lt;br/&gt; comment : TEXT&lt;br/&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;rounded=0;strokeColor=#4A5568;fillColor=#EDF2F7;fontColor=#2D3748;fontSize=12;fontFamily=Helvetica;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="300" y="260" width="220" height="160" as="geometry" />
+        </mxCell>
+        <mxCell id="fk1" value="FK (user_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;startArrow=none;strokeColor=#4A5568;fontSize=11;fontFamily=Helvetica;fontColor=#2D3748;" edge="1" parent="1" source="t_users" target="t_orders">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk2" value="FK (order_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;startArrow=none;strokeColor=#4A5568;fontSize=11;fontFamily=Helvetica;fontColor=#2D3748;" edge="1" parent="1" source="t_orders" target="t_order_items">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk3" value="FK (product_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;startArrow=none;strokeColor=#4A5568;fontSize=11;fontFamily=Helvetica;fontColor=#2D3748;" edge="1" parent="1" source="t_products" target="t_order_items">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk4" value="FK (user_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;startArrow=none;strokeColor=#4A5568;fontSize=11;fontFamily=Helvetica;fontColor=#2D3748;" edge="1" parent="1" source="t_users" target="t_reviews">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk5" value="FK (product_id)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endArrow=classic;endSize=8;startArrow=none;strokeColor=#4A5568;fontSize=11;fontFamily=Helvetica;fontColor=#2D3748;" edge="1" parent="1" source="t_products" target="t_reviews">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
