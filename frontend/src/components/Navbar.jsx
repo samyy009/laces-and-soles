@@ -5,6 +5,8 @@ import content from '../content.json';
 import { useShop } from '../context/ShopContext';
 import { useAuth } from '../context/AuthContext';
 
+import { toast } from 'react-toastify';
+
 export default function Navbar() {
   const { wishlistItems, getCartCount, getCartTotal, setIsCartOpen } = useShop();
   const { user } = useAuth();
@@ -17,37 +19,34 @@ export default function Navbar() {
   const location = useLocation();
 
   // Easter egg: 7 clicks on logo to open admin login
-  const [clickCount, setClickCount] = useState(0);
+  const clickCountRef = useRef(0);
   const clickTimerRef = useRef(null);
   
   const handleLogoClick = (e) => {
-    e.preventDefault();
-    const newCount = clickCount + 1;
+    if (e) e.preventDefault();
     
-    // Clear previous reset timer
+    clickCountRef.current += 1;
+    const currentCount = clickCountRef.current;
+    
     if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
     
-    if (newCount >= 7) {
-      // 7th click: go to admin login
-      navigate('/admin-login');
-      setClickCount(0);
+    if (currentCount >= 7) {
+      clickCountRef.current = 0;
       clickTimerRef.current = null;
-    } else if (newCount === 1) {
-      // First click: navigate home, start counting
-      navigate('/');
-      setClickCount(newCount);
-      clickTimerRef.current = setTimeout(() => {
-        setClickCount(0);
-        clickTimerRef.current = null;
-      }, 3000);
-    } else {
-      // Clicks 2-6: silently count, don't navigate
-      setClickCount(newCount);
-      clickTimerRef.current = setTimeout(() => {
-        setClickCount(0);
-        clickTimerRef.current = null;
-      }, 3000);
+      toast.info('🔑 Unlocking Admin Portal...', { autoClose: 2000 });
+      const targetPath = user?.role === 'admin' ? '/admin' : '/admin-login';
+      navigate(targetPath);
+      return;
     }
+
+    if (currentCount === 1 && location.pathname !== '/') {
+      navigate('/');
+    }
+
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+      clickTimerRef.current = null;
+    }, 2500);
   };
 
   const handleSearchSubmit = (e) => {
@@ -216,12 +215,18 @@ export default function Navbar() {
         </button>
 
         {/* ─── Mobile logo */}
-        <Link to="/" className="text-2xl font-bold text-black " onClick={() => setMenuOpen(false)}>
+        <div 
+          onClick={(e) => {
+            setMenuOpen(false);
+            handleLogoClick(e);
+          }}
+          className="cursor-pointer select-none text-2xl font-bold text-black"
+        >
           <span className="text-rose-500">{content.header.logo.textHighlight1}</span>
           {content.header.logo.textMain}
           <span className="text-rose-500">{content.header.logo.textHighlight2}</span>
           {content.header.logo.textEnd}
-        </Link>
+        </div>
 
         {/* ─── Mobile navigation links */}
         <nav className="mt-12 space-y-6">
