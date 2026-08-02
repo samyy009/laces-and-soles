@@ -11,7 +11,7 @@ import logging
 
 from extensions import db, limiter
 from models import User, PasswordReset
-from services.email_service import send_otp_email
+from services.email_service import send_otp_email, send_welcome_email
 
 logger = logging.getLogger(__name__)
 auth_bp = Blueprint('auth', __name__)
@@ -35,6 +35,12 @@ def register():
         )
         db.session.add(new_user)
         db.session.commit()
+        
+        try:
+            send_welcome_email(new_user.email, new_user.full_name)
+        except Exception as e:
+            logger.error(f"Failed to send welcome confirmation email: {e}")
+
         access_token = create_access_token(identity=str(new_user.id))
         return jsonify({'message': 'Account created successfully!', 'token': access_token, 'user': new_user.to_dict()}), 201
     except Exception as e:
