@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" version="21.6.8" type="device">
+  <diagram id="use-case-diagram" name="Use Case Diagram">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- System Boundary -->
+        <mxCell id="boundary" value="Laces &amp; Soles E-Commerce System" style="swimlane;whiteSpace=wrap;html=1;fontColor=#2D3748;strokeColor=#4A5568;fillColor=#EDF2F7;strokeWidth=1.5;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=30;horizontalStack=0;resizeParent=0;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;" vertex="1" parent="1">
+          <mxGeometry x="190" y="30" width="460" height="540" as="geometry" />
+        </mxCell>
+        <mxCell id="boundary_bg" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=none;fillColor=#FFFFFF;connectable=0;" vertex="1" parent="boundary">
+          <mxGeometry y="30" width="460" height="510" as="geometry" />
+        </mxCell>
+        
+        <!-- Actors -->
+        <mxCell id="customer" value="Customer" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#EBF8FF;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;" vertex="1" parent="1">
+          <mxGeometry x="60" y="160" width="40" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="admin" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#EBF8FF;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;" vertex="1" parent="1">
+          <mxGeometry x="60" y="420" width="40" height="80" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="driver" value="Delivery Driver" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#EBF8FF;strokeColor=#2B6CB0;strokeWidth=1.5;fontColor=#2D3748;" vertex="1" parent="1">
+          <mxGeometry x="740" y="270" width="40" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- Use Cases inside boundary -->
+        <mxCell id="uc_browse" value="Browse Shoes &amp; Search" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="40" y="50" width="160" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="uc_cart" value="Manage Shopping Cart" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="40" y="115" width="160" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="uc_checkout" value="Checkout &amp; Pay" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="40" y="180" width="160" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="uc_track" value="Track Order Live" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="40" y="245" width="160" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="uc_review" value="Write Shoe Review" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="40" y="310" width="160" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- OTP Verification Use Case (shared) -->
+        <mxCell id="uc_otp" value="Verify Delivery OTP" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="250" y="245" width="170" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Admin specific Use Cases -->
+        <mxCell id="uc_inventory" value="Manage Shoe Catalog" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="40" y="390" width="160" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="uc_reports" value="View Store Reports" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="40" y="455" width="160" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="uc_manage_drivers" value="Register &amp; Manage Drivers" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="250" y="455" width="170" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Driver specific Use Cases -->
+        <mxCell id="uc_deliveries" value="View Assigned Shipments" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="250" y="325" width="170" height="50" as="geometry" />
+        </mxCell>
+        
+        <mxCell id="uc_update_status" value="Update Status (Dispatched/Delivered)" style="ellipse;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#4A5568;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;strokeWidth=1.2;" vertex="1" parent="boundary">
+          <mxGeometry x="250" y="390" width="170" height="50" as="geometry" />
+        </mxCell>
+
+        <!-- Actor Associations -->
+        <!-- Customer Links -->
+        <mxCell id="l_c1" style="edgeStyle=none;html=1;strokeColor=#2B6CB0;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="customer" target="uc_browse">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_c2" style="edgeStyle=none;html=1;strokeColor=#2B6CB0;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="customer" target="uc_cart">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_c3" style="edgeStyle=none;html=1;strokeColor=#2B6CB0;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="customer" target="uc_checkout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_c4" style="edgeStyle=none;html=1;strokeColor=#2B6CB0;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="customer" target="uc_track">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_c5" style="edgeStyle=none;html=1;strokeColor=#2B6CB0;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="customer" target="uc_review">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_c6" style="edgeStyle=none;html=1;strokeColor=#2B6CB0;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="customer" target="uc_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Admin Links -->
+        <mxCell id="l_a1" style="edgeStyle=none;html=1;strokeColor=#4A5568;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="admin" target="uc_inventory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_a2" style="edgeStyle=none;html=1;strokeColor=#4A5568;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="admin" target="uc_reports">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_a3" style="edgeStyle=none;html=1;strokeColor=#4A5568;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="admin" target="uc_manage_drivers">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Driver Links -->
+        <mxCell id="l_d1" style="edgeStyle=none;html=1;strokeColor=#4A5568;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="driver" target="uc_deliveries">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_d2" style="edgeStyle=none;html=1;strokeColor=#4A5568;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="driver" target="uc_update_status">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="l_d3" style="edgeStyle=none;html=1;strokeColor=#4A5568;strokeWidth=1.2;endArrow=none;" edge="1" parent="1" source="driver" target="uc_otp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
