@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="Electron" version="21.6.8" type="device">
+  <diagram id="ui-design" name="User Interface Design">
+    <mxGraphModel dx="1200" dy="800" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="800" pageHeight="600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        
+        <!-- Main Browser Container -->
+        <mxCell id="browser" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7FAFC;strokeColor=#4A5568;strokeWidth=2;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="30" width="740" height="520" as="geometry" />
+        </mxCell>
+        
+        <!-- Browser Top Title/URL Bar -->
+        <mxCell id="url_bar" value="https://www.lacesandsoles.com/catalog" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#CBD5E0;strokeWidth=1;align=left;spacingLeft=10;fontColor=#4A5568;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="50" y="45" width="700" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Navbar Header -->
+        <mxCell id="navbar" value="&lt;b&gt;Laces &amp; Soles&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1A365D;strokeColor=none;fontColor=#FFFFFF;fontSize=13;fontFamily=Helvetica;align=left;spacingLeft=15;" vertex="1" parent="1">
+          <mxGeometry x="50" y="80" width="700" height="50" as="geometry" />
+        </mxCell>
+        
+        <!-- Navigation Links -->
+        <mxCell id="nav_links" value="Home    |    &lt;u&gt;Catalog&lt;/u&gt;    |    My Orders    |    Track Order" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FFFFFF;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="190" y="90" width="340" height="30" as="geometry" />
+        </mxCell>
+        
+        <!-- Cart & Profile Indicators -->
+        <mxCell id="nav_cart" value="🛒 Cart (2)  |  👤 Profile" style="text;html=1;align=right;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FFFFFF;fontSize=11;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="550" y="90" width="180" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- Sidebar / Filter Panel -->
+        <mxCell id="sidebar" value="&lt;b&gt;Filters&lt;/b&gt;&lt;hr size=&quot;1&quot;/&gt;&lt;b&gt;Categories&lt;/b&gt;&lt;br/&gt;☑ Running Shoes&lt;br/&gt;☐ Casual Sneakers&lt;br/&gt;☐ Basketball Shoes&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Brands&lt;/b&gt;&lt;br/&gt;☑ Nike&lt;br/&gt;☑ Adidas&lt;br/&gt;☐ Puma&lt;br/&gt;☐ Reebok&lt;br/&gt;&lt;br/&gt;&lt;b&gt;Price Range&lt;/b&gt;&lt;br/&gt;🔘 $50 - $150&lt;br/&gt;☐ $150 - $250" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#EDF2F7;strokeColor=#CBD5E0;strokeWidth=1;fontColor=#2D3748;fontSize=11;fontFamily=Helvetica;align=left;spacingLeft=10;verticalAlign=top;spacingTop=10;overflow=fill;" vertex="1" parent="1">
+          <mxGeometry x="50" y="145" width="160" height="385" as="geometry" />
+        </mxCell>
+
+        <!-- Catalog Container -->
+        <mxCell id="catalog_title" value="Showing 6 Shoe Products" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#2D3748;fontSize=13;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="230" y="145" width="250" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Product Card 1 -->
+        <mxCell id="card_1" value="&lt;b&gt;Air Zoom Pegasus&lt;/b&gt;&lt;br/&gt;Nike — Running&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#2B6CB0&quot;&gt;&lt;b&gt;$129.99&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1.5;fontColor=#4A5568;fontSize=11;fontFamily=Helvetica;align=center;verticalAlign=top;spacingTop=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="180" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="card_1_btn" value="Add to Cart" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3182CE;strokeColor=none;fontColor=#FFFFFF;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="250" y="290" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Product Card 2 -->
+        <mxCell id="card_2" value="&lt;b&gt;Ultraboost 22&lt;/b&gt;&lt;br/&gt;Adidas — Running&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#2B6CB0&quot;&gt;&lt;b&gt;$179.99&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1.5;fontColor=#4A5568;fontSize=11;fontFamily=Helvetica;align=center;verticalAlign=top;spacingTop=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="180" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="card_2_btn" value="Add to Cart" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3182CE;strokeColor=none;fontColor=#FFFFFF;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="420" y="290" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Product Card 3 -->
+        <mxCell id="card_3" value="&lt;b&gt;NMD R1 Sneaker&lt;/b&gt;&lt;br/&gt;Adidas — Casual&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#2B6CB0&quot;&gt;&lt;b&gt;$149.99&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1.5;fontColor=#4A5568;fontSize=11;fontFamily=Helvetica;align=center;verticalAlign=top;spacingTop=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="180" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="card_3_btn" value="Add to Cart" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3182CE;strokeColor=none;fontColor=#FFFFFF;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="590" y="290" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Product Card 4 -->
+        <mxCell id="card_4" value="&lt;b&gt;React Infinity Run&lt;/b&gt;&lt;br/&gt;Nike — Running&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#2B6CB0&quot;&gt;&lt;b&gt;$159.99&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1.5;fontColor=#4A5568;fontSize=11;fontFamily=Helvetica;align=center;verticalAlign=top;spacingTop=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="350" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="card_4_btn" value="Add to Cart" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3182CE;strokeColor=none;fontColor=#FFFFFF;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="250" y="460" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Product Card 5 -->
+        <mxCell id="card_5" value="&lt;b&gt;Air Max 270&lt;/b&gt;&lt;br/&gt;Nike — Casual&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#2B6CB0&quot;&gt;&lt;b&gt;$149.99&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1.5;fontColor=#4A5568;fontSize=11;fontFamily=Helvetica;align=center;verticalAlign=top;spacingTop=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="400" y="350" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="card_5_btn" value="Add to Cart" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3182CE;strokeColor=none;fontColor=#FFFFFF;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="420" y="460" width="110" height="25" as="geometry" />
+        </mxCell>
+
+        <!-- Product Card 6 -->
+        <mxCell id="card_6" value="&lt;b&gt;Forum Low Shoe&lt;/b&gt;&lt;br/&gt;Adidas — Casual&lt;br/&gt;&lt;br/&gt;&lt;font color=&quot;#2B6CB0&quot;&gt;&lt;b&gt;$99.99&lt;/b&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#E2E8F0;strokeWidth=1.5;fontColor=#4A5568;fontSize=11;fontFamily=Helvetica;align=center;verticalAlign=top;spacingTop=10;shadow=1;" vertex="1" parent="1">
+          <mxGeometry x="570" y="350" width="150" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="card_6_btn" value="Add to Cart" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3182CE;strokeColor=none;fontColor=#FFFFFF;fontSize=10;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="590" y="460" width="110" height="25" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
