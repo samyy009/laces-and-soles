@@ -18,6 +18,7 @@ const socialColors = {
   github:   { bg: '#24292e', fg: '#fff' },
 };
 
+import { useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
@@ -29,6 +30,35 @@ export default function Footer() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
+
+  const clickCountRef = useRef(0);
+  const clickTimerRef = useRef(null);
+
+  const handleLogoClick = (e) => {
+    if (e) e.preventDefault();
+    clickCountRef.current += 1;
+    const currentCount = clickCountRef.current;
+
+    if (clickTimerRef.current) clearTimeout(clickTimerRef.current);
+
+    if (currentCount >= 7) {
+      clickCountRef.current = 0;
+      clickTimerRef.current = null;
+      toast.info('🔑 Unlocking Admin Portal...', { autoClose: 2000 });
+      const targetPath = user?.role === 'admin' ? '/admin' : '/admin-login';
+      navigate(targetPath);
+      return;
+    }
+
+    if (currentCount === 1 && window.location.pathname !== '/') {
+      navigate('/');
+    }
+
+    clickTimerRef.current = setTimeout(() => {
+      clickCountRef.current = 0;
+      clickTimerRef.current = null;
+    }, 2500);
+  };
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
@@ -65,12 +95,15 @@ export default function Footer() {
 
           {/* Brand Column */}
           <div className="lg:col-span-1 space-y-5 animate-fade-in-up">
-            <Link to="/" className="inline-block text-2xl font-black uppercase tracking-tighter font-heading group">
+            <div 
+              onClick={handleLogoClick}
+              className="cursor-pointer select-none inline-block text-2xl font-black uppercase tracking-tighter font-heading group"
+            >
               <span className="text-rose-500 transition-colors group-hover:text-white">L</span>
               aces&{' '}
               <span className="text-rose-500 transition-colors group-hover:text-white">S</span>
               oles
-            </Link>
+            </div>
             <p className="text-sm text-gray-400 leading-relaxed max-w-xs font-medium italic">
               {footer.brand.tagline}
             </p>
