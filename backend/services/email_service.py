@@ -274,3 +274,61 @@ def send_marketing_email(receiver_email, subject, body_text):
         logger.error(f"Marketing email failed: {e}")
         _log_email(receiver_email, subject, 'newsletter', 'failed', str(e))
         return False
+
+
+# ── Welcome / Registration Email Confirmation ────────────────────────────────
+def send_welcome_email(receiver_email, customer_name):
+    """Sends a rich HTML welcome & email confirmation message via Brevo after user sign up."""
+    sender_email = os.environ.get('BREVO_SENDER')
+    api_key = os.environ.get('BREVO_API_KEY')
+    subject = "🎉 Welcome to Laces & Soles — Registration Confirmed!"
+
+    if not all([sender_email, api_key]):
+        logger.warning("Missing Brevo credentials — skipping welcome email.")
+        _log_email(receiver_email, subject, 'welcome', 'failed', 'Missing Brevo credentials')
+        return False
+
+    html = f"""<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f9fafb;font-family:'Helvetica Neue',Arial,sans-serif;">
+      <div style="max-width:600px;margin:40px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+        <div style="background:#f43f5e;padding:28px 32px;">
+          <h1 style="margin:0;color:#fff;font-size:22px;font-weight:900;letter-spacing:-0.5px;">LACES &amp; SOLES</h1>
+          <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">lacesandsoles.in</p>
+        </div>
+        <div style="padding:32px;">
+          <h2 style="margin:0 0 12px;font-size:24px;font-weight:900;color:#111827;">Welcome to Laces &amp; Soles, {customer_name}! 👋</h2>
+          <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 20px;">
+            Thank you for creating an account with <strong>Laces &amp; Soles</strong>. Your account has been registered successfully!
+          </p>
+          <p style="color:#4b5563;font-size:15px;line-height:1.6;margin:0 0 24px;">
+            Discover 100% authentic sneakers, formal shoes, and sportswear from top brands with instant order tracking and express shipping.
+          </p>
+          <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:30px;">
+            Need help? Contact support at <a href="mailto:support@lacesandsoles.in" style="color:#f43f5e;">support@lacesandsoles.in</a>
+          </p>
+        </div>
+        <div style="background:#f9fafb;padding:18px 32px;text-align:center;border-top:1px solid #f3f4f6;">
+          <p style="margin:0;font-size:11px;color:#9ca3af;">&copy; {datetime.utcnow().year} Laces &amp; Soles. All rights reserved.</p>
+        </div>
+      </div>
+    </body></html>"""
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {"accept": "application/json", "content-type": "application/json", "api-key": api_key}
+    payload = {
+        "sender": {"name": "Laces & Soles", "email": sender_email},
+        "to": [{"email": receiver_email, "name": customer_name}],
+        "subject": subject,
+        "htmlContent": html
+    }
+
+    try:
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        ok = response.status_code in [201, 202]
+        _log_email(receiver_email, subject, 'welcome', 'sent' if ok else 'failed',
+                   None if ok else f"HTTP {response.status_code}: {response.text[:200]}")
+        return ok
+    except Exception as e:
+        logger.error(f"Welcome email failed: {e}")
+        _log_email(receiver_email, subject, 'welcome', 'failed', str(e))
+        return False
+
