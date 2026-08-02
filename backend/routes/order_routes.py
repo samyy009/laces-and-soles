@@ -195,7 +195,10 @@ def verify_payment():
 
     db.session.commit()
     if created_orders:
-        send_order_confirmation_email(user.email, user.full_name, created_orders[0])
+        try:
+            send_order_confirmation_email(user.email, user.full_name, created_orders[0])
+        except Exception as e:
+            logger.error(f"Failed to send order confirmation email: {e}")
 
     return jsonify({'success': True, 'message': 'Payment verified', 'orders': [o.to_dict() for o in created_orders]}), 200
 
@@ -260,7 +263,10 @@ def handle_orders():
             socketio.emit('order_placed', {'order_id': o.id, 'total_amount': o.total_amount})
         
         if created_orders:
-            send_order_confirmation_email(user.email, user.full_name, created_orders[0])
+            try:
+                send_order_confirmation_email(user.email, user.full_name, created_orders[0])
+            except Exception as e:
+                logger.error(f"Failed to send order confirmation email: {e}")
 
         return jsonify({'message': 'Order placed successfully!', 'order': created_orders[0].to_dict()}), 201
 
